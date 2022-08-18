@@ -1,0 +1,31 @@
+service: twitter
+
+frameworkVersion: "3"
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+functions:
+  dailyTweet:
+    handler: twitter/dailyTweet.tweet
+    timeout: 45
+    events:
+      - schedule: 
+          rate: rate(1 day)
+          #enabled: false
+          enabled: true
+
+  responseTweet:
+    handler: twitter/responseTweet.tweet
+    timeout: 600
+    events:
+      - http:
+          path: /response
+          method: POST
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+

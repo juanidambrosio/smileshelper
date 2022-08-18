@@ -1,0 +1,23 @@
+{
+  "name": "smiles-helper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "listen": "node twitter/tweetListener.js",
+    "telegram": "node telegram/telegramBot.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "node-telegram-bot-api": "^0.58.0",
+    "twitter-api-v2": "^1.12.5"
+  },
+  "devDependencies": {
+    "serverless-dotenv-plugin": "^4.0.1",
+    "serverless-offline": "^8.8.0"
+  }
+}

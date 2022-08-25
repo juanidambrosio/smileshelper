@@ -1,4 +1,4 @@
-const { twitterClient } = require("../../config/config");
+const { twitterClient } = require("../config/config");
 const { dailyTweet } = require("./constants.js");
 
 module.exports.tweet = async (event) => {

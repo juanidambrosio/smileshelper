@@ -1,6 +1,8 @@
 const { TwitterApi, ETwitterStreamEvent } = require("twitter-api-v2");
+const FlightSearch = require("../models/FlightSearch");
 const { default: axios } = require("axios");
 const { responseTweetUrl } = require("../config/config");
+const dbOperations = require("../db/operations");
 const dotenv = require("dotenv").config();
 const { calculateIndex } = require("../utils/parser");
 const { TWITTER_OWN_ID } = require("../config/constants");
@@ -13,6 +15,8 @@ const twitterClient = new TwitterApi(process.env.TWITTER_BEARER_TOKEN).v2;
 
 const listen = async () => {
   try {
+    const { createOne } = await dbOperations("flight_search");
+
     await twitterClient.updateStreamRules({
       add: [{ value: "to:smileshelper", tag: "Reply to Smiles bot" }],
     });
@@ -56,6 +60,16 @@ const listen = async () => {
           };
         }
         await lambdaClient.post("/response", { id, payload });
+        const flightSearch = new FlightSearch(
+          tweet.data.author_id,
+          "twitter",
+          new Date(),
+          payload.origin,
+          payload.destination.name,
+          payload.destination.departureYearMonth.substring(0, 4),
+          payload.destination.departureYearMonth.substring(5)
+        );
+        await createOne(flightSearch);
       } catch (error) {
         console.log("Reply was not successful: " + error.message);
       }

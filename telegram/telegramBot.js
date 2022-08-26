@@ -15,6 +15,7 @@ const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
+  bot.sendMessage()
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
 
@@ -76,7 +77,8 @@ const listen = async () => {
         payload.origin,
         payload.destination.name,
         payload.destination.departureYearMonth.substring(0, 4),
-        payload.destination.departureYearMonth.substring(5)
+        payload.destination.departureYearMonth.substring(5),
+        bestFlights[0].price
       );
       await createOne(flightSearch);
     } catch (error) {

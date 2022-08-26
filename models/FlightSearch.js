@@ -1,5 +1,14 @@
 class FlightSearch {
-  constructor(author_id, source, date, origin, destination, year, month) {
+  constructor(
+    author_id,
+    source,
+    date,
+    origin,
+    destination,
+    year,
+    month,
+    bestPrice
+  ) {
     this.author_id = author_id;
     this.source = source;
     this.date = date;
@@ -7,6 +16,7 @@ class FlightSearch {
     this.destination = destination;
     this.year = year;
     this.month = month;
+    this.bestPrice = bestPrice;
   }
 }
 

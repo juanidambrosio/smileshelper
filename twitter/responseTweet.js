@@ -40,13 +40,14 @@ module.exports.tweet = async (event) => {
       payload.origin + " " + payload.destination.name + "\n"
     );
 
-    const response = await twitterClient.reply(responseTweet, id);
-    console.log(response);
+    await twitterClient.reply(responseTweet, id);
+    //console.log(responseTweet);
     return {
       statusCode: 200,
       body: JSON.stringify(
         {
           message: "Response was sent successfully!",
+          bestPrice: bestFlights[0].price,
         },
         null,
         2

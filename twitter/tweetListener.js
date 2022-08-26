@@ -59,7 +59,11 @@ const listen = async () => {
               : "",
           };
         }
-        await lambdaClient.post("/response", { id, payload });
+        const { data } = await lambdaClient.post("/response", {
+          id,
+          payload,
+        });
+
         const flightSearch = new FlightSearch(
           tweet.data.author_id,
           "twitter",
@@ -67,7 +71,8 @@ const listen = async () => {
           payload.origin,
           payload.destination.name,
           payload.destination.departureYearMonth.substring(0, 4),
-          payload.destination.departureYearMonth.substring(5)
+          payload.destination.departureYearMonth.substring(5),
+          data.bestPrice
         );
         await createOne(flightSearch);
       } catch (error) {

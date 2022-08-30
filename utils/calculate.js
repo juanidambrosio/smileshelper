@@ -1,4 +1,4 @@
-const calculatePrice = (flightSegment, cabinType) => {
+const getBestFlight = (flightSegment, cabinType) => {
   const mappedCabinType =
     cabinType === "ECO"
       ? "ECONOMIC"
@@ -7,19 +7,20 @@ const calculatePrice = (flightSegment, cabinType) => {
       : cabinType === "PEC"
       ? "PREMIUM_ECONOMIC"
       : undefined;
-  if (!cabinType || !mappedCabinType) {
-    return flightSegment.bestPricing?.miles;
-  } else {
-    return flightSegment.flightList.reduce((previous, current) => {
+  return flightSegment.flightList.reduce(
+    (previous, current) => {
       let currentMiles = Number.MAX_VALUE;
-      if (current.cabin === mappedCabinType) {
+      if (!cabinType || !mappedCabinType || current.cabin === mappedCabinType) {
         currentMiles = current.fareList.find(
           (fare) => fare.type === "SMILES_CLUB"
         ).miles;
       }
-      return Math.min(currentMiles, previous);
-    }, Number.MAX_VALUE);
-  }
+      return previous.price <= currentMiles
+        ? previous
+        : { flight: current, price: currentMiles };
+    },
+    { flight: {}, price: Number.MAX_VALUE }
+  );
 };
 
-module.exports = { calculatePrice };
+module.exports = { getBestFlight };

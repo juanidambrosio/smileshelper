@@ -1,7 +1,7 @@
 const TelegramBot = require("node-telegram-bot-api");
 const FlightSearch = require("../models/FlightSearch");
 const { telegramApiToken } = require("../config/config");
-const { calculateIndex } = require("../utils/parser");
+const { calculateIndex, generateString } = require("../utils/parser");
 const { searchFlights } = require("../search");
 const {
   notFound,
@@ -15,7 +15,6 @@ const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
-  bot.sendMessage()
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
 
@@ -64,7 +63,14 @@ const listen = async () => {
       const response = bestFlights.reduce(
         (previous, current) =>
           previous.concat(
-            current.departureDay + "/" + month + ": " + current.price + "\n"
+            current.departureDay +
+              "/" +
+              month +
+              ": " +
+              current.price +
+              "millas" +
+              generateString(current) +
+              "\n"
           ),
         payload.origin + " " + payload.destination.name + "\n"
       );
@@ -82,9 +88,9 @@ const listen = async () => {
       );
       await createOne(flightSearch);
     } catch (error) {
+      console.log(error);
       bot.sendMessage(chatId, genericError);
     }
-    //console.log(responseTweet);
   });
 };
 

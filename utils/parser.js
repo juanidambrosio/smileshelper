@@ -20,6 +20,16 @@ const calculateIndex = (parameters) => {
   return { adults: 13, cabinType: 13 };
 };
 
+const generateString = (flight) => {
+  const parameters = [
+    flight.airline,
+    flight.stops + " escalas",
+    flight.duration + " hs de duracion",
+  ];
+  return parameters.map((parameter) => " - " + parameter);
+};
+
 module.exports = {
   calculateIndex,
+  generateString,
 };

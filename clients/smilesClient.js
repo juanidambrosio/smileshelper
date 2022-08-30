@@ -2,7 +2,7 @@ const { default: axios } = require("axios");
 const { SMILES_URL } = require("../config/constants.js");
 const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
-const { calculatePrice } = require("../utils/calculate.js");
+const { getBestFlight } = require("../utils/calculate.js");
 const { sortAndSlice } = require("../flightsHelper.js");
 
 const headers = {
@@ -49,17 +49,16 @@ const getFlights = async (parameters) => {
     const flightResults = (await Promise.all(getFlightPromises))
       .flat()
       .map((flightResult) => {
+        const { flight, price } = getBestFlight(
+          flightResult.data?.requestedFlightSegmentList[0],
+          cabinType
+        );
         return {
-          price: calculatePrice(
-            flightResult.data?.requestedFlightSegmentList[0],
-            cabinType
-          ),
-          departureDay: parseInt(
-            flightResult.data?.requestedFlightSegmentList[0]?.flightList[0]?.departure?.date?.substring(
-              8,
-              10
-            )
-          ),
+          price,
+          departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+          stops: flight.stops,
+          duration: flight.duration?.hours,
+          airline: flight.airline?.name,
         };
       })
       .filter((flight) => flight.price);

@@ -1,7 +1,13 @@
 const TelegramBot = require("node-telegram-bot-api");
+const emoji = require("node-emoji");
 const FlightSearch = require("../models/FlightSearch");
 const { telegramApiToken } = require("../config/config");
-const { calculateIndex, generateString } = require("../utils/parser");
+const {
+  calculateIndex,
+  applySimpleMarkdown,
+  generateFlightOutput,
+  generateLink,
+} = require("../utils/parser");
 const { searchFlights } = require("../search");
 const {
   notFound,
@@ -23,9 +29,7 @@ const listen = async () => {
       return;
     }
 
-    const trimmedText = msg.text
-      .replace(/\s/g, "")
-      .replace("@smileshelper", "");
+    const trimmedText = msg.text.replace(/\s/g, "");
 
     const regex = new RegExp(/\w{6}(2022|2023|2024)(-|\/)(0|1)\d/);
 
@@ -63,19 +67,33 @@ const listen = async () => {
       const response = bestFlights.reduce(
         (previous, current) =>
           previous.concat(
-            current.departureDay +
-              "/" +
-              month +
+            emoji.get("airplane") +
+              applySimpleMarkdown(
+                current.departureDay + "/" + month,
+                "[",
+                "]"
+              ) +
+              applySimpleMarkdown(
+                generateLink({
+                  ...payload,
+                  departureDate:
+                    payload.destination.departureYearMonth +
+                    "-" +
+                    current.departureDay,
+                }),
+                "(",
+                ")"
+              ) +
               ": " +
-              current.price +
-              "millas" +
-              generateString(current) +
+              applySimpleMarkdown(current.price, "*") +
+              " millas" +
+              generateFlightOutput(current) +
               "\n"
           ),
         payload.origin + " " + payload.destination.name + "\n"
       );
       console.log(trimmedText);
-      bot.sendMessage(chatId, response);
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
       const flightSearch = new FlightSearch(
         msg.from.username || msg.from.id.toString(),
         "telegram",

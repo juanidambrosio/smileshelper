@@ -1,16 +1,11 @@
+const { mapCabinType } = require("./parser");
+
 const getBestFlight = (flightSegment, cabinType) => {
-  const mappedCabinType =
-    cabinType === "ECO"
-      ? "ECONOMIC"
-      : cabinType === "EJE"
-      ? "BUSINESS"
-      : cabinType === "PEC"
-      ? "PREMIUM_ECONOMIC"
-      : undefined;
+  const mappedCabinType = mapCabinType(cabinType);
   return flightSegment.flightList.reduce(
     (previous, current) => {
       let currentMiles = Number.MAX_VALUE;
-      if (!cabinType || !mappedCabinType || current.cabin === mappedCabinType) {
+      if (mappedCabinType === "all" || current.cabin === mappedCabinType) {
         currentMiles = current.fareList.find(
           (fare) => fare.type === "SMILES_CLUB"
         ).miles;

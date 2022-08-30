@@ -54,11 +54,12 @@ const getFlights = async (parameters) => {
           cabinType
         );
         return {
-          price,
+          price: price.toString(),
           departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
-          stops: flight.stops,
-          duration: flight.duration?.hours,
+          stops: flight.stops?.toString(),
+          duration: flight.duration?.hours?.toString(),
           airline: flight.airline?.name,
+          seats: flight.availableSeats?.toString(),
         };
       })
       .filter((flight) => flight.price);

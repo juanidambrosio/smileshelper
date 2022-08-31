@@ -1,24 +1,26 @@
 const TelegramBot = require("node-telegram-bot-api");
 const FlightSearch = require("../models/FlightSearch");
-const { telegramApiToken } = require("../config/config");
+const { telegramApiTokenBRL } = require("../config/config");
 const { calculateIndex } = require("../utils/parser");
 const { searchFlights } = require("../search");
 const { localization } = require("../twitter/constants");
 const dbOperations = require("../db/operations");
+const region = "ARGENTINA"
 
 const listen = async () => {
   // const { createOne } = await dbOperations("flight_search");
-  const bot = new TelegramBot(telegramApiToken, { polling: true });
+  const bot = new TelegramBot(telegramApiTokenBRL, { polling: true });
 
   bot.sendMessage()
   bot.on("message", async (msg) => {
     const chatId = msg.chat.id;
 
     if (msg.text === "/start") {
-      bot.sendMessage(chatId, localization.ES.dailyTweet);
+      bot.sendMessage(chatId, localization.PT.dailyTweet);
       return;
     }
 
+    // que pingo hace esta linea no la entiendo jajajajaj (que es lo que esta reemplazando?)
     const trimmedText = msg.text
       .replace(/\s/g, "")
       .replace("@smileshelper", "");
@@ -26,7 +28,7 @@ const listen = async () => {
     const regex = new RegExp(/\w{6}(2022|2023|2024)(-|\/)(0|1)\d/);
 
     if (!regex.test(trimmedText)) {
-      bot.sendMessage(chatId, localization.ES.incorrectFormat);
+      bot.sendMessage(chatId,  localization.PT.incorrectFormat);
       return;
     }
     const { adults, cabinType } = calculateIndex(trimmedText.substring(13));
@@ -40,6 +42,7 @@ const listen = async () => {
       cabinType: cabinType
         ? trimmedText.substring(cabinType, cabinType + 3).toUpperCase()
         : "",
+      operationCountry: region,
     };
 
     try {
@@ -51,9 +54,9 @@ const listen = async () => {
         return;
       }
       if (bestFlights.length === 0) {
-        bot.sendMessage(chatId, localization.ES.notFound);
+        bot.sendMessage(chatId, localization.PT.notFound);
         return;
-        //console.log(localization.ES.notFound);
+        //console.log( localization.PT.notFound);
       }
       const month = flightList.departureMonth.substring(5);
       const response = bestFlights.reduce(
@@ -77,7 +80,7 @@ const listen = async () => {
       );
       // await createOne(flightSearch);
     } catch (error) {
-      bot.sendMessage(chatId, localization.ES.genericError);
+      bot.sendMessage(chatId, localization.PT.genericError);
     }
     //console.log(responseTweet);
   });

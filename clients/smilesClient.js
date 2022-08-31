@@ -2,26 +2,30 @@ const { default: axios } = require("axios");
 const { SMILES_URL } = require("../config/constants.js");
 const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
-const { calculatePrice } = require("../utils/calculate.js");
+const { getBestFlight } = require("../utils/calculate.js");
 const { sortAndSlice } = require("../flightsHelper.js");
 
-const headers = {
-  authorization: `Bearer ${smiles.authorizationToken}`,
-  "x-api-key": smiles.apiKey,
-  "Content-Type": "application/json",
-  Accept: "application/json",
-  region: "ARGENTINA",
-};
 
-const smilesClient = axios.create({
-  baseURL: SMILES_URL,
-  headers,
-  insecureHTTPParser: true,
-});
 
 const getFlights = async (parameters) => {
-  const { origin, destination, departureYearMonth, cabinType, adults } =
+
+  const { origin, destination, departureYearMonth, cabinType, adults, operationCountry } =
     parameters;
+
+  const headers = {
+    authorization: `Bearer ${smiles.authorizationToken}`,
+    "x-api-key": smiles.apiKey,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    region: operationCountry || "ARGENTINA" ,
+  };
+  
+  // TODO: Hasta aca hiciste llegar el operation country al header de la request, viajo por el handler search 
+  const smilesClient = axios.create({
+    baseURL: SMILES_URL,
+    headers,
+    insecureHTTPParser: true,
+  });
   const lastDayOfMonthDeparture = lastDays.get(departureYearMonth.substring(5));
   try {
     const getFlightPromises = [];
@@ -30,6 +34,8 @@ const getFlights = async (parameters) => {
       day <= lastDayOfMonthDeparture;
       day++
     ) {
+      // TODO: aca hay que tambien parametrizar el campo currencyCode segun el pais (me imagino que aca ira algo como BRL), lo mismo con el parametro R que nose que pingo hace
+      
       const params = {
         adults: adults || "1",
         cabinType: "all",
@@ -49,17 +55,17 @@ const getFlights = async (parameters) => {
     const flightResults = (await Promise.all(getFlightPromises))
       .flat()
       .map((flightResult) => {
+        const { flight, price } = getBestFlight(
+          flightResult.data?.requestedFlightSegmentList[0],
+          cabinType
+        );
         return {
-          price: calculatePrice(
-            flightResult.data?.requestedFlightSegmentList[0],
-            cabinType
-          ),
-          departureDay: parseInt(
-            flightResult.data?.requestedFlightSegmentList[0]?.flightList[0]?.departure?.date?.substring(
-              8,
-              10
-            )
-          ),
+          price: price.toString(),
+          departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+          stops: flight.stops?.toString(),
+          duration: flight.duration?.hours?.toString(),
+          airline: flight.airline?.name,
+          seats: flight.availableSeats?.toString(),
         };
       })
       .filter((flight) => flight.price);

@@ -23,15 +23,9 @@ const calculateIndex = (parameters) => {
   return { adults: 13, cabinType: 13 };
 };
 
-const generateFlightOutput = (flight) => {
-  const parameters = [
-    flight.airline,
-    flight.stops + " escalas",
-    "duracion " + flight.duration + " hs",
-    flight.seats + emoji.get("seat"),
-  ];
-  return parameters.map((parameter) => " - " + parameter);
-};
+const generateFlightOutput = (flight) =>
+  " " +
+  [flight.airline, flight.stops + " escalas", flight.seats + emoji.get("seat")];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
@@ -42,14 +36,19 @@ const mapCabinType = (cabinType) =>
     ? "PREMIUM_ECONOMIC"
     : "all";
 
-const generateLink = (flight) =>
+const generateEmissionLink = (flight) =>
   `${SMILES_EMISSION_URL}originAirportCode=${
     flight.origin
   }&destinationAirportCode=${flight.destination.name}&departureDate=${new Date(
     flight.departureDate
   ).getTime()}&adults=${
     flight.adults || "1"
-  }&infants=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=2`;
+  }&infants=0&children=0&cabinType=${mapCabinType(
+    flight.cabinType
+  )}&tripType=2`;
+
+const generateTaxLink = (flight) =>
+  `adults=1&children=0&infants=0&fareuid=${flight.fareUid}&uid=${flight.uid}&type=SEGMENT_1&highlightText=SMILES_CLUB`;
 
 const applySimpleMarkdown = (word, symbol, symbolEnd) =>
   symbol + word + (symbolEnd || symbol);
@@ -58,6 +57,7 @@ module.exports = {
   calculateIndex,
   generateFlightOutput,
   mapCabinType,
-  generateLink,
+  generateEmissionLink,
+  generateTaxLink,
   applySimpleMarkdown,
 };

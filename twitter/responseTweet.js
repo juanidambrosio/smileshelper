@@ -32,13 +32,20 @@ module.exports.tweet = async (event) => {
       };
     }
     const month = flightList.departureMonth.substring(5);
-    const responseTweet = bestFlights.reduce(
-      (previous, current) =>
-        previous.concat(
-          current.departureDay + "/" + month + ": " + current.price + "\n"
-        ),
-      payload.origin + " " + payload.destination.name + "\n"
-    );
+    const responseTweet = bestFlights.reduce((previous, current) => {
+      const taxWord = current.tax?.miles
+        ? ` + ${current.tax.miles}/${current.tax.money}`
+        : "";
+      return previous.concat(
+        current.departureDay +
+          "/" +
+          month +
+          ": " +
+          current.price +
+          taxWord +
+          "\n"
+      );
+    }, payload.origin + " " + payload.destination.name + "\n");
 
     await twitterClient.reply(responseTweet, id);
     //console.log(responseTweet);

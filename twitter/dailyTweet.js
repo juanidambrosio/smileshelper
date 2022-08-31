@@ -1,9 +1,9 @@
 const { twitterClient } = require("../config/config");
-const { dailyTweet } = require("./constants.js");
+const { localization } = require("./constants.js");
 
 module.exports.tweet = async (event) => {
   try {
-    const tweet = await twitterClient.tweet(dailyTweet);
+    const tweet = await twitterClient.tweet( localization.ES.dailyTweet);
     return {
       statusCode: 200,
       body: JSON.stringify(

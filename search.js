@@ -1,7 +1,7 @@
 const { getFlights: getSmilesFlights } = require("./clients/smilesClient.js");
 
 const searchFlights = async (inputFlight) => {
-  const { origin, destination, cabinType, adults } = inputFlight;
+  const { origin, destination, cabinType, adults, operationCountry } = inputFlight;
 
   const { name, departureYearMonth } = destination;
 
@@ -11,9 +11,11 @@ const searchFlights = async (inputFlight) => {
     departureYearMonth,
     cabinType,
     adults,
+    operationCountry
   };
 
   return await getSmilesFlights(flightDetails);
+
 };
 
 module.exports = { searchFlights };

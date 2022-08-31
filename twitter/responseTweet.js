@@ -1,16 +1,16 @@
 const { searchFlights } = require("../search");
 const { twitterClient, ApiResponseError } = require("../config/config");
-const { incorrectFormat, notFound } = require("./constants");
+const { localization } = require("./constants");
 
 module.exports.tweet = async (event) => {
   const { id, payload } = JSON.parse(event.body);
   try {
     if (!payload) {
-      await twitterClient.reply(incorrectFormat, id);
-      //console.log(incorrectFormat);
+      await twitterClient.reply(localization.ES.incorrectFormat, id);
+      //console.log(localization.ES.incorrectFormat);
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: incorrectFormat }, null, 2),
+        body: JSON.stringify({ message: localization.ES.incorrectFormat }, null, 2),
       };
     }
     const flightList = await searchFlights(payload);
@@ -24,11 +24,11 @@ module.exports.tweet = async (event) => {
       };
     }
     if (bestFlights.length === 0) {
-      await twitterClient.reply(notFound, id);
-      //console.log(notFound);
+      await twitterClient.reply(localization.ES.notFound, id);
+      //console.log(localization.ES.notFound);
       return {
         statusCode: 404,
-        body: JSON.stringify({ message: notFound }, null, 2),
+        body: JSON.stringify({ message: localization.ES.notFound }, null, 2),
       };
     }
     const month = flightList.departureMonth.substring(5);

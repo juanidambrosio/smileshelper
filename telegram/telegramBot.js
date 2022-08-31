@@ -1,13 +1,20 @@
 const TelegramBot = require("node-telegram-bot-api");
+const emoji = require("node-emoji");
 const FlightSearch = require("../models/FlightSearch");
 const { telegramApiToken } = require("../config/config");
-const { calculateIndex } = require("../utils/parser");
+const {
+  calculateIndex,
+  applySimpleMarkdown,
+  generateFlightOutput,
+  generateLink,
+} = require("../utils/parser");
 const { searchFlights } = require("../search");
 const { localization } = require("../twitter/constants");
 const dbOperations = require("../db/operations");
+const region = "ARGENTINA"
 
 const listen = async () => {
-  // const { createOne } = await dbOperations("flight_search");
+  const { createOne } = await dbOperations("flight_search");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
   bot.sendMessage()
@@ -19,9 +26,7 @@ const listen = async () => {
       return;
     }
 
-    const trimmedText = msg.text
-      .replace(/\s/g, "")
-      .replace("@smileshelper", "");
+    const trimmedText = msg.text.replace(/\s/g, "");
 
     const regex = new RegExp(/\w{6}(2022|2023|2024)(-|\/)(0|1)\d/);
 
@@ -40,6 +45,8 @@ const listen = async () => {
       cabinType: cabinType
         ? trimmedText.substring(cabinType, cabinType + 3).toUpperCase()
         : "",
+        operationCountry: region,
+
     };
 
     try {
@@ -59,12 +66,34 @@ const listen = async () => {
       const response = bestFlights.reduce(
         (previous, current) =>
           previous.concat(
-            current.departureDay + "/" + month + ": " + current.price + "\n"
+            emoji.get("airplane") +
+              applySimpleMarkdown(
+                current.departureDay + "/" + month,
+                "[",
+                "]"
+              ) +
+              applySimpleMarkdown(
+                generateLink({
+                  ...payload,
+                  departureDate:
+                    payload.destination.departureYearMonth +
+                    "-" +
+                    current.departureDay,
+                }),
+                "(",
+                ")"
+              ) +
+              ": " +
+              applySimpleMarkdown(current.price, "*") +
+              " millas" +
+              generateFlightOutput(current) +
+              "\n"
           ),
         payload.origin + " " + payload.destination.name + "\n"
       );
       console.log(trimmedText);
-      bot.sendMessage(chatId, response);
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+      // TODO: Falta agregar el region en la db de mongo
       const flightSearch = new FlightSearch(
         msg.from.username || msg.from.id.toString(),
         "telegram",
@@ -75,7 +104,7 @@ const listen = async () => {
         payload.destination.departureYearMonth.substring(5),
         bestFlights[0].price
       );
-      // await createOne(flightSearch);
+      await createOne(flightSearch);
     } catch (error) {
       bot.sendMessage(chatId, localization.ES.genericError);
     }

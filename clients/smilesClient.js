@@ -11,16 +11,14 @@ const getFlights = async (parameters) => {
 
   const { origin, destination, departureYearMonth, cabinType, adults, operationCountry } =
     parameters;
-
   const headers = {
     authorization: `Bearer ${smiles.authorizationToken}`,
     "x-api-key": smiles.apiKey,
     "Content-Type": "application/json",
     Accept: "application/json",
-    region: operationCountry || "ARGENTINA" ,
+    region: operationCountry || "ARGENTINA",
   };
-  
-  // TODO: Hasta aca hiciste llegar el operation country al header de la request, viajo por el handler search 
+
   const smilesClient = axios.create({
     baseURL: SMILES_URL,
     headers,
@@ -35,7 +33,7 @@ const getFlights = async (parameters) => {
       day++
     ) {
       // TODO: aca hay que tambien parametrizar el campo currencyCode segun el pais (me imagino que aca ira algo como BRL), lo mismo con el parametro R que nose que pingo hace
-      
+
       const params = {
         adults: adults || "1",
         cabinType: "all",

@@ -6,7 +6,7 @@ const {
   calculateIndex,
   applySimpleMarkdown,
   generateFlightOutput,
-  generateLink,
+  generateEmissionLink,
 } = require("../utils/parser");
 const { searchFlights } = require("../search");
 const {
@@ -74,19 +74,24 @@ const listen = async () => {
                 "]"
               ) +
               applySimpleMarkdown(
-                generateLink({
+                generateEmissionLink({
                   ...payload,
                   departureDate:
                     payload.destination.departureYearMonth +
                     "-" +
-                    current.departureDay,
+                    current.departureDay +
+                    " 09:",
                 }),
                 "(",
                 ")"
               ) +
               ": " +
-              applySimpleMarkdown(current.price, "*") +
-              " millas" +
+              applySimpleMarkdown(
+                current.tax?.miles
+                  ? `${current.price} + ${current.tax?.miles}/${current.tax?.money}`
+                  : `${current.price}`,
+                "*"
+              ) +
               generateFlightOutput(current) +
               "\n"
           ),

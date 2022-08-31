@@ -1,5 +1,5 @@
 const { default: axios } = require("axios");
-const { SMILES_URL } = require("../config/constants.js");
+const { SMILES_URL, SMILES_TAX_URL } = require("../config/constants.js");
 const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
@@ -15,6 +15,12 @@ const headers = {
 
 const smilesClient = axios.create({
   baseURL: SMILES_URL,
+  headers,
+  insecureHTTPParser: true,
+});
+
+const smilesTaxClient = axios.create({
+  baseURL: SMILES_TAX_URL,
   headers,
   insecureHTTPParser: true,
 });
@@ -46,35 +52,66 @@ const getFlights = async (parameters) => {
       };
       getFlightPromises.push(smilesClient.get("/search", { params }));
     }
-    const flightResults = (await Promise.all(getFlightPromises))
-      .flat()
-      .map((flightResult) => {
-        const { flight, price } = getBestFlight(
-          flightResult.data?.requestedFlightSegmentList[0],
-          cabinType
-        );
-        return {
-          price: price.toString(),
-          departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
-          stops: flight.stops?.toString(),
-          duration: flight.duration?.hours?.toString(),
-          airline: flight.airline?.name,
-          seats: flight.availableSeats?.toString(),
-        };
-      })
-      .filter((flight) => flight.price);
+    const flightResults = (await Promise.all(getFlightPromises)).flat();
+    const mappedFlightResults = (
+      await Promise.all(
+        flightResults.map(async (flightResult) => {
+          const { flight, price, fareUid } = getBestFlight(
+            flightResult.data?.requestedFlightSegmentList[0],
+            cabinType
+          );
+          return {
+            price: price.toString(),
+            departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+            stops: flight.stops?.toString(),
+            duration: flight.duration?.hours?.toString(),
+            airline: flight.airline?.name,
+            seats: flight.availableSeats?.toString(),
+            tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+          };
+        })
+      )
+    ).filter((flight) => flight.price && flight.tax?.miles);
     return {
       origin,
       destination,
-      results: sortAndSlice(flightResults),
+      results: sortAndSlice(mappedFlightResults),
       departureMonth: departureYearMonth,
     };
   } catch (error) {
-    console.log("Error while getting flights: ", error);
+    console.log(
+      "Error while getting flights: ",
+      error.response?.data?.error
+    );
     return {
       statusError: error.response?.status,
       error: error.response?.data?.errorMessage,
     };
+  }
+};
+
+const getTax = async (uid, fareuid) => {
+  const params = {
+    adults: "1",
+    children: "0",
+    infants: "0",
+    fareuid,
+    uid,
+    type: "SEGMENT_1",
+    highlightText: "SMILES_CLUB",
+  };
+
+  try {
+    const { data } = await smilesTaxClient.get("/boardingtax", { params });
+
+    return {
+      miles: `${Math.floor(data?.totals?.totalBoardingTax?.miles / 1000)}K`,
+      money: `$${Math.floor(
+        data?.totals?.totalBoardingTax?.money / 1000
+      ).toString()}K`,
+    };
+  } catch (error) {
+    return { miles: undefined };
   }
 };
 

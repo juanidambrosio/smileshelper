@@ -6,13 +6,14 @@ const getBestFlight = (flightSegment, cabinType) => {
     (previous, current) => {
       let currentMiles = Number.MAX_VALUE;
       if (mappedCabinType === "all" || current.cabin === mappedCabinType) {
-        currentMiles = current.fareList.find(
+        currentFare = current.fareList.find(
           (fare) => fare.type === "SMILES_CLUB"
-        ).miles;
+        );
+        currentMiles = currentFare.miles;
       }
       return previous.price <= currentMiles
         ? previous
-        : { flight: current, price: currentMiles };
+        : { flight: current, price: currentMiles, fareUid: currentFare.uid };
     },
     { flight: {}, price: Number.MAX_VALUE }
   );

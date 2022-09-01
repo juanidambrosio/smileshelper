@@ -1,31 +1,39 @@
 const emoji = require("node-emoji");
-const { SMILES_EMISSION_URL } = require("../config/constants");
+const { SMILES_EMISSION_URL, regions } = require("../config/constants");
 
-const calculateIndex = (parameters) => {
+const calculateIndex = (parameters, indexStart) => {
   if (parameters.length) {
     switch (parameters.length) {
-      case 4:
+      case 5:
         return !isNaN(parameters[0])
           ? {
-              adults: 13,
-              cabinType: 14,
+              adults: indexStart,
+              cabinType: indexStart + 2,
             }
           : {
-              adults: 16,
-              cabinType: 13,
+              adults: indexStart + 4,
+              cabinType: indexStart,
             };
       case 3:
-        return { cabinType: 13 };
+        return { cabinType: indexStart };
       case 1:
-        return { adults: 13 };
+        return { adults: indexStart };
     }
   }
-  return { adults: 13, cabinType: 13 };
+  return { adults: indexStart, cabinType: indexStart };
 };
 
 const generateFlightOutput = (flight) =>
   " " +
-  [flight.airline, flight.stops + " escalas", flight.seats + emoji.get("seat")];
+  [
+    flight.airline,
+    flight.stops + " escalas",
+    emoji.get("clock1") +
+      flight.duration +
+      "hs," +
+      emoji.get("seat") +
+      flight.seats,
+  ];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
@@ -53,6 +61,44 @@ const generateTaxLink = (flight) =>
 const applySimpleMarkdown = (word, symbol, symbolEnd) =>
   symbol + word + (symbolEnd || symbol);
 
+const generatePayloadMonthlySingleDestination = (text) => {
+  const { adults, cabinType } = calculateIndex(text.substring(16), 16);
+  return {
+    origin: text.substring(0, 3).toUpperCase(),
+    destination: {
+      name: text.substring(4, 7).toUpperCase(),
+      departureYearMonth: text.substring(8, 15),
+    },
+    adults: adults ? text.substring(adults, adults + 1) : "",
+    cabinType: cabinType
+      ? text.substring(cabinType, cabinType + 3).toUpperCase()
+      : "",
+  };
+};
+
+const generatePayloadMultipleDestinations = (text) => {
+  const region = text.substring(4, text.indexOf(" ", 4));
+  const startIndexAfterRegion = 4 + region.length + 1;
+  const { adults, cabinType } = calculateIndex(
+    text.substring(startIndexAfterRegion + 11),
+    startIndexAfterRegion + 11
+  );
+  return {
+    origin: text.substring(0, 3).toUpperCase(),
+    destination: {
+      name: regions[region],
+      departureYearMonth: text.substring(
+        startIndexAfterRegion,
+        startIndexAfterRegion + 10
+      ),
+    },
+    adults: adults ? text.substring(adults, adults + 1) : "",
+    cabinType: cabinType
+      ? text.substring(cabinType, cabinType + 3).toUpperCase()
+      : "",
+  };
+};
+
 module.exports = {
   calculateIndex,
   generateFlightOutput,
@@ -60,4 +106,6 @@ module.exports = {
   generateEmissionLink,
   generateTaxLink,
   applySimpleMarkdown,
+  generatePayloadMonthlySingleDestination,
+  generatePayloadMultipleDestinations,
 };

@@ -76,7 +76,7 @@ const getFlights = async (parameters) => {
       origin,
       destination,
       results: sortAndSlice(mappedFlightResults),
-      departureMonth: departureYearMonth,
+      departureMonth: departureYearMonth.substring(5),
     };
   } catch (error) {
     console.log(

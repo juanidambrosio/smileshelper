@@ -1,5 +1,5 @@
 const { twitterClient } = require("../config/config");
-const { dailyTweet } = require("./constants.js");
+const { dailyTweet } = require("../config/constants.js");
 
 module.exports.tweet = async (event) => {
   try {

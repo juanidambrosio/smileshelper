@@ -1,6 +1,6 @@
 const { searchFlights } = require("../search");
 const { twitterClient, ApiResponseError } = require("../config/config");
-const { incorrectFormat, notFound } = require("./constants");
+const { incorrectFormat, notFound } = require("../config/constants");
 
 module.exports.tweet = async (event) => {
   const { id, payload } = JSON.parse(event.body);

@@ -12,7 +12,7 @@ const { searchFlights } = require("../search");
 const {
   notFound,
   incorrectFormat,
-  dailyTweet,
+  telegramStart,
   genericError,
 } = require("../twitter/constants");
 const dbOperations = require("../db/operations");
@@ -21,22 +21,14 @@ const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
-  bot.on("message", async (msg) => {
+  bot.onText(/\/start/, async (msg) => {
+    bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" });
+  });
+  bot.onText(/\w{3}\s\w{3}\s\d{4}(-|\/)(0|1)\d/, async (msg) => {
     const chatId = msg.chat.id;
-
-    if (msg.text === "/start") {
-      bot.sendMessage(chatId, dailyTweet);
-      return;
-    }
 
     const trimmedText = msg.text.replace(/\s/g, "");
 
-    const regex = new RegExp(/\w{6}(2022|2023|2024)(-|\/)(0|1)\d/);
-
-    if (!regex.test(trimmedText)) {
-      bot.sendMessage(chatId, incorrectFormat);
-      return;
-    }
     const { adults, cabinType } = calculateIndex(trimmedText.substring(13));
     const payload = {
       origin: trimmedText.substring(0, 3).toUpperCase(),

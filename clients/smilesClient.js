@@ -81,7 +81,7 @@ const getFlights = async (parameters) => {
   } catch (error) {
     console.log(
       "Error while getting flights: ",
-      error.response?.data?.error
+      error.response?.data?.error || error.response?.data?.errorMessage
     );
     return {
       statusError: error.response?.status,

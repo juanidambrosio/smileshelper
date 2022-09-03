@@ -77,7 +77,7 @@ const generatePayloadMonthlySingleDestination = (text) => {
 };
 
 const generatePayloadMultipleDestinations = (text) => {
-  const region = text.substring(4, text.indexOf(" ", 4));
+  const region = text.substring(4, text.indexOf(" ", 4)).toUpperCase();
   const startIndexAfterRegion = 4 + region.length + 1;
   const { adults, cabinType } = calculateIndex(
     text.substring(startIndexAfterRegion + 11),
@@ -87,7 +87,7 @@ const generatePayloadMultipleDestinations = (text) => {
     origin: text.substring(0, 3).toUpperCase(),
     destination: {
       name: regions[region],
-      departureYearMonth: text.substring(
+      departureYearMonthDate: text.substring(
         startIndexAfterRegion,
         startIndexAfterRegion + 10
       ),
@@ -96,6 +96,7 @@ const generatePayloadMultipleDestinations = (text) => {
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
       : "",
+    region,
   };
 };
 

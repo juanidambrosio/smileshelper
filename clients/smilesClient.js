@@ -26,8 +26,10 @@ const smilesTaxClient = axios.create({
 });
 
 const getFlights = async (parameters) => {
-  const { origin, destination, departureYearMonth, cabinType, adults } =
-    parameters;
+  const { origin, destination, cabinType, adults } = parameters;
+
+  const { name, departureYearMonth } = destination;
+
   const lastDayOfMonthDeparture = lastDays.get(departureYearMonth.substring(5));
   try {
     const getFlightPromises = [];
@@ -47,7 +49,7 @@ const getFlights = async (parameters) => {
         forceCongener: "false",
         r: "ar",
         originAirportCode: origin,
-        destinationAirportCode: destination,
+        destinationAirportCode: name,
         departureDate: parseDate(departureYearMonth, day),
       };
       getFlightPromises.push(smilesClient.get("/search", { params }));
@@ -74,9 +76,69 @@ const getFlights = async (parameters) => {
     ).filter((flight) => flight.price && flight.tax?.miles);
     return {
       origin,
-      destination,
+      destination: name,
       results: sortAndSlice(mappedFlightResults),
       departureMonth: departureYearMonth.substring(5),
+    };
+  } catch (error) {
+    console.log(
+      "Error while getting flights: ",
+      error.response?.data?.error || error.response?.data?.errorMessage
+    );
+    return {
+      statusError: error.response?.status,
+      error: error.response?.data?.errorMessage,
+    };
+  }
+};
+
+const getFlightsMultipleDestinations = async (parameters) => {
+  const { origin, destination, cabinType, adults } = parameters;
+
+  const { name, departureYearMonthDate } = destination;
+
+  try {
+    const getFlightPromises = [];
+    for (const destinationName of name) {
+      const params = {
+        adults: adults || "1",
+        cabinType: "all",
+        children: "0",
+        currencyCode: "ARS",
+        infants: "0",
+        isFlexibleDateChecked: "false",
+        tripType: "2",
+        forceCongener: "false",
+        r: "ar",
+        originAirportCode: origin,
+        destinationAirportCode: destinationName,
+        departureDate: departureYearMonthDate,
+      };
+      getFlightPromises.push(smilesClient.get("/search", { params }));
+    }
+    const flightResults = (await Promise.all(getFlightPromises)).flat();
+    const mappedFlightResults = (
+      await Promise.all(
+        flightResults.map(async (flightResult) => {
+          const { flight, price, fareUid } = getBestFlight(
+            flightResult.data?.requestedFlightSegmentList[0],
+            cabinType
+          );
+          return {
+            price: price.toString(),
+            stops: flight.stops?.toString(),
+            duration: flight.duration?.hours?.toString(),
+            airline: flight.airline?.name,
+            seats: flight.availableSeats?.toString(),
+            tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            destination: flight.arrival?.airport?.code,
+          };
+        })
+      )
+    ).filter((flight) => flight.price && flight.tax?.miles);
+    return {
+      origin,
+      results: sortAndSlice(mappedFlightResults),
     };
   } catch (error) {
     console.log(
@@ -115,4 +177,4 @@ const getTax = async (uid, fareuid) => {
   }
 };
 
-module.exports = { getFlights };
+module.exports = { getFlights, getFlightsMultipleDestinations };

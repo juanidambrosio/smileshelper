@@ -2,6 +2,13 @@ const TelegramBot = require("node-telegram-bot-api");
 const emoji = require("node-emoji");
 const FlightSearch = require("../models/FlightSearch");
 const { telegramApiToken } = require("../config/config");
+const dbOperations = require("../db/operations");
+const {
+  notFound,
+  telegramStart,
+  genericError,
+  searching,
+} = require("../config/constants");
 const {
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
@@ -9,14 +16,10 @@ const {
   generateFlightOutput,
   generateEmissionLink,
 } = require("../utils/parser");
-const { searchFlights } = require("../search");
 const {
-  notFound,
-  telegramStart,
-  genericError,
-  searching
-} = require("../config/constants");
-const dbOperations = require("../db/operations");
+  getFlights,
+  getFlightsMultipleDestinations,
+} = require("../clients/smilesClient");
 
 const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
@@ -32,7 +35,7 @@ const listen = async () => {
     const payload = generatePayloadMonthlySingleDestination(msg.text);
     bot.sendMessage(chatId, searching);
     try {
-      const flightList = await searchFlights(payload);
+      const flightList = await getFlights(payload);
       const bestFlights = flightList.results;
       if (flightList.error) {
         return bot.sendMessage(chatId, flightList.error);
@@ -95,8 +98,54 @@ const listen = async () => {
   bot.onText(/\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d/, async (msg) => {
     const chatId = msg.chat.id;
     const payload = generatePayloadMultipleDestinations(msg.text);
-    bot.sendMessage(chatId, searching);
-    bot.sendMessage(chatId, JSON.stringify(payload, null, 2));
+    try {
+      bot.sendMessage(chatId, searching);
+      const flightList = await getFlightsMultipleDestinations(payload);
+      const bestFlights = flightList.results;
+      if (flightList.error) {
+        return bot.sendMessage(chatId, flightList.error);
+      }
+      if (bestFlights.length === 0) {
+        return bot.sendMessage(chatId, notFound);
+      }
+      const response = bestFlights.reduce(
+        (previous, current) =>
+          previous.concat(
+            emoji.get("airplane") +
+              applySimpleMarkdown(current.destination, "[", "]") +
+              applySimpleMarkdown(
+                generateEmissionLink({
+                  ...payload,
+                  destination: { name: current.destination },
+                  departureDate:
+                    payload.destination.departureYearMonthDate + " 09:",
+                }),
+                "(",
+                ")"
+              ) +
+              ": " +
+              applySimpleMarkdown(
+                current.tax?.miles
+                  ? `${current.price} + ${current.tax?.miles}/${current.tax?.money}`
+                  : `${current.price}`,
+                "*"
+              ) +
+              generateFlightOutput(current) +
+              "\n"
+          ),
+        payload.origin +
+          " " +
+          payload.region +
+          " " +
+          payload.destination.departureYearMonthDate +
+          "\n"
+      );
+      console.log(msg.text);
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    } catch (error) {
+      console.log(error);
+      bot.sendMessage(chatId, genericError);
+    }
   });
 };
 

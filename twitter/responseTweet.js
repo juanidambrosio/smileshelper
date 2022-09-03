@@ -1,4 +1,4 @@
-const { searchFlights } = require("../search");
+const { getFlights } = require("../clients/smilesClient");
 const { twitterClient, ApiResponseError } = require("../config/config");
 const { incorrectFormat, notFound } = require("../config/constants");
 
@@ -13,7 +13,7 @@ module.exports.tweet = async (event) => {
         body: JSON.stringify({ message: incorrectFormat }, null, 2),
       };
     }
-    const flightList = await searchFlights(payload);
+    const flightList = await getFlights(payload);
     const bestFlights = flightList.results;
     if (flightList.error) {
       const response = flightList.error;
@@ -31,7 +31,6 @@ module.exports.tweet = async (event) => {
         body: JSON.stringify({ message: notFound }, null, 2),
       };
     }
-    const month = flightList.departureMonth.substring(5);
     const responseTweet = bestFlights.reduce((previous, current) => {
       const taxWord = current.tax?.miles
         ? ` + ${current.tax.miles}/${current.tax.money}`
@@ -39,7 +38,7 @@ module.exports.tweet = async (event) => {
       return previous.concat(
         current.departureDay +
           "/" +
-          month +
+          flightList.departureMonth +
           ": " +
           current.price +
           taxWord +

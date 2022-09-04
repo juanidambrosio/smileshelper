@@ -80,16 +80,16 @@ const generatePayloadMultipleDestinations = (text) => {
   const region = text.substring(4, text.indexOf(" ", 4)).toUpperCase();
   const startIndexAfterRegion = 4 + region.length + 1;
   const { adults, cabinType } = calculateIndex(
-    text.substring(startIndexAfterRegion + 11),
-    startIndexAfterRegion + 11
+    text.substring(startIndexAfterRegion + 8),
+    startIndexAfterRegion + 8
   );
   return {
     origin: text.substring(0, 3).toUpperCase(),
     destination: {
       name: regions[region],
-      departureYearMonthDate: text.substring(
+      departureYearMonth: text.substring(
         startIndexAfterRegion,
-        startIndexAfterRegion + 10
+        startIndexAfterRegion + 7
       ),
     },
     adults: adults ? text.substring(adults, adults + 1) : "",

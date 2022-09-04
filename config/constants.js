@@ -33,29 +33,17 @@ const NAMERICA = [
   "LAX",
   "MCO",
   "DFW",
-  "LAS",
   "HNL",
   "SFO",
 ];
 
-const SAMERICA = [
-  "SCL",
-  "LIM",
-  "BOG",
-  "BUE",
-  "COR",
-  "MVD",
-  "ASU",
-  "ROS",
-  "UIO",
-  "IGU",
-];
+const SAMERICA = ["SCL", "LIM", "BOG", "BUE", "MVD", "ASU", "UIO"];
 
 const BRASIL = ["RIO", "SAO", "FLN", "MCZ", "SSA", "REC", "NAT"];
 
-const CARIBE = ["CUN", "MEX", "PTY", "PUJ", "SJO", "AUA", "HAV", "CTG", "ADZ"];
+const CARIBE = ["CUN", "MEX", "PTY", "PUJ", "SJO", "AUA", "HAV", "CTG"];
 
-const ASIA = ["DXB", "BKK", "TLV", "TYO", "DOH", "SEL", "SIN", "MLE"];
+const ASIA = ["DXB", "BKK", "TLV", "TYO", "DOH", "SEL", "SIN", "MLE", "DPS"];
 
 const AFRICA = ["CAI", "SEZ", "CPT", "DAR", "ADD", "RBA"];
 

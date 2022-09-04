@@ -1,8 +1,8 @@
 const { mapCabinType } = require("./parser");
 
-const getBestFlight = (flightSegment, cabinType) => {
+const getBestFlight = (flightSegment = { flightList: [] }, cabinType) => {
   const mappedCabinType = mapCabinType(cabinType);
-  return flightSegment.flightList.reduce(
+  return flightSegment?.flightList.reduce(
     (previous, current) => {
       let currentMiles = Number.MAX_VALUE;
       if (mappedCabinType === "all" || current.cabin === mappedCabinType) {

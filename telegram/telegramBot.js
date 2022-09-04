@@ -95,13 +95,18 @@ const listen = async () => {
     }
   });
 
-  bot.onText(/\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d/, async (msg) => {
+  bot.onText(/\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d/, async (msg) => {
     const chatId = msg.chat.id;
     const payload = generatePayloadMultipleDestinations(msg.text);
     try {
       bot.sendMessage(chatId, searching);
       const flightList = await getFlightsMultipleDestinations(payload);
       const bestFlights = flightList.results;
+
+      if (!bestFlights) {
+        throw new Error();
+      }
+
       if (flightList.error) {
         return bot.sendMessage(chatId, flightList.error);
       }
@@ -112,13 +117,24 @@ const listen = async () => {
         (previous, current) =>
           previous.concat(
             emoji.get("airplane") +
-              applySimpleMarkdown(current.destination, "[", "]") +
+              applySimpleMarkdown(
+                current.destination +
+                  " " +
+                  current.departureDay +
+                  "/" +
+                  payload.destination.departureYearMonth.substring(5),
+                "[",
+                "]"
+              ) +
               applySimpleMarkdown(
                 generateEmissionLink({
                   ...payload,
                   destination: { name: current.destination },
                   departureDate:
-                    payload.destination.departureYearMonthDate + " 09:",
+                    payload.destination.departureYearMonth +
+                    "-" +
+                    current.departureDay +
+                    " 09:",
                 }),
                 "(",
                 ")"
@@ -137,7 +153,7 @@ const listen = async () => {
           " " +
           payload.region +
           " " +
-          payload.destination.departureYearMonthDate +
+          payload.destination.departureYearMonth +
           "\n"
       );
       console.log(msg.text);

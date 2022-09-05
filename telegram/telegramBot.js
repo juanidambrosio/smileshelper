@@ -8,6 +8,7 @@ const {
   telegramStart,
   genericError,
   searching,
+  regions,
 } = require("../config/constants");
 const {
   generatePayloadMonthlySingleDestination,
@@ -25,8 +26,19 @@ const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
-  bot.onText(/\/start/, async (msg) => {
-    bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" });
+  bot.onText(/\/start/, async (msg) =>
+    bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })
+  );
+
+  bot.onText(/\/regiones/, async (msg) => {
+    const airports = Object.entries(regions).reduce(
+      (phrase, current) =>
+        phrase.concat(
+          applySimpleMarkdown(current[0], "__") + ": " + current[1] + "\n\n"
+        ),
+      ""
+    );
+    bot.sendMessage(msg.chat.id, airports, { parse_mode: "MarkdownV2" });
   });
 
   bot.onText(/\w{3}\s\w{3}\s\d{4}(-|\/)(0|1)\d/, async (msg) => {

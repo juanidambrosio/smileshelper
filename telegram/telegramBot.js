@@ -9,6 +9,7 @@ const {
   genericError,
   searching,
   regions,
+  retry,
 } = require("../config/constants");
 const {
   generatePayloadMonthlySingleDestination,
@@ -107,77 +108,86 @@ const listen = async () => {
     }
   });
 
-  bot.onText(/\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d/, async (msg) => {
-    const chatId = msg.chat.id;
-    const payload = generatePayloadMultipleDestinations(msg.text);
-    try {
-      bot.sendMessage(chatId, searching);
-      const flightList = await getFlightsMultipleDestinations(payload);
-      const bestFlights = flightList.results;
+  bot.onText(
+    /\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d(\s(\d|\w{3})){0,2}$/,
+    async (msg) => await searchRegionalQuery(bot, msg, false)
+  );
 
-      if (!bestFlights) {
-        throw new Error();
-      }
-
-      if (flightList.error) {
-        return bot.sendMessage(chatId, flightList.error);
-      }
-      if (bestFlights.length === 0) {
-        return bot.sendMessage(chatId, notFound);
-      }
-      const response = bestFlights.reduce(
-        (previous, current) =>
-          previous.concat(
-            emoji.get("airplane") +
-              applySimpleMarkdown(
-                current.destination +
-                  " " +
-                  current.departureDay +
-                  "/" +
-                  payload.destination.departureYearMonth.substring(5),
-                "[",
-                "]"
-              ) +
-              applySimpleMarkdown(
-                generateEmissionLink({
-                  ...payload,
-                  destination: { name: current.destination },
-                  departureDate:
-                    payload.destination.departureYearMonth +
-                    "-" +
-                    current.departureDay +
-                    " 09:",
-                }),
-                "(",
-                ")"
-              ) +
-              ": " +
-              applySimpleMarkdown(
-                current.tax?.miles
-                  ? `${current.price} + ${current.tax?.miles}/${current.tax?.money}`
-                  : `${current.price}`,
-                "*"
-              ) +
-              generateFlightOutput(current) +
-              "\n"
-          ),
-        payload.origin +
-          " " +
-          payload.region +
-          " " +
-          payload.destination.departureYearMonth +
-          "\n"
-      );
-      console.log(msg.text);
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    } catch (error) {
-      console.log(error);
-      bot.sendMessage(chatId, genericError);
-    }
-  });
+  bot.onText(
+    /\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d(\s(\d|\w{3})){0,2}$/,
+    async (msg) => await searchRegionalQuery(bot, msg, true)
+  );
 };
 
 listen();
+
+const searchRegionalQuery = async (bot, msg, fixedDay, attempt = 1) => {
+  const chatId = msg.chat.id;
+  const payload = generatePayloadMultipleDestinations(msg.text, fixedDay);
+  try {
+    bot.sendMessage(chatId, searching);
+    const flightList = await getFlightsMultipleDestinations(payload, fixedDay);
+    const bestFlights = flightList.results;
+
+    if (!bestFlights) {
+      // if (attempt <= 3) {
+      //   bot.sendMessage(chatId, retry(attempt));
+      //   await searchRegionalQuery(bot, msg, fixedDay, attempt + 1);
+      //   return;
+      // } else {
+      //   throw new Error();
+      // }
+      throw new Error();
+    }
+
+    if (flightList.error) {
+      return bot.sendMessage(chatId, flightList.error);
+    }
+    if (bestFlights.length === 0) {
+      return bot.sendMessage(chatId, notFound);
+    }
+
+    const response = bestFlights.reduce((previous, current) => {
+      const dateToShow = fixedDay
+        ? ""
+        : " " +
+          current.departureDay +
+          "/" +
+          payload.destination.departureDate.substring(5, 7);
+      return previous.concat(
+        emoji.get("airplane") +
+          applySimpleMarkdown(current.destination + dateToShow, "[", "]") +
+          applySimpleMarkdown(
+            generateEmissionLink({
+              ...payload,
+              destination: { name: current.destination },
+              departureDate:
+                payload.destination.departureDate +
+                "-" +
+                current.departureDay +
+                " 09:",
+            }),
+            "(",
+            ")"
+          ) +
+          ": " +
+          applySimpleMarkdown(
+            current.tax?.miles
+              ? `${current.price} + ${current.tax?.miles}/${current.tax?.money}`
+              : `${current.price}`,
+            "*"
+          ) +
+          generateFlightOutput(current) +
+          "\n"
+      );
+    }, payload.origin + " " + payload.region + " " + payload.destination.departureDate + "\n");
+    console.log(msg.text);
+    bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+  } catch (error) {
+    console.log(error);
+    bot.sendMessage(chatId, genericError);
+  }
+};
 
 const createFlightSearch = async (data, createOne) => {
   const { id, origin, destination, departureYearMonth, price } = data;

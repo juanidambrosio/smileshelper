@@ -93,17 +93,17 @@ const getFlights = async (parameters) => {
   }
 };
 
-const getFlightsMultipleDestinations = async (parameters) => {
+const getFlightsMultipleDestinations = async (parameters, fixedDay) => {
   const { origin, destination, cabinType, adults } = parameters;
 
-  const { name, departureYearMonth } = destination;
-  const lastDayOfMonthDeparture = lastDays.get(departureYearMonth.substring(5));
+  const { name, departureDate } = destination;
+  const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   const getFlightPromises = [];
   try {
     for (const destinationName of name) {
       for (
-        let day = calculateFirstDay(departureYearMonth);
-        day <= lastDayOfMonthDeparture;
+        let day = fixedDay ? 0 : calculateFirstDay(departureDate);
+        day < (fixedDay ? 1 : lastDayOfMonthDeparture);
         day++
       ) {
         const params = {
@@ -118,7 +118,9 @@ const getFlightsMultipleDestinations = async (parameters) => {
           r: "ar",
           originAirportCode: origin,
           destinationAirportCode: destinationName,
-          departureDate: parseDate(departureYearMonth, day),
+          departureDate: fixedDay
+            ? departureDate
+            : parseDate(departureDate, day),
         };
         getFlightPromises.push(smilesClient.get("/search", { params }));
       }

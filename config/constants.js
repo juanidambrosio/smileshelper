@@ -5,7 +5,7 @@ const badResponse = "El formato es inválido.";
 const dailyTweet =
   "Te ayudamos a encontrar las 10 mejores ofertas en millas! Respondé este tweet con el formato [ORIGEN] [DESTINO] [AÑO-MES]. Ejemplo EZE MAD 2023-05.";
 
-const telegramStart = `Te ayudamos a encontrar las mejores ofertas en millas \\! El bot soporta los siguientes ejemplos: \n\n __Búsqueda simple__: EZE MAD 2023\\-05 \n\n __Búsqueda por tipo de cabina__: EZE MAD 2023\\-05 EJE , EZE MAD 2023\\-05 ECO, EZE MAD 2023\\-05 PEC \\(premium economy\\)\n\n __Búsqueda por cantidad de adultos__: EZE MAD 2023\\-05 3\n\n __Búsqueda por región__: EZE EUROPA 2023\\-05\n\n __Regiones disponibles__: SAMERICA, NAMERICA, BRASIL, CARIBE, EUROPA, AFRICA, ASIA, OCEANIA\n\n`;
+const telegramStart = `Te ayudamos a encontrar las mejores ofertas en millas \\! El bot soporta los siguientes ejemplos: \n\n __Búsqueda simple__: EZE MAD 2023\\-05 \n\n __Búsqueda por tipo de cabina__: EZE MAD 2023\\-05 EJE , EZE MAD 2023\\-05 ECO, EZE MAD 2023\\-05 PEC \\(premium economy\\)\n\n __Búsqueda por cantidad de adultos__: EZE MAD 2023\\-05 3\n\n __Búsqueda por región__: EZE EUROPA 2023\\-05\nEZE EUROPA 2023\\-05\\-01\n\n __Regiones disponibles__: SAMERICA, NAMERICA, BRASIL, CARIBE, EUROPA, AFRICA, ASIA, OCEANIA\n\n`;
 
 const incorrectFormat =
   "El formato indicado es incorrecto. Intentá de nuevo respondiendo con [ORIGEN] [DESTINO] [AÑO]-[MES]";
@@ -14,6 +14,9 @@ const notFound = "No se encontraron resultados para este tramo.";
 
 const genericError =
   "Hubo un problema en el servidor de Smiles para responder la consulta. Intenta nuevamente.";
+
+const retry = (attempt) =>
+  `Error al consultar en smiles. Reintento numero ${attempt}/3`;
 
 const searching = emoji.get("mag_right") + " Buscando las mejores ofertas...";
 
@@ -67,6 +70,7 @@ module.exports = {
   incorrectFormat,
   notFound,
   genericError,
+  retry,
   searching,
   regions,
   SMILES_URL,

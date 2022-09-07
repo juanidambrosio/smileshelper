@@ -79,7 +79,7 @@ const generatePayloadMonthlySingleDestination = (text) => {
 const generatePayloadMultipleDestinations = (text, fixedDay) => {
   const offset = fixedDay ? 10 : 7;
   const region = text.substring(4, text.indexOf(" ", 4)).toUpperCase();
-  const startIndexAfterRegion = 4 + region.length + 1;
+  const startIndexAfterRegion = region.length + 5;
   const { adults, cabinType } = calculateIndex(
     text.substring(startIndexAfterRegion + offset + 1),
     startIndexAfterRegion + offset + 1
@@ -88,6 +88,31 @@ const generatePayloadMultipleDestinations = (text, fixedDay) => {
     origin: text.substring(0, 3).toUpperCase(),
     destination: {
       name: regions[region],
+      departureDate: text.substring(
+        startIndexAfterRegion,
+        startIndexAfterRegion + offset
+      ),
+    },
+    adults: adults ? text.substring(adults, adults + 1) : "",
+    cabinType: cabinType
+      ? text.substring(cabinType, cabinType + 3).toUpperCase()
+      : "",
+    region,
+  };
+};
+
+const generatePayloadMultipleOrigins = (text, fixedDay) => {
+  const offset = fixedDay ? 10 : 7;
+  const region = text.substring(0, text.indexOf(" ")).toUpperCase();
+  const startIndexAfterRegion = region.length + 5;
+  const { adults, cabinType } = calculateIndex(
+    text.substring(startIndexAfterRegion + offset + 1),
+    startIndexAfterRegion + offset + 1
+  );
+  return {
+    origin: regions[region],
+    destination: {
+      name: text.substring(region.length + 1, region.length + 4).toUpperCase(),
       departureDate: text.substring(
         startIndexAfterRegion,
         startIndexAfterRegion + offset
@@ -110,4 +135,5 @@ module.exports = {
   applySimpleMarkdown,
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
+  generatePayloadMultipleOrigins
 };

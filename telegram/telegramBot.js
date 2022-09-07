@@ -14,14 +14,23 @@ const {
 const {
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
+  generatePayloadMultipleOrigins,
   applySimpleMarkdown,
   generateFlightOutput,
   generateEmissionLink,
 } = require("../utils/parser");
 const {
   getFlights,
-  getFlightsMultipleDestinations,
+  getFlightsMultipleCities,
 } = require("../clients/smilesClient");
+
+const {
+  regexSingleCities,
+  regexMultipleDestinationMonthly,
+  regexMultipleDestinationFixedDay,
+  regexMultipleOriginMonthly,
+  regexMultipleOriginFixedDay,
+} = require("../utils/regex");
 
 const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
@@ -42,7 +51,7 @@ const listen = async () => {
     bot.sendMessage(msg.chat.id, airports, { parse_mode: "MarkdownV2" });
   });
 
-  bot.onText(/\w{3}\s\w{3}\s\d{4}(-|\/)(0|1)\d/, async (msg) => {
+  bot.onText(regexSingleCities, async (msg) => {
     const chatId = msg.chat.id;
 
     const payload = generatePayloadMonthlySingleDestination(msg.text);
@@ -109,24 +118,46 @@ const listen = async () => {
   });
 
   bot.onText(
-    /\w{3}\s\w{4,9}\s\d{4}(-|\/)[0-1]\d(\s(\d|\w{3})){0,2}$/,
-    async (msg) => await searchRegionalQuery(bot, msg, false)
+    regexMultipleDestinationMonthly,
+    async (msg) => await searchRegionalQuery(bot, msg, false, false)
   );
 
   bot.onText(
-    /\w{3}\s\w{4,9}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d(\s(\d|\w{3})){0,2}$/,
-    async (msg) => await searchRegionalQuery(bot, msg, true)
+    regexMultipleDestinationFixedDay,
+    async (msg) => await searchRegionalQuery(bot, msg, true, false)
+  );
+
+  bot.onText(
+    regexMultipleOriginMonthly,
+    async (msg) => await searchRegionalQuery(bot, msg, false, true)
+  );
+
+  bot.onText(
+    regexMultipleOriginFixedDay,
+    async (msg) => await searchRegionalQuery(bot, msg, true, true)
   );
 };
 
 listen();
 
-const searchRegionalQuery = async (bot, msg, fixedDay, attempt = 1) => {
+const searchRegionalQuery = async (
+  bot,
+  msg,
+  fixedDay,
+  isMultipleOrigin,
+  attempt = 1
+) => {
   const chatId = msg.chat.id;
-  const payload = generatePayloadMultipleDestinations(msg.text, fixedDay);
+  const payload = isMultipleOrigin
+    ? generatePayloadMultipleOrigins(msg.text, fixedDay)
+    : generatePayloadMultipleDestinations(msg.text, fixedDay);
   try {
     bot.sendMessage(chatId, searching);
-    const flightList = await getFlightsMultipleDestinations(payload, fixedDay);
+    const flightList = await getFlightsMultipleCities(
+      payload,
+      fixedDay,
+      isMultipleOrigin
+    );
     const bestFlights = flightList.results;
 
     if (!bestFlights) {
@@ -147,6 +178,10 @@ const searchRegionalQuery = async (bot, msg, fixedDay, attempt = 1) => {
       return bot.sendMessage(chatId, notFound);
     }
 
+    const flightTitle = isMultipleOrigin
+      ? `${payload.region} ${payload.destination.name} ${payload.destination.departureDate}\n`
+      : `${payload.origin} ${payload.region} ${payload.destination.departureDate}\n`;
+
     const response = bestFlights.reduce((previous, current) => {
       const dateToShow = fixedDay
         ? ""
@@ -156,11 +191,19 @@ const searchRegionalQuery = async (bot, msg, fixedDay, attempt = 1) => {
           payload.destination.departureDate.substring(5, 7);
       return previous.concat(
         emoji.get("airplane") +
-          applySimpleMarkdown(current.destination + dateToShow, "[", "]") +
+          applySimpleMarkdown(
+            (isMultipleOrigin ? current.origin : current.destination) +
+              dateToShow,
+            "[",
+            "]"
+          ) +
           applySimpleMarkdown(
             generateEmissionLink({
               ...payload,
-              destination: { name: current.destination },
+              origin: isMultipleOrigin ? current.origin : payload.origin,
+              destination: isMultipleOrigin
+                ? payload.destination
+                : { name: current.destination },
               departureDate:
                 payload.destination.departureDate +
                 "-" +
@@ -180,7 +223,7 @@ const searchRegionalQuery = async (bot, msg, fixedDay, attempt = 1) => {
           generateFlightOutput(current) +
           "\n"
       );
-    }, payload.origin + " " + payload.region + " " + payload.destination.departureDate + "\n");
+    }, flightTitle);
     console.log(msg.text);
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
   } catch (error) {

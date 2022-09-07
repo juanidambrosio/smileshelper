@@ -67,7 +67,7 @@ const generatePayloadMonthlySingleDestination = (text) => {
     origin: text.substring(0, 3).toUpperCase(),
     destination: {
       name: text.substring(4, 7).toUpperCase(),
-      departureYearMonth: text.substring(8, 15),
+      departureDate: text.substring(8, 15),
     },
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType

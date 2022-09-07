@@ -93,14 +93,19 @@ const getFlights = async (parameters) => {
   }
 };
 
-const getFlightsMultipleDestinations = async (parameters, fixedDay) => {
+const getFlightsMultipleCities = async (
+  parameters,
+  fixedDay,
+  isMultipleOrigin
+) => {
   const { origin, destination, cabinType, adults } = parameters;
 
   const { name, departureDate } = destination;
+  const multipleCity = isMultipleOrigin ? origin : name;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   const getFlightPromises = [];
   try {
-    for (const destinationName of name) {
+    for (const city of multipleCity) {
       for (
         let day = fixedDay ? 0 : calculateFirstDay(departureDate);
         day < (fixedDay ? 1 : lastDayOfMonthDeparture);
@@ -116,8 +121,8 @@ const getFlightsMultipleDestinations = async (parameters, fixedDay) => {
           tripType: "2",
           forceCongener: "false",
           r: "ar",
-          originAirportCode: origin,
-          destinationAirportCode: destinationName,
+          originAirportCode: isMultipleOrigin ? city : origin,
+          destinationAirportCode: isMultipleOrigin ? name : city,
           departureDate: fixedDay
             ? departureDate
             : parseDate(departureDate, day),
@@ -142,12 +147,12 @@ const getFlightsMultipleDestinations = async (parameters, fixedDay) => {
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
             destination: flight.arrival?.airport?.code,
+            origin: flight.departure?.airport?.code,
           };
         })
       )
     ).filter((flight) => validFlight(flight));
     return {
-      origin,
       results: sortAndSlice(mappedFlightResults.flat()),
     };
   } catch (error) {
@@ -195,4 +200,4 @@ const validFlight = (flight) =>
   flight.price !== Number.MAX_VALUE.toString() &&
   flight.tax?.miles;
 
-module.exports = { getFlights, getFlightsMultipleDestinations };
+module.exports = { getFlights, getFlightsMultipleCities };

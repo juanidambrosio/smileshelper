@@ -69,7 +69,7 @@ const listen = async () => {
                 generateEmissionLink({
                   ...payload,
                   departureDate:
-                    payload.destination.departureYearMonth +
+                    payload.destination.departureDate +
                     "-" +
                     current.departureDay +
                     " 09:",
@@ -97,7 +97,7 @@ const listen = async () => {
           id: msg.from.username || msg.from.id.toString(),
           origin: payload.origin,
           destination: payload.destination.name,
-          departureYearMonth: payload.destination.departureYearMonth,
+          departureDate: payload.destination.departureDate,
           price: bestFlights[0].price,
         },
         createOne
@@ -109,12 +109,12 @@ const listen = async () => {
   });
 
   bot.onText(
-    /\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d(\s(\d|\w{3})){0,2}$/,
+    /\w{3}\s\w{4,9}\s\d{4}(-|\/)[0-1]\d(\s(\d|\w{3})){0,2}$/,
     async (msg) => await searchRegionalQuery(bot, msg, false)
   );
 
   bot.onText(
-    /\w{3}\s\w{4,8}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d(\s(\d|\w{3})){0,2}$/,
+    /\w{3}\s\w{4,9}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d(\s(\d|\w{3})){0,2}$/,
     async (msg) => await searchRegionalQuery(bot, msg, true)
   );
 };
@@ -190,7 +190,7 @@ const searchRegionalQuery = async (bot, msg, fixedDay, attempt = 1) => {
 };
 
 const createFlightSearch = async (data, createOne) => {
-  const { id, origin, destination, departureYearMonth, price } = data;
+  const { id, origin, destination, departureDate, price } = data;
 
   const flightSearch = new FlightSearch(
     id,
@@ -198,8 +198,8 @@ const createFlightSearch = async (data, createOne) => {
     new Date(),
     origin,
     destination,
-    departureYearMonth.substring(0, 4),
-    departureYearMonth.substring(5),
+    departureDate.substring(0, 4),
+    departureDate.substring(5, 7),
     price
   );
   await createOne(flightSearch);

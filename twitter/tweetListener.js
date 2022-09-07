@@ -4,7 +4,10 @@ const { default: axios } = require("axios");
 const { responseTweetUrl } = require("../config/config");
 const dbOperations = require("../db/operations");
 const dotenv = require("dotenv").config();
-const { generatePayloadMonthlySingleDestination } = require("../utils/parser");
+const {
+  generatePayloadMonthlySingleDestination,
+  generatePayloadMultipleDestinations,
+} = require("../utils/parser");
 const { TWITTER_OWN_ID } = require("../config/constants");
 
 const lambdaClient = axios.create({
@@ -29,21 +32,30 @@ const listen = async () => {
 
     const regex = new RegExp(/\w{3}\s\w{3}\s\d{4}(-|\/)(0|1)\d/);
 
+    const regexRegion = new RegExp(
+      /\w{3}\s\w{4,9}\s\d{4}(-|\/)[0-1]\d(\s(\d|\w{3})){0,2}$/
+    );
+
     stream.on(ETwitterStreamEvent.Data, async (tweet) => {
-      if (
-        tweet.data.author_id === TWITTER_OWN_ID ||
-        ![29, 31, 33, 35].includes(tweet.data.text.length)
-      ) {
+      if (tweet.data.author_id === TWITTER_OWN_ID) {
         return;
       }
       try {
         const { id, text } = tweet.data;
         const trimmedText = text.replace("@smileshelper", "").trimStart();
+        if (!regex.test(trimmedText) && !regexRegion.test(trimmedText)) {
+          return;
+        }
         console.log(trimmedText);
         let payload = undefined;
         if (regex.test(trimmedText)) {
           payload = generatePayloadMonthlySingleDestination(trimmedText);
         }
+
+        if (regexRegion.test(trimmedText)) {
+          payload = generatePayloadMultipleDestinations(trimmedText);
+        }
+
         const { data } = await lambdaClient.post("/response", {
           id,
           payload,
@@ -54,9 +66,9 @@ const listen = async () => {
           "twitter",
           new Date(),
           payload.origin,
-          payload.destination.name,
-          payload.destination.departureYearMonth.substring(0, 4),
-          payload.destination.departureYearMonth.substring(5),
+          payload.region || payload.destination.name,
+          payload.destination.departureDate.substring(0, 4),
+          payload.destination.departureDate.substring(5, 7),
           data.bestPrice
         );
         await createOne(flightSearch);

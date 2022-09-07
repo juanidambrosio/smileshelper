@@ -29,13 +29,13 @@ const smilesTaxClient = axios.create({
 const getFlights = async (parameters) => {
   const { origin, destination, cabinType, adults } = parameters;
 
-  const { name, departureYearMonth } = destination;
+  const { name, departureDate } = destination;
 
-  const lastDayOfMonthDeparture = lastDays.get(departureYearMonth.substring(5));
+  const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   try {
     const getFlightPromises = [];
     for (
-      let day = calculateFirstDay(departureYearMonth);
+      let day = calculateFirstDay(departureDate);
       day <= lastDayOfMonthDeparture;
       day++
     ) {
@@ -51,7 +51,7 @@ const getFlights = async (parameters) => {
         r: "ar",
         originAirportCode: origin,
         destinationAirportCode: name,
-        departureDate: parseDate(departureYearMonth, day),
+        departureDate: parseDate(departureDate, day),
       };
       getFlightPromises.push(smilesClient.get("/search", { params }));
     }
@@ -79,7 +79,7 @@ const getFlights = async (parameters) => {
       origin,
       destination: name,
       results: sortAndSlice(mappedFlightResults),
-      departureMonth: departureYearMonth.substring(5),
+      departureMonth: departureDate.substring(5, 7),
     };
   } catch (error) {
     console.log(

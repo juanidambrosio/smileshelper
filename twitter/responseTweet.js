@@ -1,4 +1,7 @@
-const { getFlights } = require("../clients/smilesClient");
+const {
+  getFlights,
+  getFlightsMultipleDestinations,
+} = require("../clients/smilesClient");
 const { twitterClient, ApiResponseError } = require("../config/config");
 const { incorrectFormat, notFound } = require("../config/constants");
 
@@ -13,7 +16,9 @@ module.exports.tweet = async (event) => {
         body: JSON.stringify({ message: incorrectFormat }, null, 2),
       };
     }
-    const flightList = await getFlights(payload);
+    const flightList = payload.region
+      ? await getFlightsMultipleDestinations(payload)
+      : await getFlights(payload);
     const bestFlights = flightList.results;
     if (flightList.error) {
       const response = flightList.error;
@@ -35,16 +40,19 @@ module.exports.tweet = async (event) => {
       const taxWord = current.tax?.miles
         ? ` + ${current.tax.miles}/${current.tax.money}`
         : "";
-      return previous.concat(
-        current.departureDay +
-          "/" +
-          flightList.departureMonth +
-          ": " +
-          current.price +
-          taxWord +
-          "\n"
-      );
-    }, payload.origin + " " + payload.destination.name + "\n");
+      return previous.length <= 250
+        ? previous.concat(
+            (current.destination ? current.destination + " " : "") +
+              current.departureDay +
+              "/" +
+              payload.destination.departureDate.substring(5, 7) +
+              ": " +
+              current.price +
+              taxWord +
+              "\n"
+          )
+        : previous;
+    }, payload.origin + " " + (payload.region || payload.destination.name) + "\n");
 
     await twitterClient.reply(responseTweet, id);
     //console.log(responseTweet);

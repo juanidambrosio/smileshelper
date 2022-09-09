@@ -7,8 +7,15 @@ const dotenv = require("dotenv").config();
 const {
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
+  generatePayloadMultipleOrigins,
 } = require("../utils/parser");
 const { TWITTER_OWN_ID } = require("../config/constants");
+
+const {
+  regexSingleCities,
+  regexMultipleDestinationMonthly,
+  regexMultipleOriginMonthly,
+} = require("../utils/regex");
 
 const lambdaClient = axios.create({
   baseURL: responseTweetUrl,
@@ -30,11 +37,11 @@ const listen = async () => {
     stream.keepAliveTimeoutMs = Infinity;
     stream.autoReconnect = true;
 
-    const regex = new RegExp(/\w{3}\s\w{3}\s\d{4}(-|\/)(0|1)\d/);
+    const regex = new RegExp(regexSingleCities);
 
-    const regexRegion = new RegExp(
-      /\w{3}\s\w{4,9}\s\d{4}(-|\/)[0-1]\d(\s(\d|\w{3})){0,2}$/
-    );
+    const regexRegionDestination = new RegExp(regexMultipleDestinationMonthly);
+
+    const regexRegionOrigin = new RegExp(regexMultipleOriginMonthly);
 
     stream.on(ETwitterStreamEvent.Data, async (tweet) => {
       if (tweet.data.author_id === TWITTER_OWN_ID) {
@@ -43,7 +50,11 @@ const listen = async () => {
       try {
         const { id, text } = tweet.data;
         const trimmedText = text.replace("@smileshelper", "").trimStart();
-        if (!regex.test(trimmedText) && !regexRegion.test(trimmedText)) {
+        if (
+          !regex.test(trimmedText) &&
+          !regexRegionDestination.test(trimmedText) &&
+          !regexMultipleOriginMonthly.test(trimmedText)
+        ) {
           return;
         }
         console.log(trimmedText);
@@ -52,8 +63,12 @@ const listen = async () => {
           payload = generatePayloadMonthlySingleDestination(trimmedText);
         }
 
-        if (regexRegion.test(trimmedText)) {
+        if (regexRegionDestination.test(trimmedText)) {
           payload = generatePayloadMultipleDestinations(trimmedText);
+        }
+
+        if (regexRegionOrigin.test(trimmedText)) {
+          payload = generatePayloadMultipleOrigins(trimmedText);
         }
 
         const { data } = await lambdaClient.post("/response", {
@@ -65,7 +80,7 @@ const listen = async () => {
           tweet.data.author_id,
           "twitter",
           new Date(),
-          payload.origin,
+          payload.region || payload.origin,
           payload.region || payload.destination.name,
           payload.destination.departureDate.substring(0, 4),
           payload.destination.departureDate.substring(5, 7),

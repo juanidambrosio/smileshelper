@@ -186,6 +186,7 @@ const getTax = async (uid, fareuid) => {
 
     return {
       miles: `${Math.floor(data?.totals?.totalBoardingTax?.miles / 1000)}K`,
+      milesNumber: Math.floor(data?.totals?.totalBoardingTax?.miles / 1000),
       money: `$${Math.floor(
         data?.totals?.totalBoardingTax?.money / 1000
       ).toString()}K`,

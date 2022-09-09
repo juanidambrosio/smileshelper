@@ -1,6 +1,6 @@
 const {
   getFlights,
-  getFlightsMultipleDestinations,
+  getFlightsMultipleCities,
 } = require("../clients/smilesClient");
 const { twitterClient, ApiResponseError } = require("../config/config");
 const { incorrectFormat, notFound } = require("../config/constants");
@@ -16,8 +16,9 @@ module.exports.tweet = async (event) => {
         body: JSON.stringify({ message: incorrectFormat }, null, 2),
       };
     }
+    const isMultipleOrigin = Array.isArray(payload.origin) ? true : false;
     const flightList = payload.region
-      ? await getFlightsMultipleDestinations(payload)
+      ? await getFlightsMultipleCities(payload, false, isMultipleOrigin)
       : await getFlights(payload);
     const bestFlights = flightList.results;
     if (flightList.error) {
@@ -36,13 +37,21 @@ module.exports.tweet = async (event) => {
         body: JSON.stringify({ message: notFound }, null, 2),
       };
     }
+
+    const flightTitle = isMultipleOrigin
+      ? `${payload.region || payload.origin} ${payload.destination.name}\n`
+      : `${payload.origin} ${payload.region || payload.destination.name}\n`;
     const responseTweet = bestFlights.reduce((previous, current) => {
       const taxWord = current.tax?.miles
         ? ` + ${current.tax.miles}/${current.tax.money}`
         : "";
       return previous.length <= 250
         ? previous.concat(
-            (current.destination ? current.destination + " " : "") +
+            (!payload.region
+              ? ""
+              : isMultipleOrigin
+              ? current.origin + " "
+              : current.destination + " ") +
               current.departureDay +
               "/" +
               payload.destination.departureDate.substring(5, 7) +
@@ -52,7 +61,7 @@ module.exports.tweet = async (event) => {
               "\n"
           )
         : previous;
-    }, payload.origin + " " + (payload.region || payload.destination.name) + "\n");
+    }, flightTitle);
 
     await twitterClient.reply(responseTweet, id);
     //console.log(responseTweet);

@@ -10,11 +10,14 @@ const {
   searching,
   regions,
   retry,
+  cafecito,
+  links,
 } = require("../config/constants");
 const {
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,
+  generatePayloadRoundTrip,
   applySimpleMarkdown,
   generateFlightOutput,
   generateEmissionLink,
@@ -30,6 +33,7 @@ const {
   regexMultipleDestinationFixedDay,
   regexMultipleOriginMonthly,
   regexMultipleOriginFixedDay,
+  regexRoundTrip,
 } = require("../utils/regex");
 
 const listen = async () => {
@@ -50,6 +54,14 @@ const listen = async () => {
     );
     bot.sendMessage(msg.chat.id, airports, { parse_mode: "MarkdownV2" });
   });
+
+  bot.onText(/\/cafecito/, async (msg) =>
+    bot.sendMessage(msg.chat.id, cafecito, { parse_mode: "MarkdownV2" })
+  );
+
+  bot.onText(/\/links/, async (msg) =>
+    bot.sendMessage(msg.chat.id, links, { parse_mode: "MarkdownV2" })
+  );
 
   bot.onText(regexSingleCities, async (msg) => {
     const chatId = msg.chat.id;
@@ -136,6 +148,12 @@ const listen = async () => {
     regexMultipleOriginFixedDay,
     async (msg) => await searchRegionalQuery(bot, msg, true, true)
   );
+
+  bot.onText(regexRoundTrip, async (msg) => {
+    const chatId = msg.chat.id;
+    const payload = generatePayloadRoundTrip(msg.text);
+    bot.sendMessage(chatId, JSON.stringify(payload, null, 2));
+  });
 };
 
 listen();

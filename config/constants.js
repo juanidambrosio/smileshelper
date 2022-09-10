@@ -5,7 +5,7 @@ const badResponse = "El formato es inválido.";
 const dailyTweet =
   "Te ayudamos a encontrar las 10 mejores ofertas en millas! Respondé este tweet con el formato [ORIGEN] [DESTINO] [AÑO-MES]. Ejemplo EZE MAD 2023-05.";
 
-const telegramStart = `Te ayudamos a encontrar las mejores ofertas en millas \\! El bot soporta los siguientes ejemplos: \n\n __Búsqueda simple__: EZE MAD 2023\\-05 \n\n __Búsqueda por tipo de cabina__: EZE MAD 2023\\-05 EJE , EZE MAD 2023\\-05 ECO, EZE MAD 2023\\-05 PEC \\(premium economy\\)\n\n __Búsqueda por cantidad de adultos__: EZE MAD 2023\\-05 3\n\n __Búsqueda por región__: EZE EUROPA 2023\\-05\nEZE EUROPA 2023\\-05\\-01`;
+const telegramStart = `Te ayudamos a encontrar las mejores ofertas en millas \\! El bot soporta los siguientes ejemplos: \n\n __Búsqueda simple__: EZE MAD 2023\\-05 \n\n __Búsqueda por tipo de cabina__: EZE MAD 2023\\-05 EJE , EZE MAD 2023\\-05 ECO, EZE MAD 2023\\-05 PEC \\(premium economy\\)\n\n __Búsqueda por cantidad de adultos__: EZE MAD 2023\\-05 3\n\n __Búsqueda por región__: EZE EUROPA 2023\\-05\nEZE EUROPA 2023\\-05\\-01\nEUROPA EZE 2023\\-05\\-01\nEUROPA EZE 2023\\-05\\-01`;
 
 const incorrectFormat =
   "El formato indicado es incorrecto. Intentá de nuevo respondiendo con [ORIGEN] [DESTINO] [AÑO]-[MES]";
@@ -19,6 +19,10 @@ const retry = (attempt) =>
   `Error al consultar en smiles. Reintento numero ${attempt}/3`;
 
 const searching = emoji.get("mag_right") + " Buscando las mejores ofertas...";
+
+const cafecito = `Si te ayudé a encontrar tu vuelo ideal y te gustaría contribuir al proyecto de Smiles Helper, podés donar en este link de [Cafecito](https://cafecito.app/juandambrosio)\\. Muchas gracias\\!`;
+
+const links = `[Grupo de Telegram sobre alertas y consultas sobre Smiles](https://t.me/+FiKom9f1944xYzIx)\\.`;
 
 const SMILES_URL = "https://api-air-flightsearch-prd.smiles.com.br/v1/airlines";
 const TWITTER_OWN_ID = "1529767809105920000";
@@ -93,6 +97,8 @@ module.exports = {
   retry,
   searching,
   regions,
+  cafecito,
+  links,
   SMILES_URL,
   TWITTER_OWN_ID,
   SMILES_EMISSION_URL,

@@ -2,7 +2,9 @@ const emoji = require("node-emoji");
 const { SMILES_EMISSION_URL, regions } = require("../config/constants");
 
 const calculateIndex = (parameters, indexStart) => {
-  if (parameters.length) {
+  const regex = /^\d$|^(EJE|ECO|PEC)$|^\d (EJE|ECO|PEC)$|^(EJE|ECO|PEC) \d$/;
+
+  if (regex.test(parameters?.toUpperCase())) {
     switch (parameters.length) {
       case 5:
         return !isNaN(parameters[0])
@@ -20,7 +22,7 @@ const calculateIndex = (parameters, indexStart) => {
         return { adults: indexStart };
     }
   }
-  return { adults: indexStart, cabinType: indexStart };
+  return { adults: undefined, cabinType: undefined };
 };
 
 const generateFlightOutput = (flight) =>
@@ -126,6 +128,63 @@ const generatePayloadMultipleOrigins = (text, fixedDay) => {
   };
 };
 
+const generatePayloadRoundTrip = (text) => {
+  // Get offset of coming date to know whether they exist options or not
+  const offsetComing = text.indexOf("202", 19);
+  const { adults: adultsGoing, cabinType: cabinTypeGoing } = calculateIndex(
+    text.substring(19, offsetComing - 1),
+    19
+  );
+
+  const minDaysStart = text.indexOf("m", offsetComing + 10) + 1;
+  const minDaysEnd =
+    minDaysStart !== 0 ? text.indexOf(" ", minDaysStart) : undefined;
+
+  const maxDaysStart = text.indexOf("M", offsetComing + 10) + 1;
+  const spaceExistsAfterMaxDays = text.indexOf(" ", maxDaysStart) !== -1;
+  const maxDaysEnd =
+    maxDaysStart !== 0
+      ? spaceExistsAfterMaxDays
+        ? text.indexOf(" ", maxDaysStart)
+        : text.length + 2
+      : undefined;
+
+  const minDays = minDaysEnd
+    ? parseInt(text.substring(minDaysStart, minDaysEnd + 1), 10)
+    : undefined;
+  const maxDays = maxDaysEnd
+    ? parseInt(text.substring(maxDaysStart, maxDaysEnd + 1), 10)
+    : undefined;
+
+  const minDaysOffset = minDays ? minDays.toString().length + 2 : 0;
+  const maxDaysOffset = maxDays ? maxDays.toString().length + 2 : 0;
+
+  const { adults: adultsComing, cabinType: cabinTypeComing } = calculateIndex(
+    text.substring(offsetComing + 11 + minDaysOffset + maxDaysOffset),
+    offsetComing + 11 + minDaysOffset + maxDaysOffset
+  );
+  return {
+    origin: text.substring(0, 3).toUpperCase(),
+    destination: text.substring(4, 7).toUpperCase(),
+    departureDate: text.substring(8, 18),
+    returnDate: text.substring(offsetComing, offsetComing + 10),
+    adultsGoing: adultsGoing
+      ? text.substring(adultsGoing, adultsGoing + 1)
+      : "",
+    cabinTypeGoing: cabinTypeGoing
+      ? text.substring(cabinTypeGoing, cabinTypeGoing + 3).toUpperCase()
+      : "",
+    adultsComing: adultsComing
+      ? text.substring(adultsComing, adultsComing + 1)
+      : "",
+    cabinTypeComing: cabinTypeComing
+      ? text.substring(cabinTypeComing, cabinTypeComing + 3).toUpperCase()
+      : "",
+    minDays,
+    maxDays,
+  };
+};
+
 module.exports = {
   calculateIndex,
   generateFlightOutput,
@@ -135,5 +194,6 @@ module.exports = {
   applySimpleMarkdown,
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
-  generatePayloadMultipleOrigins
+  generatePayloadMultipleOrigins,
+  generatePayloadRoundTrip,
 };

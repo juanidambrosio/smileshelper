@@ -75,13 +75,14 @@ const listen = async () => {
           id,
           payload,
         });
-
         const flightSearch = new FlightSearch(
           tweet.data.author_id,
           "twitter",
           new Date(),
-          payload.region || payload.origin,
-          payload.region || payload.destination.name,
+          Array.isArray(payload.origin) ? payload.region : payload.origin,
+          Array.isArray(payload.destination.name)
+            ? payload.region
+            : payload.destination.name,
           payload.destination.departureDate.substring(0, 4),
           payload.destination.departureDate.substring(5, 7),
           data.bestPrice

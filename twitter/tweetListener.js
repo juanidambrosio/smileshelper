@@ -80,11 +80,11 @@ const listen = async () => {
           "twitter",
           new Date(),
           Array.isArray(payload.origin) ? payload.region : payload.origin,
-          Array.isArray(payload.destination.name)
+          Array.isArray(payload.destination)
             ? payload.region
-            : payload.destination.name,
-          payload.destination.departureDate.substring(0, 4),
-          payload.destination.departureDate.substring(5, 7),
+            : payload.destination,
+          payload.departureDate.substring(0, 4),
+          payload.departureDate.substring(5, 7),
           data.bestPrice
         );
         await createOne(flightSearch);

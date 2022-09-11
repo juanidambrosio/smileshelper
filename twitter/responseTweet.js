@@ -39,8 +39,8 @@ module.exports.tweet = async (event) => {
     }
 
     const flightTitle = isMultipleOrigin
-      ? `${payload.region || payload.origin} ${payload.destination.name}\n`
-      : `${payload.origin} ${payload.region || payload.destination.name}\n`;
+      ? `${payload.region || payload.origin} ${payload.destination}\n`
+      : `${payload.origin} ${payload.region || payload.destination}\n`;
     const responseTweet = bestFlights.reduce((previous, current) => {
       const taxWord = current.tax?.miles
         ? ` + ${current.tax.miles}/${current.tax.money}`
@@ -54,7 +54,7 @@ module.exports.tweet = async (event) => {
               : current.destination + " ") +
               current.departureDay +
               "/" +
-              payload.destination.departureDate.substring(5, 7) +
+              payload.departureDate.substring(5, 7) +
               ": " +
               current.price +
               taxWord +

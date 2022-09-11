@@ -25,6 +25,7 @@ const {
 const {
   getFlights,
   getFlightsMultipleCities,
+  getFlightsRoundTrip,
 } = require("../clients/smilesClient");
 
 const {
@@ -90,10 +91,7 @@ const listen = async () => {
                 generateEmissionLink({
                   ...payload,
                   departureDate:
-                    payload.destination.departureDate +
-                    "-" +
-                    current.departureDay +
-                    " 09:",
+                    payload.departureDate + "-" + current.departureDay + " 09:",
                 }),
                 "(",
                 ")"
@@ -108,7 +106,7 @@ const listen = async () => {
               generateFlightOutput(current) +
               "\n"
           ),
-        payload.origin + " " + payload.destination.name + "\n"
+        payload.origin + " " + payload.destination + "\n"
       );
       console.log(msg.text);
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
@@ -117,8 +115,8 @@ const listen = async () => {
         {
           id: msg.from.username || msg.from.id.toString(),
           origin: payload.origin,
-          destination: payload.destination.name,
-          departureDate: payload.destination.departureDate,
+          destination: payload.destination,
+          departureDate: payload.departureDate,
           price: bestFlights[0].price,
         },
         createOne
@@ -152,7 +150,14 @@ const listen = async () => {
   bot.onText(regexRoundTrip, async (msg) => {
     const chatId = msg.chat.id;
     const payload = generatePayloadRoundTrip(msg.text);
-    bot.sendMessage(chatId, JSON.stringify(payload, null, 2));
+    try {
+      bot.sendMessage(chatId, searching);
+      const flightList = await getFlightsRoundTrip(payload);
+      // TODO: Code round trip flights and output
+    } catch (error) {
+      console.log(error);
+      bot.sendMessage(chatId, genericError);
+    }
   });
 };
 
@@ -197,8 +202,8 @@ const searchRegionalQuery = async (
     }
 
     const flightTitle = isMultipleOrigin
-      ? `${payload.region} ${payload.destination.name} ${payload.destination.departureDate}\n`
-      : `${payload.origin} ${payload.region} ${payload.destination.departureDate}\n`;
+      ? `${payload.region} ${payload.destination} ${payload.departureDate}\n`
+      : `${payload.origin} ${payload.region} ${payload.departureDate}\n`;
 
     const response = bestFlights.reduce((previous, current) => {
       const dateToShow = fixedDay
@@ -206,7 +211,7 @@ const searchRegionalQuery = async (
         : " " +
           current.departureDay +
           "/" +
-          payload.destination.departureDate.substring(5, 7);
+          payload.departureDate.substring(5, 7);
       return previous.concat(
         emoji.get("airplane") +
           applySimpleMarkdown(
@@ -221,12 +226,9 @@ const searchRegionalQuery = async (
               origin: isMultipleOrigin ? current.origin : payload.origin,
               destination: isMultipleOrigin
                 ? payload.destination
-                : { name: current.destination },
+                : current.destination,
               departureDate:
-                payload.destination.departureDate +
-                "-" +
-                current.departureDay +
-                " 09:",
+                payload.departureDate + "-" + current.departureDay + " 09:",
             }),
             "(",
             ")"

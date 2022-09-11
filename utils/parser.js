@@ -49,7 +49,7 @@ const mapCabinType = (cabinType) =>
 const generateEmissionLink = (flight) =>
   `${SMILES_EMISSION_URL}originAirportCode=${
     flight.origin
-  }&destinationAirportCode=${flight.destination.name}&departureDate=${new Date(
+  }&destinationAirportCode=${flight.destination}&departureDate=${new Date(
     flight.departureDate
   ).getTime()}&adults=${
     flight.adults || "1"
@@ -67,10 +67,8 @@ const generatePayloadMonthlySingleDestination = (text) => {
   const { adults, cabinType } = calculateIndex(text.substring(16), 16);
   return {
     origin: text.substring(0, 3).toUpperCase(),
-    destination: {
-      name: text.substring(4, 7).toUpperCase(),
-      departureDate: text.substring(8, 15),
-    },
+    destination: text.substring(4, 7).toUpperCase(),
+    departureDate: text.substring(8, 15),
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
@@ -88,13 +86,11 @@ const generatePayloadMultipleDestinations = (text, fixedDay) => {
   );
   return {
     origin: text.substring(0, 3).toUpperCase(),
-    destination: {
-      name: regions[region],
-      departureDate: text.substring(
-        startIndexAfterRegion,
-        startIndexAfterRegion + offset
-      ),
-    },
+    destination: regions[region],
+    departureDate: text.substring(
+      startIndexAfterRegion,
+      startIndexAfterRegion + offset
+    ),
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
@@ -113,13 +109,13 @@ const generatePayloadMultipleOrigins = (text, fixedDay) => {
   );
   return {
     origin: regions[region],
-    destination: {
-      name: text.substring(region.length + 1, region.length + 4).toUpperCase(),
-      departureDate: text.substring(
-        startIndexAfterRegion,
-        startIndexAfterRegion + offset
-      ),
-    },
+    destination: text
+      .substring(region.length + 1, region.length + 4)
+      .toUpperCase(),
+    departureDate: text.substring(
+      startIndexAfterRegion,
+      startIndexAfterRegion + offset
+    ),
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
@@ -137,8 +133,7 @@ const generatePayloadRoundTrip = (text) => {
   );
 
   const minDaysStart = text.indexOf("m", offsetComing + 10) + 1;
-  const minDaysEnd =
-    minDaysStart !== 0 ? text.indexOf(" ", minDaysStart) : undefined;
+  const minDaysEnd = text.indexOf(" ", minDaysStart);
 
   const maxDaysStart = text.indexOf("M", offsetComing + 10) + 1;
   const spaceExistsAfterMaxDays = text.indexOf(" ", maxDaysStart) !== -1;
@@ -149,14 +144,12 @@ const generatePayloadRoundTrip = (text) => {
         : text.length + 2
       : undefined;
 
-  const minDays = minDaysEnd
-    ? parseInt(text.substring(minDaysStart, minDaysEnd + 1), 10)
-    : undefined;
+  const minDays = parseInt(text.substring(minDaysStart, minDaysEnd + 1), 10);
   const maxDays = maxDaysEnd
     ? parseInt(text.substring(maxDaysStart, maxDaysEnd + 1), 10)
     : undefined;
 
-  const minDaysOffset = minDays ? minDays.toString().length + 2 : 0;
+  const minDaysOffset = minDays.toString().length + 2;
   const maxDaysOffset = maxDays ? maxDays.toString().length + 2 : 0;
 
   const { adults: adultsComing, cabinType: cabinTypeComing } = calculateIndex(

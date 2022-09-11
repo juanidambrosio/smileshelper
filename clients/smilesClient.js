@@ -4,7 +4,6 @@ const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
 const { sortAndSlice } = require("../flightsHelper.js");
-const fs = require("fs").promises;
 
 const headers = {
   authorization: `Bearer ${smiles.authorizationToken}`,
@@ -27,9 +26,7 @@ const smilesTaxClient = axios.create({
 });
 
 const getFlights = async (parameters) => {
-  const { origin, destination, cabinType, adults } = parameters;
-
-  const { name, departureDate } = destination;
+  const { origin, destination, departureDate, cabinType, adults } = parameters;
 
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   try {
@@ -39,20 +36,13 @@ const getFlights = async (parameters) => {
       day <= lastDayOfMonthDeparture;
       day++
     ) {
-      const params = {
-        adults: adults || "1",
-        cabinType: "all",
-        children: "0",
-        currencyCode: "ARS",
-        infants: "0",
-        isFlexibleDateChecked: "false",
-        tripType: "2",
-        forceCongener: "false",
-        r: "ar",
-        originAirportCode: origin,
-        destinationAirportCode: name,
-        departureDate: parseDate(departureDate, day),
-      };
+      const params = buildParams(
+        origin,
+        destination,
+        departureDate,
+        adults,
+        day
+      );
       getFlightPromises.push(smilesClient.get("/search", { params }));
     }
     const flightResults = (await Promise.all(getFlightPromises)).flat();
@@ -77,7 +67,7 @@ const getFlights = async (parameters) => {
     ).filter((flight) => validFlight(flight));
     return {
       origin,
-      destination: name,
+      destination,
       results: sortAndSlice(mappedFlightResults),
       departureMonth: departureDate.substring(5, 7),
     };
@@ -98,10 +88,9 @@ const getFlightsMultipleCities = async (
   fixedDay,
   isMultipleOrigin
 ) => {
-  const { origin, destination, cabinType, adults } = parameters;
+  const { origin, destination, departureDate, cabinType, adults } = parameters;
 
-  const { name, departureDate } = destination;
-  const multipleCity = isMultipleOrigin ? origin : name;
+  const multipleCity = isMultipleOrigin ? origin : destination;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   const getFlightPromises = [];
   try {
@@ -111,22 +100,13 @@ const getFlightsMultipleCities = async (
         day < (fixedDay ? 1 : lastDayOfMonthDeparture);
         day++
       ) {
-        const params = {
-          adults: adults || "1",
-          cabinType: "all",
-          children: "0",
-          currencyCode: "ARS",
-          infants: "0",
-          isFlexibleDateChecked: "false",
-          tripType: "2",
-          forceCongener: "false",
-          r: "ar",
-          originAirportCode: isMultipleOrigin ? city : origin,
-          destinationAirportCode: isMultipleOrigin ? name : city,
-          departureDate: fixedDay
-            ? departureDate
-            : parseDate(departureDate, day),
-        };
+        const params = buildParams(
+          isMultipleOrigin ? city : origin,
+          isMultipleOrigin ? destination : city,
+          departureDate,
+          adults,
+          fixedDay ? undefined : day
+        );
         getFlightPromises.push(smilesClient.get("/search", { params }));
       }
     }
@@ -170,6 +150,87 @@ const getFlightsMultipleCities = async (
   }
 };
 
+const getFlightsRoundTrip = async (parameters) => {
+  const {
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    adultsGoing,
+    cabinTypeGoing,
+    adultsComing,
+    cabinTypeComing,
+    minDays,
+    maxDays,
+  } = parameters;
+  const parsedReturnDate = new Date(returnDate);
+  //TODO: REVIEW HOW IT BEHAVES WITH MONTH CHANGE
+  const lastDepartureDate = parsedReturnDate.setDate(
+    parsedReturnDate.getDate - minDays
+  );
+  const getFlightPromises = [];
+  try {
+    for (
+      let date = new Date(departureDate);
+      date <= new Date(lastDepartureDate);
+      date.setDate(day.getDate() + 1)
+    ) {
+      const paramsGoing = buildParams(origin, destination, date, adultsGoing);
+      getFlightPromises.push(smilesClient.get("/search", { paramsGoing }));
+    }
+    const flightResults = (await Promise.all(getFlightPromises)).flat();
+    const mappedFlightResults = (
+      await Promise.all(
+        flightResults.map(async (flightResult) => {
+          const { flight, price, fareUid } = getBestFlight(
+            flightResult.data?.requestedFlightSegmentList[0],
+            cabinType
+          );
+          return {
+            price: price.toString(),
+            departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+            stops: flight.stops?.toString(),
+            duration: flight.duration?.hours?.toString(),
+            airline: flight.airline?.name,
+            seats: flight.availableSeats?.toString(),
+            tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+          };
+        })
+      )
+    ).filter((flight) => validFlight(flight));
+    return {
+      origin,
+      destination,
+      results: sortAndSlice(mappedFlightResults),
+      departureMonth: departureDate.substring(5, 7),
+    };
+  } catch (error) {
+    console.log(
+      "Error while getting flights: ",
+      error.response?.data?.error || error.response?.data?.errorMessage
+    );
+    return {
+      statusError: error.response?.status,
+      error: error.response?.data?.errorMessage,
+    };
+  }
+};
+
+const buildParams = (origin, destination, departureDate, adults, fixedDay) => ({
+  adults: adults || "1",
+  cabinType: "all",
+  children: "0",
+  currencyCode: "ARS",
+  infants: "0",
+  isFlexibleDateChecked: "false",
+  tripType: "2",
+  forceCongener: "false",
+  r: "ar",
+  originAirportCode: origin,
+  destinationAirportCode: destination,
+  departureDate: fixedDay ? departureDate : parseDate(departureDate, fixedDay),
+});
+
 const getTax = async (uid, fareuid) => {
   const params = {
     adults: "1",
@@ -201,4 +262,4 @@ const validFlight = (flight) =>
   flight.price !== Number.MAX_VALUE.toString() &&
   flight.tax?.miles;
 
-module.exports = { getFlights, getFlightsMultipleCities };
+module.exports = { getFlights, getFlightsMultipleCities, getFlightsRoundTrip };

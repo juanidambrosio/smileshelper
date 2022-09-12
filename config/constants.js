@@ -5,7 +5,8 @@ const badResponse = "El formato es inválido.";
 const dailyTweet =
   "Te ayudamos a encontrar las 10 mejores ofertas en millas! Respondé este tweet con el formato [ORIGEN] [DESTINO] [AÑO-MES]. Ejemplo EZE MAD 2023-05.";
 
-const telegramStart = `Te ayudamos a encontrar las mejores ofertas en millas \\! El bot soporta los siguientes ejemplos: \n\n __Búsqueda simple__: EZE MAD 2023\\-05 \n\n __Búsqueda por tipo de cabina__: EZE MAD 2023\\-05 EJE , EZE MAD 2023\\-05 ECO, EZE MAD 2023\\-05 PEC \\(premium economy\\)\n\n __Búsqueda por cantidad de adultos__: EZE MAD 2023\\-05 3\n\n __Búsqueda por región__: EZE EUROPA 2023\\-05\nEZE EUROPA 2023\\-05\\-01\nEUROPA EZE 2023\\-05\\-01\nEUROPA EZE 2023\\-05\\-01`;
+const telegramStart =
+  "Te ayudamos a encontrar las mejores ofertas en millas \\! El bot soporta los siguientes ejemplos: \n\n __Búsqueda simple__:\n`EZE MAD 2023\\-05` \n\n __Búsqueda por tipo de cabina__:\n`EZE MAD 2023\\-05 EJE`\n`EZE MAD 2023\\-05 ECO`\n`EZE MAD 2023\\-05 PEC` \\(premium economy\\)\n\n __Búsqueda por cantidad de adultos__:\n`EZE MAD 2023\\-05 3`\n\n __Búsqueda por región__: \n`EZE EUROPA 2023\\-05`\n`EZE EUROPA 2023\\-05\\-01`\n`EUROPA EZE 2023\\-05\\-01`\n`EUROPA EZE 2023\\-05\\-01`\n\n__Búsqueda ida y vuelta__:\n`EZE BCN 2023\\-03\\-01 2023\\-03\\-30 m7`\n`EZE BCN 2023\\-03\\-01 2023\\-03\\-30 m7 M14`\n`EZE BCN 2023\\-03\\-01 EJE 2 2023\\-03\\-30 m7 ECO 3` \n\n __Parámetros ida y vuelta__:\n\\m\\[OBLIGATORIO\\]\\: Mínima cantidad de días entre ida y vuelta\nM \\[OPCIONAL\\]\\: Máxima cantidad de días entre ida y vuelta";
 
 const incorrectFormat =
   "El formato indicado es incorrecto. Intentá de nuevo respondiendo con [ORIGEN] [DESTINO] [AÑO]-[MES]";
@@ -22,7 +23,7 @@ const searching = emoji.get("mag_right") + " Buscando las mejores ofertas...";
 
 const cafecito = `Si te ayudé a encontrar tu vuelo ideal y te gustaría contribuir al proyecto de Smiles Helper, podés donar en este link de [Cafecito](https://cafecito.app/juandambrosio)\\. Muchas gracias\\!`;
 
-const links = `[Grupo de Telegram sobre alertas y consultas sobre Smiles](https://t.me/+FiKom9f1944xYzIx)\\.`;
+const links = `\\-[Grupo de Telegram sobre alerta de ofertas en Smiles](https://t.me/+FiKom9f1944xYzIx)\n\\-[Grupo de Telegram sobre consultas de Smiles](https://t.me/+3JRDTJIf2gM0YWE5)\n\\-[Guía completa sobre Smiles](https://elviajeroserial.com/smiles-argentina-manual-del-usuario-analisis-estrategias-y-todo-lo-que-necesitas-saber/)\n`;
 
 const SMILES_URL = "https://api-air-flightsearch-prd.smiles.com.br/v1/airlines";
 const TWITTER_OWN_ID = "1529767809105920000";

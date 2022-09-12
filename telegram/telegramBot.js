@@ -100,7 +100,9 @@ const listen = async () => {
               ) +
               ": " +
               applySimpleMarkdown(
-                `${current.price.toString()} + ${current.tax.miles}/${current.tax.money}`,
+                `${current.price.toString()} + ${current.tax.miles}/${
+                  current.tax.money
+                }`,
                 "*"
               ) +
               generateFlightOutput(current) +
@@ -129,22 +131,22 @@ const listen = async () => {
 
   bot.onText(
     regexMultipleDestinationMonthly,
-    async (msg) => await searchRegionalQuery(bot, msg, false, false)
+    async (msg) => await searchRegionalQuery(bot, msg, false, false, createOne)
   );
 
   bot.onText(
     regexMultipleDestinationFixedDay,
-    async (msg) => await searchRegionalQuery(bot, msg, true, false)
+    async (msg) => await searchRegionalQuery(bot, msg, true, false, createOne)
   );
 
   bot.onText(
     regexMultipleOriginMonthly,
-    async (msg) => await searchRegionalQuery(bot, msg, false, true)
+    async (msg) => await searchRegionalQuery(bot, msg, false, true, createOne)
   );
 
   bot.onText(
     regexMultipleOriginFixedDay,
-    async (msg) => await searchRegionalQuery(bot, msg, true, true)
+    async (msg) => await searchRegionalQuery(bot, msg, true, true, createOne)
   );
 
   bot.onText(regexRoundTrip, async (msg) => {
@@ -190,9 +192,7 @@ const listen = async () => {
               ) +
               ": " +
               applySimpleMarkdown(
-                `${current.departureFlight.price.toString()} + ${
-                  current.returnFlight.price.toString()
-                } + ${Math.floor(
+                `${current.departureFlight.price.toString()} + ${current.returnFlight.price.toString()} + ${Math.floor(
                   (current.departureFlight.tax.milesNumber +
                     current.returnFlight.tax.milesNumber) /
                     1000
@@ -211,6 +211,19 @@ const listen = async () => {
           ),
         payload.origin + " " + payload.destination + "\n"
       );
+      await createFlightSearch(
+        {
+          id: msg.from.username || msg.from.id.toString(),
+          origin: payload.origin,
+          destination: payload.destination,
+          departureDate: payload.departureDate,
+          returnDate: payload.returnDate,
+          price:
+            bestFlights[0].departureFlight.price +
+            bestFlights[0].returnFlight.price,
+        },
+        createOne
+      );
       console.log(msg.text);
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     } catch (error) {
@@ -227,7 +240,7 @@ const searchRegionalQuery = async (
   msg,
   fixedDay,
   isMultipleOrigin,
-  attempt = 1
+  createFlight
 ) => {
   const chatId = msg.chat.id;
   const payload = isMultipleOrigin
@@ -243,13 +256,6 @@ const searchRegionalQuery = async (
     const bestFlights = flightList.results;
 
     if (!bestFlights) {
-      // if (attempt <= 3) {
-      //   bot.sendMessage(chatId, retry(attempt));
-      //   await searchRegionalQuery(bot, msg, fixedDay, attempt + 1);
-      //   return;
-      // } else {
-      //   throw new Error();
-      // }
       throw new Error();
     }
 
@@ -295,13 +301,27 @@ const searchRegionalQuery = async (
           ) +
           ": " +
           applySimpleMarkdown(
-            `${current.price.toString()} + ${current.tax.miles}/${current.tax.money}`,
+            `${current.price.toString()} + ${current.tax.miles}/${
+              current.tax.money
+            }`,
             "*"
           ) +
           generateFlightOutput(current) +
           "\n"
       );
     }, flightTitle);
+    await createFlightSearch(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+        origin: Array.isArray(payload.origin) ? payload.region : payload.origin,
+        destination: Array.isArray(payload.destination)
+          ? payload.region
+          : payload.destination,
+        departureDate: payload.departureDate,
+        price: bestFlights[0].price,
+      },
+      createFlight
+    );
     console.log(msg.text);
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
   } catch (error) {
@@ -311,7 +331,7 @@ const searchRegionalQuery = async (
 };
 
 const createFlightSearch = async (data, createOne) => {
-  const { id, origin, destination, departureDate, price } = data;
+  const { id, origin, destination, departureDate, returnDate, price } = data;
 
   const flightSearch = new FlightSearch(
     id,
@@ -321,6 +341,8 @@ const createFlightSearch = async (data, createOne) => {
     destination,
     departureDate.substring(0, 4),
     departureDate.substring(5, 7),
+    returnDate ? returnDate.substring(0, 4) : undefined,
+    returnDate ? returnDate.substring(5, 7) : undefined,
     price
   );
   await createOne(flightSearch);

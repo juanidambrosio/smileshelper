@@ -7,6 +7,8 @@ class FlightSearch {
     destination,
     year,
     month,
+    yearReturn,
+    monthReturn,
     bestPrice
   ) {
     this.author_id = author_id;
@@ -16,6 +18,8 @@ class FlightSearch {
     this.destination = destination;
     this.year = year;
     this.month = month;
+    this.yearReturn = yearReturn;
+    this.monthReturn = monthReturn;
     this.bestPrice = bestPrice;
   }
 }

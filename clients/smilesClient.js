@@ -3,7 +3,7 @@ const { SMILES_URL, SMILES_TAX_URL } = require("../config/constants.js");
 const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
-const { sortAndSlice } = require("../flightsHelper.js");
+const { sortAndSlice, sortAndSliceRoundTrip } = require("../flightsHelper.js");
 
 const headers = {
   authorization: `Bearer ${smiles.authorizationToken}`,
@@ -41,6 +41,7 @@ const getFlights = async (parameters) => {
         destination,
         departureDate,
         adults,
+        false,
         day
       );
       getFlightPromises.push(smilesClient.get("/search", { params }));
@@ -105,6 +106,7 @@ const getFlightsMultipleCities = async (
           isMultipleOrigin ? destination : city,
           departureDate,
           adults,
+          fixedDay,
           fixedDay ? undefined : day
         );
         getFlightPromises.push(smilesClient.get("/search", { params }));
@@ -119,6 +121,8 @@ const getFlightsMultipleCities = async (
             cabinType
           );
           return {
+            origin: flight.departure?.airport?.code,
+            destination: flight.arrival?.airport?.code,
             price: price.toString(),
             departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
             stops: flight.stops?.toString(),
@@ -126,8 +130,6 @@ const getFlightsMultipleCities = async (
             airline: flight.airline?.name,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
-            destination: flight.arrival?.airport?.code,
-            origin: flight.departure?.airport?.code,
           };
         })
       )
@@ -136,13 +138,7 @@ const getFlightsMultipleCities = async (
       results: sortAndSlice(mappedFlightResults.flat()),
     };
   } catch (error) {
-    console.log(
-      "Error while getting flights: ",
-      error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response ||
-        error
-    );
+    console.log("Error while getting flights: ", error);
     return {
       statusError: error.response?.status,
       error: error.response?.data?.errorMessage,
@@ -163,32 +159,67 @@ const getFlightsRoundTrip = async (parameters) => {
     minDays,
     maxDays,
   } = parameters;
-  const parsedReturnDate = new Date(returnDate);
-  //TODO: REVIEW HOW IT BEHAVES WITH MONTH CHANGE
-  const lastDepartureDate = parsedReturnDate.setDate(
-    parsedReturnDate.getDate - minDays
-  );
+
+  const lastDepartureDate = new Date(returnDate);
+  const firstReturnDate = new Date(departureDate);
+
+  lastDepartureDate.setDate(lastDepartureDate.getDate() - minDays);
+  firstReturnDate.setDate(firstReturnDate.getDate() + minDays);
+
   const getFlightPromises = [];
+
   try {
     for (
       let date = new Date(departureDate);
-      date <= new Date(lastDepartureDate);
-      date.setDate(day.getDate() + 1)
+      date <= lastDepartureDate;
+      date.setDate(date.getDate() + 1)
     ) {
-      const paramsGoing = buildParams(origin, destination, date, adultsGoing);
-      getFlightPromises.push(smilesClient.get("/search", { paramsGoing }));
+      const paramsGoing = buildParams(
+        origin,
+        destination,
+        date.toLocaleDateString("en-CA"),
+        adultsGoing,
+        true
+      );
+      getFlightPromises.push(
+        smilesClient.get("/search", { params: paramsGoing })
+      );
     }
+
+    for (
+      let date = firstReturnDate;
+      date <= new Date(returnDate);
+      date.setDate(date.getDate() + 1)
+    ) {
+      const paramsComing = buildParams(
+        destination,
+        origin,
+        date.toLocaleDateString("en-CA"),
+        adultsComing,
+        true
+      );
+      getFlightPromises.push(smilesClient.get("/search"), {
+        params: paramsComing,
+      });
+    }
+
     const flightResults = (await Promise.all(getFlightPromises)).flat();
     const mappedFlightResults = (
       await Promise.all(
         flightResults.map(async (flightResult) => {
+          const flightSegment =
+            flightResult.data?.requestedFlightSegmentList[0];
+          const departureAirport =
+            flightSegment?.airports?.departureAirportList[0]?.code;
           const { flight, price, fareUid } = getBestFlight(
-            flightResult.data?.requestedFlightSegmentList[0],
-            cabinType
+            flightSegment,
+            departureAirport === origin ? cabinTypeGoing : cabinTypeComing
           );
           return {
+            origin: departureAirport,
+            destination: flight.arrival?.airport?.code,
             price: price.toString(),
-            departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+            departureDay: new Date(flight.departure?.date?.substring(0, 10)),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
@@ -199,15 +230,18 @@ const getFlightsRoundTrip = async (parameters) => {
       )
     ).filter((flight) => validFlight(flight));
     return {
-      origin,
-      destination,
-      results: sortAndSlice(mappedFlightResults),
-      departureMonth: departureDate.substring(5, 7),
+      results: sortAndSliceRoundTrip(
+        mappedFlightResults,
+        minDays,
+        maxDays,
+        origin
+      ),
     };
   } catch (error) {
     console.log(
       "Error while getting flights: ",
-      error.response?.data?.error || error.response?.data?.errorMessage
+      error
+      //error.response?.data?.error || error.response?.data?.errorMessage
     );
     return {
       statusError: error.response?.status,
@@ -216,7 +250,14 @@ const getFlightsRoundTrip = async (parameters) => {
   }
 };
 
-const buildParams = (origin, destination, departureDate, adults, fixedDay) => ({
+const buildParams = (
+  origin,
+  destination,
+  departureDate,
+  adults,
+  fixedDay,
+  specificDay
+) => ({
   adults: adults || "1",
   cabinType: "all",
   children: "0",
@@ -228,7 +269,9 @@ const buildParams = (origin, destination, departureDate, adults, fixedDay) => ({
   r: "ar",
   originAirportCode: origin,
   destinationAirportCode: destination,
-  departureDate: fixedDay ? departureDate : parseDate(departureDate, fixedDay),
+  departureDate: fixedDay
+    ? departureDate
+    : parseDate(departureDate, specificDay),
 });
 
 const getTax = async (uid, fareuid) => {

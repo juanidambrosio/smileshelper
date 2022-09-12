@@ -92,15 +92,14 @@ const listen = async () => {
                   ...payload,
                   departureDate:
                     payload.departureDate + "-" + current.departureDay + " 09:",
+                  tripType: "2",
                 }),
                 "(",
                 ")"
               ) +
               ": " +
               applySimpleMarkdown(
-                current.tax?.miles
-                  ? `${current.price} + ${current.tax?.miles}/${current.tax?.money}`
-                  : `${current.price}`,
+                `${current.price} + ${current.tax.miles}/${current.tax.money}`,
                 "*"
               ) +
               generateFlightOutput(current) +
@@ -152,8 +151,66 @@ const listen = async () => {
     const payload = generatePayloadRoundTrip(msg.text);
     try {
       bot.sendMessage(chatId, searching);
+      bot.sendMessage(chatId, JSON.stringify(payload, null, 2));
       const flightList = await getFlightsRoundTrip(payload);
-      // TODO: Code round trip flights and output
+
+      const bestFlights = flightList.results;
+      if (flightList.error) {
+        return bot.sendMessage(chatId, flightList.error);
+      }
+      if (bestFlights.length === 0) {
+        return bot.sendMessage(chatId, notFound);
+      }
+
+      const response = bestFlights.reduce(
+        (previous, current) =>
+          previous.concat(
+            emoji.get("airplane") +
+              applySimpleMarkdown(
+                current.departureFlight.departureDay.getDay() +
+                  "/" +
+                  current.departureFlight.departureDate.getMonth() +
+                  " - " +
+                  current.returnFlight.departureDay.getDay() +
+                  "/" +
+                  current.returnFlight.departureDate.getMonth(),
+                "[",
+                "]"
+              ) +
+              applySimpleMarkdown(
+                generateEmissionLink({
+                  ...payload,
+                  departureDate:
+                    current.departureFlight.departureDay.setHours(9),
+                  returnDate: current.returnFlight.departureDate.setHours(9),
+                  tripType: "1",
+                }),
+                "(",
+                ")"
+              ) +
+              ": " +
+              applySimpleMarkdown(
+                `${current.departureFlight.price} + ${
+                  current.returnFlight.price
+                } + ${(
+                  parseInt(current.departureFlight.tax.miles, 10) +
+                  parseInt(current.returnFlight.tax.miles, 10)
+                ).toString()}/${(
+                  parseInt(current.departureFlight.tax.money, 10) +
+                  parseInt(current.returnFlight.tax.money, 10)
+                ).toString()}`,
+                "*"
+              ) +
+              "\nIDA:" +
+              generateFlightOutput(current.departureFlight) +
+              "\nVUELTA:" +
+              generateFlightOutput(current.returnFlight) +
+              "\n"
+          ),
+        payload.origin + " " + payload.destination + "\n"
+      );
+      console.log(msg.text);
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     } catch (error) {
       console.log(error);
       bot.sendMessage(chatId, genericError);
@@ -229,15 +286,14 @@ const searchRegionalQuery = async (
                 : current.destination,
               departureDate:
                 payload.departureDate + "-" + current.departureDay + " 09:",
+              tripType: "2",
             }),
             "(",
             ")"
           ) +
           ": " +
           applySimpleMarkdown(
-            current.tax?.miles
-              ? `${current.price} + ${current.tax?.miles}/${current.tax?.money}`
-              : `${current.price}`,
+            `${current.price} + ${current.tax.miles}/${current.tax.money}`,
             "*"
           ) +
           generateFlightOutput(current) +

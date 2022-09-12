@@ -4,6 +4,7 @@ const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
 const { sortAndSlice, sortAndSliceRoundTrip } = require("../flightsHelper.js");
+const { belongsToCity } = require("../utils/parser");
 
 const headers = {
   authorization: `Bearer ${smiles.authorizationToken}`,
@@ -187,20 +188,22 @@ const getFlightsRoundTrip = async (parameters) => {
     }
 
     for (
-      let date = firstReturnDate;
-      date <= new Date(returnDate);
-      date.setDate(date.getDate() + 1)
+      let dateReturn = firstReturnDate;
+      dateReturn <= new Date(returnDate);
+      dateReturn.setDate(dateReturn.getDate() + 1)
     ) {
       const paramsComing = buildParams(
         destination,
         origin,
-        date.toLocaleDateString("en-CA"),
+        dateReturn.toLocaleDateString("en-CA"),
         adultsComing,
         true
       );
-      getFlightPromises.push(smilesClient.get("/search"), {
-        params: paramsComing,
-      });
+      getFlightPromises.push(
+        smilesClient.get("/search", {
+          params: paramsComing,
+        })
+      );
     }
 
     const flightResults = (await Promise.all(getFlightPromises)).flat();
@@ -213,13 +216,15 @@ const getFlightsRoundTrip = async (parameters) => {
             flightSegment?.airports?.departureAirportList[0]?.code;
           const { flight, price, fareUid } = getBestFlight(
             flightSegment,
-            departureAirport === origin ? cabinTypeGoing : cabinTypeComing
+            belongsToCity(departureAirport, origin)
+              ? cabinTypeGoing
+              : cabinTypeComing
           );
           return {
             origin: departureAirport,
             destination: flight.arrival?.airport?.code,
-            price: price.toString(),
-            departureDay: new Date(flight.departure?.date?.substring(0, 10)),
+            price,
+            departureDay: new Date(flight.departure?.date),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
@@ -287,13 +292,13 @@ const getTax = async (uid, fareuid) => {
 
   try {
     const { data } = await smilesTaxClient.get("/boardingtax", { params });
-
+    const milesNumber = data?.totals?.totalBoardingTax?.miles;
+    const moneyNumber = data?.totals?.totalBoardingTax?.money;
     return {
-      miles: `${Math.floor(data?.totals?.totalBoardingTax?.miles / 1000)}K`,
-      milesNumber: Math.floor(data?.totals?.totalBoardingTax?.miles / 1000),
-      money: `$${Math.floor(
-        data?.totals?.totalBoardingTax?.money / 1000
-      ).toString()}K`,
+      miles: `${Math.floor(milesNumber / 1000)}K`,
+      milesNumber,
+      money: `$${Math.floor(moneyNumber / 1000)}K`,
+      moneyNumber,
     };
   } catch (error) {
     return { miles: undefined };

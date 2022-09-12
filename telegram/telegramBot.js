@@ -21,6 +21,7 @@ const {
   applySimpleMarkdown,
   generateFlightOutput,
   generateEmissionLink,
+  generateEmissionLinkRoundTrip,
 } = require("../utils/parser");
 const {
   getFlights,
@@ -99,7 +100,7 @@ const listen = async () => {
               ) +
               ": " +
               applySimpleMarkdown(
-                `${current.price} + ${current.tax.miles}/${current.tax.money}`,
+                `${current.price.toString()} + ${current.tax.miles}/${current.tax.money}`,
                 "*"
               ) +
               generateFlightOutput(current) +
@@ -151,7 +152,6 @@ const listen = async () => {
     const payload = generatePayloadRoundTrip(msg.text);
     try {
       bot.sendMessage(chatId, searching);
-      bot.sendMessage(chatId, JSON.stringify(payload, null, 2));
       const flightList = await getFlightsRoundTrip(payload);
 
       const bestFlights = flightList.results;
@@ -167,22 +167,22 @@ const listen = async () => {
           previous.concat(
             emoji.get("airplane") +
               applySimpleMarkdown(
-                current.departureFlight.departureDay.getDay() +
+                current.departureFlight.departureDay.getDate() +
                   "/" +
-                  current.departureFlight.departureDate.getMonth() +
+                  (current.departureFlight.departureDay.getMonth() + 1) +
                   " - " +
-                  current.returnFlight.departureDay.getDay() +
+                  current.returnFlight.departureDay.getDate() +
                   "/" +
-                  current.returnFlight.departureDate.getMonth(),
+                  (current.returnFlight.departureDay.getMonth() + 1),
                 "[",
                 "]"
               ) +
               applySimpleMarkdown(
-                generateEmissionLink({
+                generateEmissionLinkRoundTrip({
                   ...payload,
                   departureDate:
                     current.departureFlight.departureDay.setHours(9),
-                  returnDate: current.returnFlight.departureDate.setHours(9),
+                  returnDate: current.returnFlight.departureDay.setHours(9),
                   tripType: "1",
                 }),
                 "(",
@@ -190,20 +190,22 @@ const listen = async () => {
               ) +
               ": " +
               applySimpleMarkdown(
-                `${current.departureFlight.price} + ${
-                  current.returnFlight.price
-                } + ${(
-                  parseInt(current.departureFlight.tax.miles, 10) +
-                  parseInt(current.returnFlight.tax.miles, 10)
-                ).toString()}/${(
-                  parseInt(current.departureFlight.tax.money, 10) +
-                  parseInt(current.returnFlight.tax.money, 10)
-                ).toString()}`,
+                `${current.departureFlight.price.toString()} + ${
+                  current.returnFlight.price.toString()
+                } + ${Math.floor(
+                  (current.departureFlight.tax.milesNumber +
+                    current.returnFlight.tax.milesNumber) /
+                    1000
+                ).toString()}K/$${Math.floor(
+                  (current.departureFlight.tax.moneyNumber +
+                    current.returnFlight.tax.moneyNumber) /
+                    1000
+                ).toString()}K`,
                 "*"
               ) +
-              "\nIDA:" +
+              "\n IDA:" +
               generateFlightOutput(current.departureFlight) +
-              "\nVUELTA:" +
+              "\n VUELTA:" +
               generateFlightOutput(current.returnFlight) +
               "\n"
           ),
@@ -293,7 +295,7 @@ const searchRegionalQuery = async (
           ) +
           ": " +
           applySimpleMarkdown(
-            `${current.price} + ${current.tax.miles}/${current.tax.money}`,
+            `${current.price.toString()} + ${current.tax.miles}/${current.tax.money}`,
             "*"
           ) +
           generateFlightOutput(current) +

@@ -1,5 +1,5 @@
 const { maxResults } = require("./config/config.js");
-const { partitionArrays } = require("./utils/parser");
+const { partitionArrays, belongsToCity } = require("./utils/parser");
 
 const sortAndSlice = (flights) =>
   flights
@@ -12,9 +12,8 @@ const sortAndSlice = (flights) =>
     .slice(0, parseInt(maxResults, 10));
 
 const sortAndSliceRoundTrip = (flights, minDays, maxDays, origin) => {
-  const departuresAndReturns = partitionArrays(
-    flights,
-    (flight) => flight.origin === origin
+  const departuresAndReturns = partitionArrays(flights, (flight) =>
+    belongsToCity(flight.origin, origin)
   );
   const flightCombinations = [];
   for (const departureFlight of departuresAndReturns[0]) {
@@ -27,7 +26,10 @@ const sortAndSliceRoundTrip = (flights, minDays, maxDays, origin) => {
         daysDifference >= minDays &&
         (!maxDays || daysDifference <= maxDays)
       ) {
-        flightCombinations.push({ ...departureFlight, ...returnFlight });
+        flightCombinations.push({
+          departureFlight: { ...departureFlight },
+          returnFlight: { ...returnFlight },
+        });
       }
     }
   }

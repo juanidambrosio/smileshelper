@@ -74,6 +74,25 @@ const partitionArrays = (array, predicate) => {
   );
 };
 
+const belongsToCity = (airport, city) => {
+  switch (city) {
+    case "BUE":
+      return ["EZE", "AEP"].includes(airport);
+    case "RIO":
+      return ["GIG", "SDU", "CFB"].includes(airport);
+    case "LON":
+      return ["LHR", "LGW", "LCY", "STN"].includes(airport);
+    case "ROM":
+      return ["FCO"].includes(airport);
+    case "SAO":
+      return ["GRU", "CGH"].includes(airport);
+    case "PAR":
+      return ["CDG", "ORY"].includes(airport);
+    default:
+      return airport === city;
+  }
+};
+
 const generatePayloadMonthlySingleDestination = (text) => {
   const { adults, cabinType } = calculateIndex(text.substring(16), 16);
   return {
@@ -155,7 +174,13 @@ const generatePayloadRoundTrip = (text) => {
         : text.length + 2
       : undefined;
 
-  const minDays = parseInt(text.substring(minDaysStart, minDaysEnd + 1), 10);
+  const minDays = parseInt(
+    text.substring(
+      minDaysStart,
+      minDaysEnd !== -1 ? minDaysEnd + 1 : text.length + 1
+    ),
+    10
+  );
   const maxDays = maxDaysEnd
     ? parseInt(text.substring(maxDaysStart, maxDaysEnd + 1), 10)
     : undefined;
@@ -198,6 +223,7 @@ module.exports = {
   generateTaxLink,
   applySimpleMarkdown,
   partitionArrays,
+  belongsToCity,
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,

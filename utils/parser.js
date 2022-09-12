@@ -53,15 +53,26 @@ const generateEmissionLink = (flight) =>
     flight.departureDate
   ).getTime()}&adults=${
     flight.adults || "1"
-  }&infants=0&children=0&cabinType=${mapCabinType(
-    flight.cabinType
-  )}&tripType=2`;
+  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${
+    flight.tripType
+  }`;
+
+const generateEmissionLinkRoundTrip = (flight) =>
+  generateEmissionLink(flight).concat(`&returnDate=${flight.returnDate}`);
 
 const generateTaxLink = (flight) =>
   `adults=1&children=0&infants=0&fareuid=${flight.fareUid}&uid=${flight.uid}&type=SEGMENT_1&highlightText=SMILES_CLUB`;
 
 const applySimpleMarkdown = (word, symbol, symbolEnd) =>
   symbol + word + (symbolEnd || symbol);
+
+const partitionArrays = (array, predicate) => {
+  return array.reduce(
+    (acc, item) =>
+      predicate(item) ? (acc[0].push(item), acc) : (acc[1].push(item), acc),
+    [[], []]
+  );
+};
 
 const generatePayloadMonthlySingleDestination = (text) => {
   const { adults, cabinType } = calculateIndex(text.substring(16), 16);
@@ -183,8 +194,10 @@ module.exports = {
   generateFlightOutput,
   mapCabinType,
   generateEmissionLink,
+  generateEmissionLinkRoundTrip,
   generateTaxLink,
   applySimpleMarkdown,
+  partitionArrays,
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,

@@ -11,9 +11,9 @@ const getMany = (collection) => async (parameters) => {
 };
 
 const getOne = (collection) => async (id) => {
-  if (ObjectId.isValid(id)) {
-    return collection.findOne({ _id: ObjectId(id) });
-  } else throw new Error("Id provided has an incorrect format");
+  if (id) {
+    return collection.findOne(id);
+  } else throw new Error("getOne: Id provided has an incorrect format");
 };
 
 const createOne = (collection) => async (event) => collection.insertOne(event);
@@ -21,13 +21,19 @@ const createOne = (collection) => async (event) => collection.insertOne(event);
 const updateOne = (collection) => async (id, updatedEvent) => {
   if (ObjectId.isValid(id)) {
     return collection.updateOne({ _id: ObjectId(id) }, updatedEvent);
-  } else throw new Error("Id provided has an incorrect format");
+  } else throw new Error("updateOne: Id provided has an incorrect format");
 };
 
 const deleteOne = (collection) => async (id) => {
-  if (ObjectId.isValid(id)) {
-    return collection.deleteOne({ _id: ObjectId(id) });
-  } else throw new Error("Id provided has an incorrect format");
+  if (id) {
+    return collection.deleteOne(id);
+  } else throw new Error("deleteOne: Id provided has an incorrect format");
+};
+
+const upsert = (collection) => async (id, update) => {
+  if (id) {
+    return await collection.findOneAndUpdate(id, update, {upsert: true});
+  } else throw new Error("upsert: Id provided has an incorrect format");
 };
 
 module.exports = async (collection) => {
@@ -38,5 +44,6 @@ module.exports = async (collection) => {
     createOne: createOne(dbCollection),
     updateOne: updateOne(dbCollection),
     deleteOne: deleteOne(dbCollection),
+    upsert: upsert(dbCollection),
   };
 };

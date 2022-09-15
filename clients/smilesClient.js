@@ -27,8 +27,7 @@ const smilesTaxClient = axios.create({
 });
 
 const getFlights = async (parameters) => {
-  const { origin, destination, departureDate, cabinType, adults } = parameters;
-
+  const { origin, destination, departureDate, cabinType, adults, preferences } = parameters;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   try {
     const getFlightPromises = [];
@@ -61,12 +60,13 @@ const getFlights = async (parameters) => {
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
+            airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
           };
         })
       )
-    ).filter((flight) => validFlight(flight));
+    ).filter((flight) => validFlight(flight, preferences));
     return {
       origin,
       destination,
@@ -90,7 +90,7 @@ const getFlightsMultipleCities = async (
   fixedDay,
   isMultipleOrigin
 ) => {
-  const { origin, destination, departureDate, cabinType, adults } = parameters;
+  const { origin, destination, departureDate, cabinType, adults, preferences } = parameters;
 
   const multipleCity = isMultipleOrigin ? origin : destination;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
@@ -129,12 +129,13 @@ const getFlightsMultipleCities = async (
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
+            airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
           };
         })
       )
-    ).filter((flight) => validFlight(flight));
+    ).filter((flight) => validFlight(flight, preferences));
     return {
       results: sortAndSlice(mappedFlightResults.flat()),
     };
@@ -159,6 +160,7 @@ const getFlightsRoundTrip = async (parameters) => {
     cabinTypeComing,
     minDays,
     maxDays,
+    preferences,
   } = parameters;
 
   const lastDepartureDate = new Date(returnDate);
@@ -228,12 +230,13 @@ const getFlightsRoundTrip = async (parameters) => {
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
+            airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
           };
         })
       )
-    ).filter((flight) => validFlight(flight));
+    ).filter((flight) => validFlight(fligh, preferences));
     return {
       results: sortAndSliceRoundTrip(
         mappedFlightResults,
@@ -305,9 +308,11 @@ const getTax = async (uid, fareuid) => {
   }
 };
 
-const validFlight = (flight) =>
+const validFlight = (flight, preferences) =>
   flight.price &&
   flight.price !== Number.MAX_VALUE.toString() &&
-  flight.tax?.miles;
+  flight.tax?.miles && 
+  (preferences === null || !preferences.hasOwnProperty('airlines') || (!preferences.airlines.includes(flight.airlineCode))) && 
+  (preferences === null || !preferences.hasOwnProperty('stops') ||  (flight.stops <= preferences.stops));
 
 module.exports = { getFlights, getFlightsMultipleCities, getFlightsRoundTrip };

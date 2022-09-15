@@ -25,85 +25,13 @@ const cafecito = `Si te ayudé a encontrar tu vuelo ideal y te gustaría contrib
 
 const links = `\\-[Grupo de Telegram sobre alerta de ofertas en Smiles](https://t.me/+FiKom9f1944xYzIx)\n\\-[Grupo de Telegram sobre consultas de Smiles](https://t.me/+3JRDTJIf2gM0YWE5)\n\\-[Guía completa sobre Smiles](https://elviajeroserial.com/smiles-argentina-manual-del-usuario-analisis-estrategias-y-todo-lo-que-necesitas-saber/)\n`;
 
+const groupChatIdAlerts = -590494802;
+
 const SMILES_URL = "https://api-air-flightsearch-prd.smiles.com.br/v1/airlines";
 const TWITTER_OWN_ID = "1529767809105920000";
 const SMILES_EMISSION_URL = "https://www.smiles.com.ar/emission?";
 const SMILES_TAX_URL =
   "https://api-airlines-boarding-tax-prd.smiles.com.br/v1/airlines/flight";
-
-const SAMERICA = ["SCL", "LIM", "BOG", "BUE", "MVD", "ASU", "UIO"];
-
-const ARGENTINA = ["BUE", "COR", "ROS", "MDZ", "NQN", "BRC", "IGR"];
-
-const BRASIL = ["RIO", "SAO", "FLN", "MCZ", "SSA", "REC", "NAT", "IGU"];
-
-const COLOMBIA = ["BOG", "ADZ", "CTG", "SMR"];
-
-const CARIBE = ["CUN", "PTY", "PUJ", "SJO", "AUA", "HAV", "CTG"];
-
-const NAMERICA = ["MEX", "CHI", "NYC", "LAX", "DFW", "SFO", "LAS"];
-
-const USAESTE = ["NYC", "WAS", "PHL", "BOS", "DTT", "CHI"];
-
-const USAOESTE = ["LAX", "HNL", "SFO", "LAS", "SAN", "SMF"];
-
-const USASUR = ["DFW", "PHX", "IAH", "SAT", "ATL"];
-
-const FLORIDA = ["MIA", "FLL", "MCO", "TPA"];
-
-const CANADA = ["YTO", "YMQ", "YVR", "YOW", "YQB"];
-
-const EUROPA = ["LIS", "MAD", "BCN", "PAR", "AMS", "ROM", "LON", "FRA", "IST"];
-
-const CEUROPA = ["BRU", "ATH", "BER", "ZRH", "VIE", "PRG"];
-
-const ESPANA = ["MAD", "BCN", "VLC", "PMI", "AGP", "IBZ", "SVQ"];
-
-const ITALIA = ["ROM", "MIL", "BLQ", "VCE", "NAP"];
-
-const FRANCIA = ["PAR", "MRS", "NCE", "LYS", "NTE", "TLS"];
-
-const ASIA = ["DXB", "BKK", "TLV", "TYO", "SEL", "DPS"];
-
-const MORIENTE = ["IST", "CAI", "DXB", "TLV", "DOH"];
-
-const SASIA = ["BKK", "SIN", "MLE", "DPS", "SGN", "KUL"];
-
-const NASIA = ["TYO", "SEL", "HKG"];
-
-const INDIA = ["DEL", "BLR", "BOM", "CCU", "JAI"];
-
-const AFRICA = ["CAI", "SEZ", "CPT", "DAR", "ADD", "RBA"];
-
-const OCEANIA = ["AKL", "SYD", "MEL"];
-
-const regions = {
-  SAMERICA,
-  ARGENTINA,
-  BRASIL,
-  COLOMBIA,
-  CARIBE,
-  NAMERICA,
-  FLORIDA,
-  USAESTE,
-  USAOESTE,
-  USASUR,
-  CANADA,
-  EUROPA,
-  CEUROPA,
-  ESPANA,
-  ITALIA,
-  FRANCIA,
-  ASIA,
-  MORIENTE,
-  SASIA,
-  NASIA,
-  INDIA,
-  AFRICA,
-  OCEANIA,
-};
-
-const airlines = ["AA", "AR", "UX", "AM", "AV", "CM", "AF", "KL", "AC", "IB", "EK", "TK", "TP", "SA", "ET", "AT", "KE", "2Z", "G3", "FV", "A3", "MS", "AS", "EI", "VA", "V7", "NH", "XW", "AI", "4O", "OU", "UP", "HA", "OB", "TR", "OK", "JQ", "MN", "PG", "WM", "KQ", "BT", "MU", "ZP", "ME", "GA", "HO", "SG", "PY", "PS", "CX", "TG", "JL", "S7", "FA", "H2"];
 
 const airlinesCodes = `El listado de aerolíneas disponibles en Smiles es el siguiente: Use el código de 2 caracteres para configurar sus filtros:  \n\\\n\\AA: American Airlines\n\\AR: Aerolíneas Argentinas\n\\UX: Air Europa\n\\AM: AeroMéxico\n\\AV: Avianca\n\\CM: Copa Airlines\n\\AF: Air France\n\\KL: KLM\n\\AC: Air Canadá\n\\IB: Iberia\n\\EK: Emirates\n\\TK: Turkish Airlines\n\\TP: TAP Portugal\n\\SA: South African Airways\n\\ET: Ethiopian Airways\n\\AT: Royal Air Maroc\n\\KE: Korean Air\n\\2Z: Voe Pass\n\\G3: Gol\n\\FV: Viva Air\n\\A3: Aegean\n\\MS: Egyptair\n\\AS: Alaska Airlines\n\\EI: Aer Lingus\n\\VA: Virgin Australia\n\\V7: Volotea\n\\NH: Ana\n\\XW: Sky Express\n\\AI: Air India\n\\4O: Interjet\n\\OU: Croatia Airlines\n\\UP: Bahamas Air\n\\HA: Hawaiian Airlines\n\\OB: Boliviana de Aviación\n\\TR: Scoot\n\\OK: Czech Airlines\n\\JQ: Jetstar\n\\MN: Kulula\n\\PG: Bangkok Airways\n\\WM: Winair\n\\KQ: Kenya Airways\n\\BT: Air Baltic\n\\MU: China Estern\n\\ZP: Paranair\n\\ME: MEA\n\\GA: Garuda Indonesia\n\\HO: Juneyao Airlines\n\\SG: SpiceJet\n\\PY: Surinam Airways\n\\PS: UIA\n\\CX: Cathay Pacific\n\\TG: THAI\n\\JL: Japan Airlines\n\\S7: S7 Airlines\n\\FA: FlySafair\n\\H2: SKY Airline`;
 
@@ -113,7 +41,8 @@ const preferencesDelete = "Se han eliminado sus filtros.";
 
 const preferencesNone = "No tiene filtros guardados.";
 
-const preferencesError = "Se ha presentado un error. Revise el formato del comando por favor";
+const preferencesError =
+  "Se ha presentado un error. Revise el formato del comando por favor";
 
 module.exports = {
   badResponse,
@@ -124,17 +53,16 @@ module.exports = {
   genericError,
   retry,
   searching,
-  regions,
   cafecito,
   links,
+  groupChatIdAlerts,
   SMILES_URL,
   TWITTER_OWN_ID,
   SMILES_EMISSION_URL,
   SMILES_TAX_URL,
-  airlines,
   preferencesSave,
   preferencesDelete,
   preferencesError,
   preferencesNone,
-  airlinesCodes
+  airlinesCodes,
 };

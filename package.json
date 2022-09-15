@@ -15,6 +15,7 @@
     "dotenv": "^16.0.1",
     "mongodb": "^4.9.0",
     "node-emoji": "^1.11.0",
+    "node-schedule": "^2.1.0",
     "node-telegram-bot-api": "^0.58.0",
     "twitter-api-v2": "^1.12.5"
   },

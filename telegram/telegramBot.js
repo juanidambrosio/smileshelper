@@ -291,7 +291,7 @@ const listen = async () => {
     }
   });
 
-  bot.onText(/\/filtros-eliminar/, async (msg) => {
+  bot.onText(/\/filtroseliminar/, async (msg) => {
     const chatId = msg.chat.id;
     
     try{

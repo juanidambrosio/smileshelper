@@ -1,5 +1,5 @@
 const emoji = require("node-emoji");
-const { SMILES_EMISSION_URL, regions } = require("../config/constants");
+const { SMILES_EMISSION_URL, regions, airlines } = require("../config/constants");
 
 const calculateIndex = (parameters, indexStart) => {
   const regex = /^\d$|^(EJE|ECO|PEC)$|^\d (EJE|ECO|PEC)$|^(EJE|ECO|PEC) \d$/;
@@ -214,6 +214,25 @@ const generatePayloadRoundTrip = (text) => {
   };
 };
 
+const preferencesParser = (text) => {
+  const offsetAirlines = text.indexOf(" a:");
+  const offsetStops = text.indexOf(" e:");
+  const result = {};
+
+  const airlinesEnd = (offsetAirlines > 0 && offsetStops == -1)? text.length : offsetStops;
+
+  if(offsetAirlines > 0){
+    const airlinesArray = text.substring(offsetAirlines + 3, airlinesEnd).toUpperCase().split(" ").filter(airline => airlines.includes(airline));
+    Object.assign(result, {airlines : airlinesArray});
+  }
+
+  if(offsetStops > 0){
+    Object.assign(result, {stops : text.substring(offsetStops + 3, offsetStops + 4)});
+  }
+
+  return result;
+};
+
 module.exports = {
   calculateIndex,
   generateFlightOutput,
@@ -228,4 +247,5 @@ module.exports = {
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,
   generatePayloadRoundTrip,
+  preferencesParser,
 };

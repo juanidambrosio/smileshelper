@@ -12,6 +12,10 @@ const {
   retry,
   cafecito,
   links,
+  preferencesSave,
+  preferencesDelete,
+  preferencesError,
+  airlinesCodes,
 } = require("../config/constants");
 const {
   generatePayloadMonthlySingleDestination,
@@ -22,6 +26,7 @@ const {
   generateFlightOutput,
   generateEmissionLink,
   generateEmissionLinkRoundTrip,
+  preferencesParser,
 } = require("../utils/parser");
 const {
   getFlights,
@@ -36,10 +41,14 @@ const {
   regexMultipleOriginMonthly,
   regexMultipleOriginFixedDay,
   regexRoundTrip,
+  regexAirlines,
 } = require("../utils/regex");
+
+let preferences;
 
 const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
+  const { createOne : createOnePref, upsert, getOne, deleteOne } = await dbOperations("preferences");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
   bot.onText(/\/start/, async (msg) =>
@@ -65,10 +74,21 @@ const listen = async () => {
     bot.sendMessage(msg.chat.id, links, { parse_mode: "MarkdownV2" })
   );
 
+  bot.onText(/\/aerolineas/, async (msg) =>
+    bot.sendMessage(msg.chat.id, airlinesCodes, { parse_mode: "MarkdownV2" })
+  );
+
   bot.onText(regexSingleCities, async (msg) => {
     const chatId = msg.chat.id;
 
     const payload = generatePayloadMonthlySingleDestination(msg.text);
+    preferences = await getPreferences({
+        id: msg.from.username || msg.from.id.toString(),
+      }, 
+      getOne);
+    
+    payload.preferences = preferences;
+    
     bot.sendMessage(chatId, searching);
     try {
       const flightList = await getFlights(payload);
@@ -152,6 +172,14 @@ const listen = async () => {
   bot.onText(regexRoundTrip, async (msg) => {
     const chatId = msg.chat.id;
     const payload = generatePayloadRoundTrip(msg.text);
+
+    preferences = await getPreferences({
+      id: msg.from.username || msg.from.id.toString(),
+    }, 
+    getOne);
+  
+    payload.preferences = preferences;
+
     try {
       bot.sendMessage(chatId, searching);
       const flightList = await getFlightsRoundTrip(payload);
@@ -231,6 +259,67 @@ const listen = async () => {
       bot.sendMessage(chatId, genericError);
     }
   });
+
+  bot.onText(regexAirlines, async (msg) => {
+    const chatId = msg.chat.id;
+    const result = preferencesParser(msg.text);
+    const airlines = result.airlines;
+    const stops = result.stops;
+    try{
+      await setPreferences(
+        {
+          id: msg.from.username || msg.from.id.toString(),
+          result,
+        },
+        upsert
+      );
+      bot.sendMessage(chatId, preferencesSave, { parse_mode: "Markdown" });
+    } catch (error) {
+      console.log(error);
+      bot.sendMessage(chatId, preferencesError);
+    }
+  });
+
+  bot.onText(/\/parametros-eliminar/, async (msg) => {
+    const chatId = msg.chat.id;
+    
+    try{
+      await deleteOne({author_id: msg.from.username || msg.from.id.toString()});
+      bot.sendMessage(chatId, preferencesDelete, { parse_mode: "Markdown" });
+    } catch (error) {
+      console.log(error);
+      bot.sendMessage(chatId, preferencesError);
+    }
+  });
+
+  bot.onText(/\/parametros$/, async (msg) => {
+    const chatId = msg.chat.id;
+    
+    try{
+      preferences = await getPreferences({
+        id: msg.from.username || msg.from.id.toString(),
+      }, 
+      getOne);
+
+      let response = "";
+      if(preferences === null){
+        response = "No tiene parámetros guardados.";
+      }else{
+        if(preferences.hasOwnProperty('airlines')){
+          response += "a: " + preferences.airlines.toString() + " ";
+        }
+        if(preferences.hasOwnProperty('stops')){
+          response += "e: " + preferences.stops + " ";
+        }
+      }
+      
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    } catch (error) {
+      console.log(error);
+      bot.sendMessage(chatId, preferencesError);
+    }
+  });
+
 };
 
 listen();
@@ -246,6 +335,14 @@ const searchRegionalQuery = async (
   const payload = isMultipleOrigin
     ? generatePayloadMultipleOrigins(msg.text, fixedDay)
     : generatePayloadMultipleDestinations(msg.text, fixedDay);
+
+  preferences = await getPreferences({
+    id: msg.from.username || msg.from.id.toString(),
+  }, 
+  getOne);
+  
+  payload.preferences = preferences;
+
   try {
     bot.sendMessage(chatId, searching);
     const flightList = await getFlightsMultipleCities(
@@ -346,4 +443,14 @@ const createFlightSearch = async (data, createOne) => {
     price
   );
   await createOne(flightSearch);
+};
+
+const setPreferences = async (data, upsert) => {
+  const { id, result } = data;
+  await upsert({author_id: id}, {$set: result});
+};
+
+const getPreferences = async (data, getOne) => {
+  const { id } = data;
+  return await getOne({author_id: id});
 };

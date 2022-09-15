@@ -15,6 +15,7 @@ const {
   preferencesSave,
   preferencesDelete,
   preferencesError,
+  preferencesNone,
   airlinesCodes,
 } = require("../config/constants");
 const {
@@ -280,7 +281,7 @@ const listen = async () => {
     }
   });
 
-  bot.onText(/\/parametros-eliminar/, async (msg) => {
+  bot.onText(/\/filtros-eliminar/, async (msg) => {
     const chatId = msg.chat.id;
     
     try{
@@ -292,7 +293,7 @@ const listen = async () => {
     }
   });
 
-  bot.onText(/\/parametros$/, async (msg) => {
+  bot.onText(/\/filtros$/, async (msg) => {
     const chatId = msg.chat.id;
     
     try{
@@ -303,7 +304,7 @@ const listen = async () => {
 
       let response = "";
       if(preferences === null){
-        response = "No tiene parámetros guardados.";
+        response = preferencesNone;
       }else{
         if(preferences.hasOwnProperty('airlines')){
           response += "a: " + preferences.airlines.toString() + " ";

@@ -267,6 +267,16 @@ const listen = async () => {
     const airlines = result.airlines;
     const stops = result.stops;
     try{
+      if(airlines !== undefined){
+        result.airlines = await existingPreferences(
+          {
+            id : msg.from.username || msg.from.id.toString(),
+            airlines,
+          },
+          getOne
+        );
+      }
+      
       await setPreferences(
         {
           id: msg.from.username || msg.from.id.toString(),
@@ -449,6 +459,17 @@ const createFlightSearch = async (data, createOne) => {
 const setPreferences = async (data, upsert) => {
   const { id, result } = data;
   await upsert({author_id: id}, {$set: result});
+};
+
+const existingPreferences = async (data, getOne) => {
+  const { id, airlines } = data;
+  const previous = await getOne({author_id: id});
+
+  if(previous !== null && previous.airlines !== undefined){
+    return [...previous.airlines, ...airlines];
+  }else{
+    return airlines;
+  }
 };
 
 const getPreferences = async (data, getOne) => {

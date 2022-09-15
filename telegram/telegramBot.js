@@ -6,7 +6,6 @@ const {
   cafecito,
   links,
   airlinesCodes,
-  genericError,
   searching,
 } = require("../config/constants");
 const regions = require("../data/regions");

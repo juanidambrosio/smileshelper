@@ -27,7 +27,8 @@ const smilesTaxClient = axios.create({
 });
 
 const getFlights = async (parameters) => {
-  const { origin, destination, departureDate, cabinType, adults, preferences } = parameters;
+  const { origin, destination, departureDate, cabinType, adults, preferences } =
+    parameters;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   try {
     const getFlightPromises = [];
@@ -55,6 +56,8 @@ const getFlights = async (parameters) => {
             cabinType
           );
           return {
+            origin: flight.departure?.airport?.code,
+            destination: flight.arrival?.airport?.code,
             price,
             departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
             stops: flight.stops?.toString(),
@@ -68,8 +71,6 @@ const getFlights = async (parameters) => {
       )
     ).filter((flight) => validFlight(flight, preferences));
     return {
-      origin,
-      destination,
       results: sortAndSlice(mappedFlightResults),
       departureMonth: departureDate.substring(5, 7),
     };
@@ -90,7 +91,8 @@ const getFlightsMultipleCities = async (
   fixedDay,
   isMultipleOrigin
 ) => {
-  const { origin, destination, departureDate, cabinType, adults, preferences } = parameters;
+  const { origin, destination, departureDate, cabinType, adults, preferences } =
+    parameters;
 
   const multipleCity = isMultipleOrigin ? origin : destination;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
@@ -311,8 +313,12 @@ const getTax = async (uid, fareuid) => {
 const validFlight = (flight, preferences) =>
   flight.price &&
   flight.price !== Number.MAX_VALUE.toString() &&
-  flight.tax?.miles && 
-  (preferences === null || !preferences.hasOwnProperty('airlines') || (!preferences.airlines.includes(flight.airlineCode))) && 
-  (preferences === null || !preferences.hasOwnProperty('stops') ||  (flight.stops <= preferences.stops));
+  flight.tax?.miles &&
+  (!preferences ||
+    !preferences.hasOwnProperty("airlines") ||
+    !preferences.airlines.includes(flight.airlineCode)) &&
+  (!preferences ||
+    !preferences.hasOwnProperty("stops") ||
+    flight.stops <= preferences.stops);
 
 module.exports = { getFlights, getFlightsMultipleCities, getFlightsRoundTrip };

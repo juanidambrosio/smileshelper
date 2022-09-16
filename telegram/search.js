@@ -21,62 +21,63 @@ const { notFound, genericError, searching } = require("../config/constants");
 
 const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
 
-const searchCityQuery = async (bot, msg, flightFunctions) => {
+const searchCityQuery = async (msg, flightFunctions = {}) => {
   const chatId = msg.chat.id;
 
   const payload = generatePayloadMonthlySingleDestination(msg.text);
   const { createOne, getOne } = flightFunctions;
-  payload.preferences = await getPreferencesDb(
-    {
-      id: msg.from.username || msg.from.id.toString(),
-    },
-    getOne
+
+  if (getOne) {
+    payload.preferences = await getPreferencesDb(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    );
+  }
+  const flightList = await getFlights(payload);
+  const bestFlights = flightList.results;
+  if (flightList.error) {
+    throw new Error(flightList.error);
+    //return bot.sendMessage(chatId, flightList.error);
+  }
+  if (bestFlights.length === 0) {
+    throw new Error(notFound);
+    //return bot.sendMessage(chatId, notFound);
+  }
+  const response = bestFlights.reduce(
+    (previous, current) =>
+      previous.concat(
+        emoji.get("airplane") +
+          applySimpleMarkdown(
+            current.departureDay + "/" + flightList.departureMonth,
+            "[",
+            "]"
+          ) +
+          applySimpleMarkdown(
+            generateEmissionLink({
+              ...payload,
+              departureDate:
+                payload.departureDate + "-" + current.departureDay + " 09:",
+              tripType: "2",
+            }),
+            "(",
+            ")"
+          ) +
+          ": " +
+          applySimpleMarkdown(
+            `${current.price.toString()} + ${current.tax.miles}/${
+              current.tax.money
+            }`,
+            "*"
+          ) +
+          generateFlightOutput(current) +
+          "\n"
+      ),
+    payload.origin + " " + payload.destination + "\n"
   );
 
-  bot.sendMessage(chatId, searching);
-  try {
-    const flightList = await getFlights(payload);
-    const bestFlights = flightList.results;
-    if (flightList.error) {
-      return bot.sendMessage(chatId, flightList.error);
-    }
-    if (bestFlights.length === 0) {
-      return bot.sendMessage(chatId, notFound);
-    }
-    const response = bestFlights.reduce(
-      (previous, current) =>
-        previous.concat(
-          emoji.get("airplane") +
-            applySimpleMarkdown(
-              current.departureDay + "/" + flightList.departureMonth,
-              "[",
-              "]"
-            ) +
-            applySimpleMarkdown(
-              generateEmissionLink({
-                ...payload,
-                departureDate:
-                  payload.departureDate + "-" + current.departureDay + " 09:",
-                tripType: "2",
-              }),
-              "(",
-              ")"
-            ) +
-            ": " +
-            applySimpleMarkdown(
-              `${current.price.toString()} + ${current.tax.miles}/${
-                current.tax.money
-              }`,
-              "*"
-            ) +
-            generateFlightOutput(current) +
-            "\n"
-        ),
-      payload.origin + " " + payload.destination + "\n"
-    );
-    console.log(msg.text);
-    bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-
+  if (createOne) {
     await createFlightSearch(
       {
         id: msg.from.username || msg.from.id.toString(),
@@ -87,10 +88,8 @@ const searchCityQuery = async (bot, msg, flightFunctions) => {
       },
       createOne
     );
-  } catch (error) {
-    console.log(error);
-    bot.sendMessage(chatId, genericError);
   }
+  return { response, bestFlight: bestFlights[0] };
 };
 
 const searchRegionalQuery = async (

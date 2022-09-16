@@ -6,8 +6,10 @@ const {
   cafecito,
   links,
   airlinesCodes,
+  genericError,
+  searching,
 } = require("../config/constants");
-const regions = require("../config/regions");
+const regions = require("../data/regions");
 const { applySimpleMarkdown } = require("../utils/parser");
 
 const {
@@ -39,7 +41,7 @@ const listen = async () => {
   const { upsert, getOne, deleteOne } = await dbOperations("preferences");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
-  //await checkDailyAlerts(bot);
+  await checkDailyAlerts(bot);
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })
@@ -68,10 +70,17 @@ const listen = async () => {
     bot.sendMessage(msg.chat.id, airlinesCodes, { parse_mode: "MarkdownV2" })
   );
 
-  bot.onText(
-    regexSingleCities,
-    async (msg) => await searchCityQuery(bot, msg, { createOne, getOne })
-  );
+  bot.onText(regexSingleCities, async (msg) => {
+    try {
+      bot.sendMessage(msg.chat.id, searching);
+      const { response } = await searchCityQuery(msg, { createOne, getOne });
+      console.log(msg.text);
+      bot.sendMessage(msg.chat.id, response, { parse_mode: "Markdown" });
+    } catch (error) {
+      console.log(error);
+      bot.sendMessage(msg.chat.id, error.message || genericError);
+    }
+  });
 
   bot.onText(
     regexMultipleDestinationMonthly,

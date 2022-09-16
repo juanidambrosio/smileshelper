@@ -1,7 +1,7 @@
 const emoji = require("node-emoji");
 const { SMILES_EMISSION_URL } = require("../config/constants");
-const regions = require("../config/regions");
-const airlines = require("../config/airlines");
+const regions = require("../data/regions");
+const airlines = require("../data/airlines");
 
 const calculateIndex = (parameters, indexStart) => {
   const regex = /^\d$|^(EJE|ECO|PEC)$|^\d (EJE|ECO|PEC)$|^(EJE|ECO|PEC) \d$/;

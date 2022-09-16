@@ -13,6 +13,9 @@ const lastDays = new Map([
   ["12", 31],
 ]);
 
+const monthToString = (month) =>
+  month >= 10 ? month.toString() : "0".concat(month);
+
 const parseDate = (monthDate, number) =>
   number >= 10 ? monthDate + "-" + number : monthDate + "-" + "0" + number;
 
@@ -26,4 +29,4 @@ const calculateFirstDay = (departureMonth) => {
   }
 };
 
-module.exports = { lastDays, parseDate, calculateFirstDay };
+module.exports = { lastDays, parseDate, calculateFirstDay, monthToString };

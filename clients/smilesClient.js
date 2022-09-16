@@ -55,7 +55,7 @@ const getFlights = async (parameters) => {
             cabinType
           );
           return {
-            price: price.toString(),
+            price,
             departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
@@ -124,7 +124,7 @@ const getFlightsMultipleCities = async (
           return {
             origin: flight.departure?.airport?.code,
             destination: flight.arrival?.airport?.code,
-            price: price.toString(),
+            price,
             departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
@@ -236,7 +236,7 @@ const getFlightsRoundTrip = async (parameters) => {
           };
         })
       )
-    ).filter((flight) => validFlight(fligh, preferences));
+    ).filter((flight) => validFlight(flight, preferences));
     return {
       results: sortAndSliceRoundTrip(
         mappedFlightResults,

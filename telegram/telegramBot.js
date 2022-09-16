@@ -49,7 +49,7 @@ let preferences;
 
 const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
-  const { createOne : createOnePref, upsert, getOne, deleteOne } = await dbOperations("preferences");
+  const { upsert, getOne, deleteOne } = await dbOperations("preferences");
   const bot = new TelegramBot(telegramApiToken, { polling: true });
 
   bot.onText(/\/start/, async (msg) =>
@@ -83,13 +83,15 @@ const listen = async () => {
     const chatId = msg.chat.id;
 
     const payload = generatePayloadMonthlySingleDestination(msg.text);
-    preferences = await getPreferences({
+    preferences = await getPreferences(
+      {
         id: msg.from.username || msg.from.id.toString(),
-      }, 
-      getOne);
-    
+      },
+      getOne
+    );
+
     payload.preferences = preferences;
-    
+
     bot.sendMessage(chatId, searching);
     try {
       const flightList = await getFlights(payload);
@@ -152,33 +154,39 @@ const listen = async () => {
 
   bot.onText(
     regexMultipleDestinationMonthly,
-    async (msg) => await searchRegionalQuery(bot, msg, false, false, createOne)
+    async (msg) =>
+      await searchRegionalQuery(bot, msg, false, false, { createOne, getOne })
   );
 
   bot.onText(
     regexMultipleDestinationFixedDay,
-    async (msg) => await searchRegionalQuery(bot, msg, true, false, createOne)
+    async (msg) =>
+      await searchRegionalQuery(bot, msg, true, false, { createOne, getOne })
   );
 
   bot.onText(
     regexMultipleOriginMonthly,
-    async (msg) => await searchRegionalQuery(bot, msg, false, true, createOne)
+    async (msg) =>
+      await searchRegionalQuery(bot, msg, false, true, { createOne, getOne })
   );
 
   bot.onText(
     regexMultipleOriginFixedDay,
-    async (msg) => await searchRegionalQuery(bot, msg, true, true, createOne)
+    async (msg) =>
+      await searchRegionalQuery(bot, msg, true, true, { createOne, getOne })
   );
 
   bot.onText(regexRoundTrip, async (msg) => {
     const chatId = msg.chat.id;
     const payload = generatePayloadRoundTrip(msg.text);
 
-    preferences = await getPreferences({
-      id: msg.from.username || msg.from.id.toString(),
-    }, 
-    getOne);
-  
+    preferences = await getPreferences(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    );
+
     payload.preferences = preferences;
 
     try {
@@ -266,17 +274,17 @@ const listen = async () => {
     const result = preferencesParser(msg.text);
     const airlines = result.airlines;
     const stops = result.stops;
-    try{
-      if(airlines !== undefined){
+    try {
+      if (airlines !== undefined) {
         result.airlines = await existingPreferences(
           {
-            id : msg.from.username || msg.from.id.toString(),
+            id: msg.from.username || msg.from.id.toString(),
             airlines,
           },
           getOne
         );
       }
-      
+
       await setPreferences(
         {
           id: msg.from.username || msg.from.id.toString(),
@@ -293,9 +301,11 @@ const listen = async () => {
 
   bot.onText(/\/filtroseliminar/, async (msg) => {
     const chatId = msg.chat.id;
-    
-    try{
-      await deleteOne({author_id: msg.from.username || msg.from.id.toString()});
+
+    try {
+      await deleteOne({
+        author_id: msg.from.username || msg.from.id.toString(),
+      });
       bot.sendMessage(chatId, preferencesDelete, { parse_mode: "Markdown" });
     } catch (error) {
       console.log(error);
@@ -305,53 +315,58 @@ const listen = async () => {
 
   bot.onText(/\/filtros$/, async (msg) => {
     const chatId = msg.chat.id;
-    
-    try{
-      preferences = await getPreferences({
-        id: msg.from.username || msg.from.id.toString(),
-      }, 
-      getOne);
+
+    try {
+      preferences = await getPreferences(
+        {
+          id: msg.from.username || msg.from.id.toString(),
+        },
+        getOne
+      );
 
       let response = "";
-      if(preferences === null){
+      if (preferences === null) {
         response = preferencesNone;
-      }else{
-        if(preferences.hasOwnProperty('airlines')){
+      } else {
+        if (preferences.hasOwnProperty("airlines")) {
           response += "a: " + preferences.airlines.toString() + " ";
         }
-        if(preferences.hasOwnProperty('stops')){
+        if (preferences.hasOwnProperty("stops")) {
           response += "e: " + preferences.stops + " ";
         }
       }
-      
+
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     } catch (error) {
       console.log(error);
       bot.sendMessage(chatId, preferencesError);
     }
   });
-
 };
 
 listen();
 
 const searchRegionalQuery = async (
+
   bot,
   msg,
   fixedDay,
   isMultipleOrigin,
-  createFlight
+  flightFunctions
 ) => {
   const chatId = msg.chat.id;
+  const { createOne, getOne } = flightFunctions;
   const payload = isMultipleOrigin
     ? generatePayloadMultipleOrigins(msg.text, fixedDay)
     : generatePayloadMultipleDestinations(msg.text, fixedDay);
 
-  preferences = await getPreferences({
-    id: msg.from.username || msg.from.id.toString(),
-  }, 
-  getOne);
-  
+  preferences = await getPreferences(
+    {
+      id: msg.from.username || msg.from.id.toString(),
+    },
+    getOne
+  );
+
   payload.preferences = preferences;
 
   try {
@@ -428,7 +443,7 @@ const searchRegionalQuery = async (
         departureDate: payload.departureDate,
         price: bestFlights[0].price,
       },
-      createFlight
+      createOne
     );
     console.log(msg.text);
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
@@ -458,21 +473,21 @@ const createFlightSearch = async (data, createOne) => {
 
 const setPreferences = async (data, upsert) => {
   const { id, result } = data;
-  await upsert({author_id: id}, {$set: result});
+  await upsert({ author_id: id }, { $set: result });
 };
 
 const existingPreferences = async (data, getOne) => {
   const { id, airlines } = data;
-  const previous = await getOne({author_id: id});
+  const previous = await getOne({ author_id: id });
 
-  if(previous !== null && previous.airlines !== undefined){
+  if (previous !== null && previous.airlines !== undefined) {
     return [...previous.airlines, ...airlines];
-  }else{
+  } else {
     return airlines;
   }
 };
 
 const getPreferences = async (data, getOne) => {
   const { id } = data;
-  return await getOne({author_id: id});
+  return await getOne({ author_id: id });
 };

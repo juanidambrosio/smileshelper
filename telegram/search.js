@@ -22,8 +22,6 @@ const { notFound, genericError, searching } = require("../config/constants");
 const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
 
 const searchCityQuery = async (msg, flightFunctions = {}) => {
-  const chatId = msg.chat.id;
-
   const payload = generatePayloadMonthlySingleDestination(msg.text);
   const { createOne, getOne } = flightFunctions;
 
@@ -39,41 +37,41 @@ const searchCityQuery = async (msg, flightFunctions = {}) => {
   const bestFlights = flightList.results;
   if (flightList.error) {
     throw new Error(flightList.error);
-    //return bot.sendMessage(chatId, flightList.error);
   }
   if (bestFlights.length === 0) {
     throw new Error(notFound);
-    //return bot.sendMessage(chatId, notFound);
   }
   const response = bestFlights.reduce(
     (previous, current) =>
-      previous.concat(
-        emoji.get("airplane") +
-          applySimpleMarkdown(
-            current.departureDay + "/" + flightList.departureMonth,
-            "[",
-            "]"
-          ) +
-          applySimpleMarkdown(
-            generateEmissionLink({
-              ...payload,
-              departureDate:
-                payload.departureDate + "-" + current.departureDay + " 09:",
-              tripType: "2",
-            }),
-            "(",
-            ")"
-          ) +
-          ": " +
-          applySimpleMarkdown(
-            `${current.price.toString()} + ${current.tax.miles}/${
-              current.tax.money
-            }`,
-            "*"
-          ) +
-          generateFlightOutput(current) +
-          "\n"
-      ),
+      msg.promoMiles && current.price > msg.promoMiles
+        ? previous
+        : previous.concat(
+            emoji.get("airplane") +
+              applySimpleMarkdown(
+                current.departureDay + "/" + flightList.departureMonth,
+                "[",
+                "]"
+              ) +
+              applySimpleMarkdown(
+                generateEmissionLink({
+                  ...payload,
+                  departureDate:
+                    payload.departureDate + "-" + current.departureDay + " 09:",
+                  tripType: "2",
+                }),
+                "(",
+                ")"
+              ) +
+              ": " +
+              applySimpleMarkdown(
+                `${current.price.toString()} + ${current.tax.miles}/${
+                  current.tax.money
+                }`,
+                "*"
+              ) +
+              generateFlightOutput(current) +
+              "\n"
+          ),
     payload.origin + " " + payload.destination + "\n"
   );
 

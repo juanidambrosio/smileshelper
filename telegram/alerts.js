@@ -4,29 +4,37 @@ const { searchCityQuery } = require("./search");
 const { groupChatIdAlerts } = require("../config/constants");
 
 const rule = new schedule.RecurrenceRule();
-rule.hour = new schedule.Range(11, 23, 12);
+rule.hour = [14, 22];
 
 const checkDailyAlerts = async (bot) => {
   schedule.scheduleJob(rule, async () => {
+    const journeyAlerts = new Map();
     for (const text of texts) {
       try {
         const { bestFlight, response } = await searchCityQuery({
           from,
           chat,
-          text: text.journey,
+          text: text.journeyComplete,
           promoMiles: text.promoMiles,
         });
-        console.log(bestFlight.price + " " + new Date().toISOString());
+
         if (bestFlight.price <= text.promoMiles) {
-          bot.sendMessage(
-            groupChatIdAlerts,
-            `ALERTA! Se encontró un tramo en promoción:\n ${response}`,
-            { parse_mode: "Markdown" }
+          const journeyCompleteAlert = journeyAlerts.get(text.journey);
+          journeyAlerts.set(
+            text.journey,
+            journeyCompleteAlert
+              ? journeyCompleteAlert.concat(response)
+              : `ALERTA! Resumen anual de tramos en promoción para ${response}`
           );
         }
       } catch (error) {
         console.log(`Couldnt obtain result for alert query ${text.journey}`);
       }
+    }
+    for (const journeyAlert of journeyAlerts.values()) {
+      bot.sendMessage(groupChatIdAlerts, journeyAlert, {
+        parse_mode: "Markdown",
+      });
     }
   });
 };

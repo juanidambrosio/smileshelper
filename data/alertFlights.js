@@ -23,33 +23,39 @@ const alertFlightsInput = (flights) => {
   const alertFlightsInput = [];
   for (const flight of flights) {
     const reverseJourney = flight.journey.split(" ").reverse().join(" ");
-    for (let month = 1; month <= 12; month++) {
+    for (let month = 12; month >= 1; month--) {
       if (month >= currentMonth) {
-        alertFlightsInput.push(
+        alertFlightsInput.unshift(
           {
-            journey: flight.journey.concat(
+            journey: flight.journey,
+            journeyComplete: flight.journey.concat(
               ` ${currentYear}-${monthToString(month)}`
             ),
             promoMiles: flight.promoMiles,
           },
           {
-            journey: reverseJourney.concat(
+            journey: reverseJourney,
+            journeyComplete: reverseJourney.concat(
               ` ${currentYear}-${monthToString(month)}`
             ),
+            promoMiles: flight.promoMiles,
           }
         );
       } else {
         alertFlightsInput.push(
           {
-            journey: flight.journey.concat(
+            journey: flight.journey,
+            journeyComplete: flight.journey.concat(
               ` ${currentYear + 1}-${monthToString(month)}`
             ),
             promoMiles: flight.promoMiles,
           },
           {
-            journey: reverseJourney.concat(
+            journey: reverseJourney,
+            journeyComplete: reverseJourney.concat(
               ` ${currentYear + 1}-${monthToString(month)}`
             ),
+            promoMiles: flight.promoMiles,
           }
         );
       }

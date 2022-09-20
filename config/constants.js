@@ -25,7 +25,7 @@ const cafecito = `Si te ayudé a encontrar tu vuelo ideal y te gustaría contrib
 
 const links = `\\-[Grupo de Telegram sobre alerta de ofertas en Smiles](https://t.me/+FiKom9f1944xYzIx)\n\\-[Grupo de Telegram sobre consultas de Smiles](https://t.me/+3JRDTJIf2gM0YWE5)\n\\-[Guía completa sobre Smiles](https://elviajeroserial.com/smiles-argentina-manual-del-usuario-analisis-estrategias-y-todo-lo-que-necesitas-saber/)\n`;
 
-const groupChatIdAlerts = -590494802;
+const groupChatIdAlerts = -1638072368;
 
 const SMILES_URL = "https://api-air-flightsearch-prd.smiles.com.br/v1/airlines";
 const TWITTER_OWN_ID = "1529767809105920000";

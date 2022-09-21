@@ -219,6 +219,7 @@ const generatePayloadRoundTrip = (text) => {
 const preferencesParser = (text) => {
   const offsetAirlines = text.indexOf(" a:");
   const offsetStops = text.indexOf(" e:");
+  const offsetResults = text.indexOf(" r:");
   const result = {};
 
   const airlinesEnd = (offsetAirlines > 0 && offsetStops == -1)? text.length : offsetStops;
@@ -230,6 +231,10 @@ const preferencesParser = (text) => {
 
   if(offsetStops > 0){
     Object.assign(result, {stops : text.substring(offsetStops + 3, offsetStops + 4)});
+  }
+
+  if(offsetResults > 0){
+    Object.assign(result, {maxresults : text.substring(offsetResults + 3, offsetResults + 5)});
   }
 
   return result;

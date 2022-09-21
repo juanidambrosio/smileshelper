@@ -77,6 +77,9 @@ const getPreferences = async (bot, msg, getOne) => {
       if (preferences.hasOwnProperty("stops")) {
         response += "e: " + preferences.stops + " ";
       }
+      if (preferences.hasOwnProperty("maxresults")) {
+        response += "r: " + preferences.maxresults + " ";
+      }
     }
 
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });

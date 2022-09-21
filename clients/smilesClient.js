@@ -3,7 +3,7 @@ const { SMILES_URL, SMILES_TAX_URL } = require("../config/constants.js");
 const { smiles } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
-const { sortAndSlice, sortAndSliceRoundTrip } = require("../flightsHelper.js");
+const { sortFlights, sortFlightsRoundTrip } = require("../flightsHelper.js");
 const { belongsToCity } = require("../utils/parser");
 
 const headers = {
@@ -70,8 +70,12 @@ const getFlights = async (parameters) => {
         })
       )
     ).filter((flight) => validFlight(flight, preferences));
+
     return {
-      results: sortAndSlice(mappedFlightResults),
+      results: sortFlights(mappedFlightResults).slice(
+        0,
+        getBestFlightsCount(preferences)
+      ),
       departureMonth: departureDate.substring(5, 7),
     };
   } catch (error) {
@@ -144,7 +148,10 @@ const getFlightsMultipleCities = async (
       )
     ).filter((flight) => validFlight(flight, preferences));
     return {
-      results: sortAndSlice(mappedFlightResults.flat()),
+      results: sortFlights(mappedFlightResults.flat()).slice(
+        0,
+        getBestFlightsCount(preferences)
+      ),
     };
   } catch (error) {
     console.log(
@@ -185,6 +192,8 @@ const getFlightsRoundTrip = async (parameters) => {
   firstReturnDate.setDate(firstReturnDate.getDate() + minDays);
 
   const getFlightPromises = [];
+
+  const showResults = getBestFlightsCount(preferences);
 
   try {
     for (
@@ -253,12 +262,12 @@ const getFlightsRoundTrip = async (parameters) => {
       )
     ).filter((flight) => validFlight(flight, preferences));
     return {
-      results: sortAndSliceRoundTrip(
+      results: sortFlightsRoundTrip(
         mappedFlightResults,
         minDays,
         maxDays,
         origin
-      ),
+      ).slice(0, getBestFlightsCount(preferences)),
     };
   } catch (error) {
     console.log(
@@ -337,5 +346,10 @@ const validFlight = (flight, preferences) =>
   (!preferences ||
     !preferences.hasOwnProperty("stops") ||
     flight.stops <= preferences.stops);
+
+const getBestFlightsCount = (preferences) =>
+  !preferences || !preferences.hasOwnProperty("maxresults")
+    ? parseInt(maxResults, 10)
+    : parseInt(preferences.maxresults, 10);
 
 module.exports = { getFlights, getFlightsMultipleCities, getFlightsRoundTrip };

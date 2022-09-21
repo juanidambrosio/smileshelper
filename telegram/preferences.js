@@ -23,7 +23,7 @@ const setPreferences = async (bot, msg, preferencesFunctions) => {
       result.airlines = await existingPreferencesDb(
         {
           id: msg.from.username || msg.from.id.toString(),
-          airlines,
+          airlines: result.airlines,
         },
         getOne
       );
@@ -60,7 +60,7 @@ const getPreferences = async (bot, msg, getOne) => {
   const chatId = msg.chat.id;
 
   try {
-    preferences = await getPreferencesDb(
+    const preferences = await getPreferencesDb(
       {
         id: msg.from.username || msg.from.id.toString(),
       },

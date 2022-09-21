@@ -36,6 +36,8 @@ const {
   deletePreferences,
 } = require("./preferences");
 
+const { buildError } = require("../utils/error");
+
 const listen = async () => {
   const { createOne } = await dbOperations("flight_search");
   const { upsert, getOne, deleteOne } = await dbOperations("preferences");
@@ -77,8 +79,8 @@ const listen = async () => {
       console.log(msg.text);
       bot.sendMessage(msg.chat.id, response, { parse_mode: "Markdown" });
     } catch (error) {
-      console.log(error);
-      bot.sendMessage(msg.chat.id, error.message || genericError);
+      console.log(error.message);
+      bot.sendMessage(msg.chat.id, buildError(error.message));
     }
   });
 

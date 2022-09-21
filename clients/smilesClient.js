@@ -77,11 +77,16 @@ const getFlights = async (parameters) => {
   } catch (error) {
     console.log(
       "Error while getting flights: ",
-      error.response?.data?.error || error.response?.data?.errorMessage
+      error.response?.data?.error ||
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
-      error: error.response?.data?.errorMessage,
+      error:
+        error.response?.data?.error ||
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message,
     };
   }
 };
@@ -142,10 +147,18 @@ const getFlightsMultipleCities = async (
       results: sortAndSlice(mappedFlightResults.flat()),
     };
   } catch (error) {
-    console.log("Error while getting flights: ", error);
+    console.log(
+      "Error while getting flights: ",
+      error.response?.data?.error ||
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message
+    );
     return {
       statusError: error.response?.status,
-      error: error.response?.data?.errorMessage,
+      error:
+        error.response?.data?.error ||
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message,
     };
   }
 };
@@ -250,12 +263,16 @@ const getFlightsRoundTrip = async (parameters) => {
   } catch (error) {
     console.log(
       "Error while getting flights: ",
-      error
-      //error.response?.data?.error || error.response?.data?.errorMessage
+      error.response?.data?.error ||
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
-      error: error.response?.data?.errorMessage,
+      error:
+        error.response?.data?.error ||
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message,
     };
   }
 };

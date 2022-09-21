@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.27.2",
+    "cli-progress": "^3.11.2",
     "dotenv": "^16.0.1",
     "mongodb": "^4.9.0",
     "node-emoji": "^1.11.0",

@@ -21,6 +21,8 @@ const { notFound, genericError, searching } = require("../config/constants");
 
 const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
 
+const { buildError } = require("../utils/error");
+
 const searchCityQuery = async (msg, flightFunctions = {}) => {
   const payload = generatePayloadMonthlySingleDestination(msg.text);
   const { createOne, getOne } = flightFunctions;
@@ -39,7 +41,7 @@ const searchCityQuery = async (msg, flightFunctions = {}) => {
     throw new Error(flightList.error);
   }
   if (bestFlights.length === 0) {
-    throw new Error(notFound);
+    return { response: notFound };
   }
   const response = bestFlights.reduce(
     (previous, current) =>
@@ -119,13 +121,10 @@ const searchRegionalQuery = async (
     );
     const bestFlights = flightList.results;
 
-    if (!bestFlights) {
-      throw new Error();
+    if (flightList.error) {
+      return bot.sendMessage(chatId, buildError(flightList.error));
     }
 
-    if (flightList.error) {
-      return bot.sendMessage(chatId, flightList.error);
-    }
     if (bestFlights.length === 0) {
       return bot.sendMessage(chatId, notFound);
     }
@@ -189,7 +188,6 @@ const searchRegionalQuery = async (
     console.log(msg.text);
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
   } catch (error) {
-    console.log(error);
     bot.sendMessage(chatId, genericError);
   }
 };
@@ -211,7 +209,7 @@ const searchRoundTrip = async (bot, msg, flightFunctions) => {
 
     const bestFlights = flightList.results;
     if (flightList.error) {
-      return bot.sendMessage(chatId, flightList.error);
+      return bot.sendMessage(chatId, buildError(flightList.error));
     }
     if (bestFlights.length === 0) {
       return bot.sendMessage(chatId, notFound);
@@ -279,7 +277,6 @@ const searchRoundTrip = async (bot, msg, flightFunctions) => {
     console.log(msg.text);
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
   } catch (error) {
-    console.log(error);
     bot.sendMessage(chatId, genericError);
   }
 };

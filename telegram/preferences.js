@@ -80,6 +80,9 @@ const getPreferences = async (bot, msg, getOne) => {
       if (preferences.hasOwnProperty("maxresults")) {
         response += "r: " + preferences.maxresults + " ";
       }
+      if (preferences.hasOwnProperty("fare")) {
+        response += "vf";
+      }
     }
 
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });

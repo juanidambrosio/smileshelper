@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 const { SMILES_URL, SMILES_TAX_URL } = require("../config/constants.js");
-const { smiles } = require("../config/config.js");
+const { smiles, maxResults } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
 const { sortFlights, sortFlightsRoundTrip } = require("../flightsHelper.js");
@@ -66,6 +66,7 @@ const getFlights = async (parameters) => {
             airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            fare: flight.sourceFare,
           };
         })
       )
@@ -143,6 +144,7 @@ const getFlightsMultipleCities = async (
             airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            fare: flight.sourceFare,
           };
         })
       )
@@ -257,6 +259,7 @@ const getFlightsRoundTrip = async (parameters) => {
             airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            fare: flight.sourceFare,
           };
         })
       )
@@ -341,11 +344,12 @@ const validFlight = (flight, preferences) =>
   flight.price !== Number.MAX_VALUE.toString() &&
   flight.tax?.miles &&
   (!preferences ||
-    !preferences.hasOwnProperty("airlines") ||
-    !preferences.airlines.includes(flight.airlineCode)) &&
-  (!preferences ||
-    !preferences.hasOwnProperty("stops") ||
-    flight.stops <= preferences.stops);
+    ((!preferences.hasOwnProperty("airlines") ||
+      !preferences.airlines.includes(flight.airlineCode)) &&
+      (!preferences.hasOwnProperty("stops") ||
+        flight.stops <= preferences.stops) &&
+      (!preferences.hasOwnProperty("fare") ||
+        (preferences.fare && flight.fare == "AWARD"))));
 
 const getBestFlightsCount = (preferences) =>
   !preferences || !preferences.hasOwnProperty("maxresults")

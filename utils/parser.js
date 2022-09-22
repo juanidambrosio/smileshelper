@@ -220,6 +220,7 @@ const preferencesParser = (text) => {
   const offsetAirlines = text.indexOf(" a:");
   const offsetStops = text.indexOf(" e:");
   const offsetResults = text.indexOf(" r:");
+  const offsetVF = text.indexOf(" vf");
   const result = {};
 
   const airlinesEnd = (offsetAirlines > 0 && offsetStops == -1)? text.length : offsetStops;
@@ -235,6 +236,10 @@ const preferencesParser = (text) => {
 
   if(offsetResults > 0){
     Object.assign(result, {maxresults : text.substring(offsetResults + 3, offsetResults + 5)});
+  }
+
+  if(offsetVF > 0){
+      Object.assign(result, {fare : true});
   }
 
   return result;

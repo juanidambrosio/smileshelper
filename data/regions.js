@@ -18,6 +18,8 @@ const USASUR = ["DFW", "PHX", "IAH", "SAT", "ATL"];
 
 const FLORIDA = ["MIA", "FLL", "MCO", "TPA"];
 
+const HAWAII = ["HNL", "LIH", "KOA", "OGG"];
+
 const CANADA = ["YTO", "YMQ", "YVR", "YOW", "YQB"];
 
 const EUROPA = ["LIS", "MAD", "BCN", "PAR", "AMS", "ROM", "LON", "FRA", "IST"];
@@ -45,29 +47,30 @@ const AFRICA = ["CAI", "SEZ", "CPT", "DAR", "ADD", "RBA"];
 const OCEANIA = ["AKL", "SYD", "MEL"];
 
 const regions = {
-    SAMERICA,
-    ARGENTINA,
-    BRASIL,
-    COLOMBIA,
-    CARIBE,
-    NAMERICA,
-    FLORIDA,
-    USAESTE,
-    USAOESTE,
-    USASUR,
-    CANADA,
-    EUROPA,
-    CEUROPA,
-    ESPANA,
-    ITALIA,
-    FRANCIA,
-    ASIA,
-    MORIENTE,
-    SASIA,
-    NASIA,
-    INDIA,
-    AFRICA,
-    OCEANIA,
-  };
+  SAMERICA,
+  ARGENTINA,
+  BRASIL,
+  COLOMBIA,
+  CARIBE,
+  NAMERICA,
+  FLORIDA,
+  HAWAII,
+  USAESTE,
+  USAOESTE,
+  USASUR,
+  CANADA,
+  EUROPA,
+  CEUROPA,
+  ESPANA,
+  ITALIA,
+  FRANCIA,
+  ASIA,
+  MORIENTE,
+  SASIA,
+  NASIA,
+  INDIA,
+  AFRICA,
+  OCEANIA,
+};
 
-  module.exports = regions;
+module.exports = regions;

@@ -11,7 +11,7 @@ const cliProgress = require("cli-progress");
 
 const rule = new schedule.RecurrenceRule();
 rule.hour = [13, 21];
-rule.minute = 20;
+rule.minute = 0;
 
 const journeyAlerts = new Map();
 const progressBar = new cliProgress.SingleBar(
@@ -53,12 +53,23 @@ const checkPromoFlight = async (text, retries = 0) => {
 
     if (bestFlight && bestFlight.price <= text.promoMiles) {
       const journeyCompleteAlert = journeyAlerts.get(text.journey);
+      if (
+        journeyCompleteAlert &&
+        journeyCompleteAlert.length + response.length > 9500
+      ) {
+        const secondJourneyAlert = journeyAlerts.get(text.journey + "2");
+        journeyAlerts.journeyAlerts.set(
+          text.journey + "2",
+          secondJourneyAlert
+            ? secondJourneyAlert.concat(response)
+            : `ALERTA! Resumen anual de tramos en promoción para ${response}`
+        );
+        return true;
+      }
       journeyAlerts.set(
         text.journey,
         journeyCompleteAlert
-          ? journeyCompleteAlert.length + response.length <= 9500
-            ? journeyCompleteAlert.concat(response)
-            : journeyCompleteAlert
+          ? journeyCompleteAlert.concat(response)
           : `ALERTA! Resumen anual de tramos en promoción para ${response}`
       );
     }

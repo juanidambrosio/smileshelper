@@ -22,10 +22,16 @@ const parseDate = (monthDate, number) =>
 const calculateFirstDay = (departureMonth) => {
   const today = new Date();
   const month = today.getMonth();
-  if (month !== new Date(departureMonth).getMonth()) {
-    return 1;
-  } else {
+  const year = today.getFullYear();
+
+  const dateDepartureMonth = new Date(departureMonth);
+  if (
+    month === dateDepartureMonth.getMonth() &&
+    year === dateDepartureMonth.getFullYear()
+  ) {
     return today.getDate();
+  } else {
+    return 1;
   }
 };
 

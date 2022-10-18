@@ -4,6 +4,7 @@ const {
 } = require("../clients/smilesClient");
 const { twitterClient, ApiResponseError } = require("../config/config");
 const { incorrectFormat, notFound } = require("../config/constants");
+const { buildError } = require("../utils/error");
 
 module.exports.tweet = async (event) => {
   const { id, payload } = JSON.parse(event.body);
@@ -22,7 +23,7 @@ module.exports.tweet = async (event) => {
       : await getFlights(payload);
     const bestFlights = flightList.results;
     if (flightList.error) {
-      const response = flightList.error;
+      const response = buildError(flightList.error);
       await twitterClient.reply(response, id);
       return {
         statusCode: flightList.statusError,

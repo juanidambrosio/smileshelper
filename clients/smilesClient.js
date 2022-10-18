@@ -43,7 +43,8 @@ const getFlights = async (parameters) => {
         departureDate,
         adults,
         false,
-        day
+        day,
+        preferences.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(smilesClient.get("/search", { params }));
     }
@@ -75,17 +76,11 @@ const getFlights = async (parameters) => {
     return {
       results: sortFlights(mappedFlightResults).slice(
         0,
-        getBestFlightsCount(preferences)
+        getBestFlightsCount(preferences.maxresults)
       ),
       departureMonth: departureDate.substring(5, 7),
     };
   } catch (error) {
-    console.log(
-      "Error while getting flights: ",
-      error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message
-    );
     return {
       statusError: error.response?.status,
       error:
@@ -101,8 +96,14 @@ const getFlightsMultipleCities = async (
   fixedDay,
   isMultipleOrigin
 ) => {
-  const { origin, destination, departureDate, cabinType, adults, preferences } =
-    parameters;
+  const {
+    origin,
+    destination,
+    departureDate,
+    cabinType,
+    adults,
+    preferences,
+  } = parameters;
 
   const multipleCity = isMultipleOrigin ? origin : destination;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
@@ -120,7 +121,8 @@ const getFlightsMultipleCities = async (
           departureDate,
           adults,
           fixedDay,
-          fixedDay ? undefined : day
+          fixedDay ? undefined : day,
+          preferences.brasilNonGol ? "true" : "false"
         );
         getFlightPromises.push(smilesClient.get("/search", { params }));
       }
@@ -152,7 +154,7 @@ const getFlightsMultipleCities = async (
     return {
       results: sortFlights(mappedFlightResults.flat()).slice(
         0,
-        getBestFlightsCount(preferences)
+        getBestFlightsCount(preferences.maxresults)
       ),
     };
   } catch (error) {
@@ -195,8 +197,6 @@ const getFlightsRoundTrip = async (parameters) => {
 
   const getFlightPromises = [];
 
-  const showResults = getBestFlightsCount(preferences);
-
   try {
     for (
       let date = new Date(departureDate);
@@ -208,7 +208,9 @@ const getFlightsRoundTrip = async (parameters) => {
         destination,
         date.toLocaleDateString("en-CA"),
         adultsGoing,
-        true
+        true,
+        undefined,
+        preferences.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(
         smilesClient.get("/search", { params: paramsGoing })
@@ -225,7 +227,9 @@ const getFlightsRoundTrip = async (parameters) => {
         origin,
         dateReturn.toLocaleDateString("en-CA"),
         adultsComing,
-        true
+        true,
+        undefined,
+        preferences.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(
         smilesClient.get("/search", {
@@ -270,7 +274,7 @@ const getFlightsRoundTrip = async (parameters) => {
         minDays,
         maxDays,
         origin
-      ).slice(0, getBestFlightsCount(preferences)),
+      ).slice(0, getBestFlightsCount(preferences.maxresults)),
     };
   } catch (error) {
     console.log(
@@ -295,7 +299,8 @@ const buildParams = (
   departureDate,
   adults,
   fixedDay,
-  specificDay
+  specificDay,
+  brasilNonGol = "false"
 ) => ({
   adults: adults || "1",
   cabinType: "all",
@@ -304,7 +309,7 @@ const buildParams = (
   infants: "0",
   isFlexibleDateChecked: "false",
   tripType: "2",
-  forceCongener: "false",
+  forceCongener: brasilNonGol,
   r: "ar",
   originAirportCode: origin,
   destinationAirportCode: destination,
@@ -348,12 +353,11 @@ const validFlight = (flight, preferences) =>
       !preferences.airlines.includes(flight.airlineCode)) &&
       (!preferences.hasOwnProperty("stops") ||
         flight.stops <= preferences.stops) &&
-      (!preferences.hasOwnProperty("fare") ||
-        (preferences.fare && flight.fare == "AWARD"))));
+      (!preferences.hasOwnProperty("fare") || flight.fare == "AWARD")));
 
-const getBestFlightsCount = (preferences) =>
-  !preferences || !preferences.hasOwnProperty("maxresults")
+const getBestFlightsCount = (preferencesMaxResults) =>
+  !preferencesMaxResults
     ? parseInt(maxResults, 10)
-    : parseInt(preferences.maxresults, 10);
+    : parseInt(preferencesMaxResults, 10);
 
 module.exports = { getFlights, getFlightsMultipleCities, getFlightsRoundTrip };

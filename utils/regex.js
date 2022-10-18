@@ -12,8 +12,8 @@ const regexMultipleOriginFixedDay =
 const regexRoundTrip =
   /^\w{3}(\s|-)\w{3}\s\d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d(\s(\d|\w{3})){0,2} \d{4}(-|\/)[0-1]\d(-|\/)[0-3]\d\sm\d(\d)?(\sM\d(\d)?)?(\s(\d|\w{3})){0,2}$/;
 
-const regexAirlines =
-  /^\/filtros (a:(\w{2}(\s|)){1,10}){0,1}(e:[0-2](\s|)){0,1}(r:\d{1,2}(\s|)){0,1}(vf){0,1}$/i;
+const regexFilters =
+  /^\/filtros (a:(\w{2}(\s|)){1,10}){0,1}(e:[0-2](\s|)){0,1}(r:\d{1,2}(\s|)){0,1}(vf){0,1}(singol){0,1}$/i;
 
 module.exports = {
   regexSingleCities,
@@ -22,5 +22,5 @@ module.exports = {
   regexMultipleOriginMonthly,
   regexMultipleOriginFixedDay,
   regexRoundTrip,
-  regexAirlines,
+  regexFilters,
 };

@@ -28,12 +28,13 @@ const searchCityQuery = async (msg, flightFunctions = {}) => {
   const { createOne, getOne } = flightFunctions;
 
   if (getOne) {
-    payload.preferences = await getPreferencesDb(
-      {
-        id: msg.from.username || msg.from.id.toString(),
-      },
-      getOne
-    );
+    payload.preferences =
+      (await getPreferencesDb(
+        {
+          id: msg.from.username || msg.from.id.toString(),
+        },
+        getOne
+      )) || {};
   }
   const flightList = await getFlights(payload);
   const bestFlights = flightList.results;
@@ -105,12 +106,13 @@ const searchRegionalQuery = async (
     ? generatePayloadMultipleOrigins(msg.text, fixedDay)
     : generatePayloadMultipleDestinations(msg.text, fixedDay);
 
-  payload.preferences = await getPreferencesDb(
-    {
-      id: msg.from.username || msg.from.id.toString(),
-    },
-    getOne
-  );
+  payload.preferences =
+    (await getPreferencesDb(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    )) || {};
 
   try {
     bot.sendMessage(chatId, searching);
@@ -196,12 +198,13 @@ const searchRoundTrip = async (bot, msg, flightFunctions) => {
   const chatId = msg.chat.id;
   const payload = generatePayloadRoundTrip(msg.text);
   const { createOne, getOne } = flightFunctions;
-  payload.preferences = await getPreferencesDb(
-    {
-      id: msg.from.username || msg.from.id.toString(),
-    },
-    getOne
-  );
+  payload.preferences =
+    (await getPreferencesDb(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    )) || {};
 
   try {
     bot.sendMessage(chatId, searching);

@@ -23,17 +23,6 @@ const setPreferencesDb = async (data, upsert) => {
   await upsert({ author_id: id }, { $set: result });
 };
 
-const existingPreferencesDb = async (data, getOne) => {
-  const { id, airlines } = data;
-  const previous = await getOne({ author_id: id });
-
-  if (previous !== null && previous.airlines !== undefined) {
-    return [...previous.airlines, ...airlines];
-  } else {
-    return airlines;
-  }
-};
-
 const getPreferencesDb = async (data, getOne) => {
   const { id } = data;
   return await getOne({ author_id: id });
@@ -42,6 +31,5 @@ const getPreferencesDb = async (data, getOne) => {
 module.exports = {
   createFlightSearch,
   setPreferencesDb,
-  existingPreferencesDb,
   getPreferencesDb,
 };

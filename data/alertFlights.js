@@ -14,6 +14,7 @@ const flights = [
   { journey: "EZE CUN", promoMiles: 45600 },
   { journey: "EZE PUJ", promoMiles: 48400 },
   { journey: "EZE ADZ", promoMiles: 42500 },
+  { journey: "EZE GIG", promoMiles: 15700 },
 ];
 
 const currentDate = new Date();

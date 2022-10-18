@@ -216,30 +216,49 @@ const generatePayloadRoundTrip = (text) => {
   };
 };
 
-const preferencesParser = (text) => {
+const preferencesParser = (text, booleanPreferences) => {
+  const { previousfare, previousBrasilNonGol, previousSmilesAndMoney } =
+    booleanPreferences;
+
   const offsetAirlines = text.indexOf(" a:");
   const offsetStops = text.indexOf(" e:");
   const offsetResults = text.indexOf(" r:");
   const offsetVF = text.indexOf(" vf");
+  const offsetBrasilNonGol = text.indexOf(" singol");
+  const offsetSmilesAndMoney = text.indexOf(" smilesAndMoney");
+
   const result = {};
 
-  const airlinesEnd = (offsetAirlines > 0 && offsetStops == -1)? text.length : offsetStops;
+  const airlinesEnd =
+    offsetAirlines > 0 && offsetStops == -1 ? text.length : offsetStops;
 
-  if(offsetAirlines > 0){
-    const airlinesArray = text.substring(offsetAirlines + 3, airlinesEnd).toUpperCase().split(" ").filter(airline => airlines.includes(airline));
-    Object.assign(result, {airlines : airlinesArray});
+  if (offsetAirlines > 0) {
+    const airlinesArray = text
+      .substring(offsetAirlines + 3, airlinesEnd)
+      .toUpperCase()
+      .split(" ")
+      .filter((airline) => airlines.includes(airline));
+    result.airlines = airlinesArray;
   }
 
-  if(offsetStops > 0){
-    Object.assign(result, {stops : text.substring(offsetStops + 3, offsetStops + 4)});
+  if (offsetStops > 0) {
+    result.stops = text.substring(offsetStops + 3, offsetStops + 4);
   }
 
-  if(offsetResults > 0){
-    Object.assign(result, {maxresults : text.substring(offsetResults + 3, offsetResults + 5)});
+  if (offsetResults > 0) {
+    result.maxresults = text.substring(offsetResults + 3, offsetResults + 5);
   }
 
-  if(offsetVF > 0){
-      Object.assign(result, {fare : true});
+  if (offsetVF > 0) {
+    result.fare = !previousfare;
+  }
+
+  if (offsetBrasilNonGol > 0) {
+    result.brasilNonGol = !previousBrasilNonGol;
+  }
+
+  if (offsetSmilesAndMoney > 0) {
+    result.smilesAndMoney = !previousSmilesAndMoney;
   }
 
   return result;

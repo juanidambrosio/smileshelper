@@ -18,7 +18,7 @@ const {
   regexMultipleOriginMonthly,
   regexMultipleOriginFixedDay,
   regexRoundTrip,
-  regexAirlines,
+  regexFilters,
 } = require("../utils/regex");
 
 const { checkDailyAlerts } = require("./alerts");
@@ -112,7 +112,7 @@ const listen = async () => {
     async (msg) => await searchRoundTrip(bot, msg, { createOne, getOne })
   );
 
-  bot.onText(regexAirlines, async (msg) => {
+  bot.onText(regexFilters, async (msg) => {
     await setPreferences(bot, msg, { getOne, upsert });
   });
 

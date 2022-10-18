@@ -1,7 +1,6 @@
 const {
   getPreferencesDb,
   setPreferencesDb,
-  existingPreferencesDb,
 } = require("./dbMapper");
 
 const { preferencesParser } = require("../utils/parser");
@@ -11,24 +10,29 @@ const {
   preferencesError,
   preferencesNone,
   preferencesSave,
+  preferencesMap,
 } = require("../config/constants");
 
 const setPreferences = async (bot, msg, preferencesFunctions) => {
   const chatId = msg.chat.id;
   const { getOne, upsert } = preferencesFunctions;
 
-  const result = preferencesParser(msg.text);
   try {
-    if (result.airlines) {
-      result.airlines = await existingPreferencesDb(
-        {
-          id: msg.from.username || msg.from.id.toString(),
-          airlines: result.airlines,
-        },
+    const previousPreferences =
+      (await getPreferencesDb(
+        { id: msg.from.username || msg.from.id.toString() },
         getOne
-      );
-    }
+      )) || {};
 
+    const result = preferencesParser(msg.text, {
+      previousfare: previousPreferences.fare,
+      previousBrasilNonGol: previousPreferences.brasilNonGol,
+      previousSmilesAndMoney: previousPreferences.smilesAndMoney,
+    });
+
+    if (previousPreferences.airlines && result.airlines) {
+      result.airlines = [...previousPreferences.airlines, ...result.airlines];
+    }
     await setPreferencesDb(
       {
         id: msg.from.username || msg.from.id.toString(),
@@ -71,20 +75,15 @@ const getPreferences = async (bot, msg, getOne) => {
     if (preferences === null) {
       response = preferencesNone;
     } else {
-      if (preferences.hasOwnProperty("airlines")) {
-        response += "a: " + preferences.airlines.toString() + " ";
-      }
-      if (preferences.hasOwnProperty("stops")) {
-        response += "e: " + preferences.stops + " ";
-      }
-      if (preferences.hasOwnProperty("maxresults")) {
-        response += "r: " + preferences.maxresults + " ";
-      }
-      if (preferences.hasOwnProperty("fare")) {
-        response += "vf";
+      for (const preference in preferences) {
+        if (preferencesMap.has(preference)) {
+          response +=
+            preferencesMap.get(preference) +
+            preferences[preference].toString() +
+            " ";
+        }
       }
     }
-
     bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
   } catch (error) {
     console.log(error);

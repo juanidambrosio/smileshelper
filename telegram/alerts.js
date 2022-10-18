@@ -37,6 +37,7 @@ const checkDailyAlerts = async (bot) => {
       bot.sendMessage(groupChatIdAlerts, journeyAlert, {
         parse_mode: "Markdown",
       });
+      await sleep(500);
     }
     journeyAlerts.clear();
   });

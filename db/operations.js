@@ -1,5 +1,4 @@
 const { ObjectId } = require("mongodb");
-const getDbCollection = require("./connection");
 
 const getMany = (collection) => async (parameters) => {
   const { page, limit, query } = parameters || {};
@@ -32,12 +31,11 @@ const deleteOne = (collection) => async (id) => {
 
 const upsert = (collection) => async (id, update) => {
   if (id) {
-    return await collection.findOneAndUpdate(id, update, {upsert: true});
+    return await collection.findOneAndUpdate(id, update, { upsert: true });
   } else throw new Error("upsert: Id provided has an incorrect format");
 };
 
-module.exports = async (collection) => {
-  const dbCollection = await getDbCollection(collection);
+module.exports = (dbCollection) => {
   return {
     getMany: getMany(dbCollection),
     getOne: getOne(dbCollection),

@@ -45,12 +45,15 @@ const checkDailyAlerts = async (bot) => {
 
 const checkPromoFlight = async (text, retries = 0) => {
   try {
-    const { bestFlight, response } = await searchCityQuery({
-      from,
-      chat,
-      text: text.journeyComplete,
-      promoMiles: text.promoMiles,
-    });
+    const { bestFlight, response } = await searchCityQuery(
+      {
+        from,
+        chat,
+        text: text.journeyComplete,
+        promoMiles: text.promoMiles,
+      },
+      true
+    );
 
     if (bestFlight && bestFlight.price <= text.promoMiles) {
       const journeyCompleteAlert = journeyAlerts.get(text.journey);

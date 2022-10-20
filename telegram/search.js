@@ -23,19 +23,19 @@ const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
 
 const { buildError } = require("../utils/error");
 
-const searchCityQuery = async (msg, flightFunctions = {}) => {
-  const payload = generatePayloadMonthlySingleDestination(msg.text);
-  const { createOne, getOne } = flightFunctions;
+const { getDbFunctions } = require("../db/dbFunctions");
 
-  if (getOne) {
-    payload.preferences =
-      (await getPreferencesDb(
-        {
-          id: msg.from.username || msg.from.id.toString(),
-        },
-        getOne
-      )) || {};
-  }
+const searchCityQuery = async (msg, isAlert	) => {
+  const payload = generatePayloadMonthlySingleDestination(msg.text);
+  const { createOne, getOne } = getDbFunctions();
+  payload.preferences =
+    (await getPreferencesDb(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    )) || {};
+
   const flightList = await getFlights(payload);
   const bestFlights = flightList.results;
   if (flightList.error) {
@@ -78,7 +78,7 @@ const searchCityQuery = async (msg, flightFunctions = {}) => {
     payload.origin + " " + payload.destination + "\n"
   );
 
-  if (createOne) {
+  if (!isAlert) {
     await createFlightSearch(
       {
         id: msg.from.username || msg.from.id.toString(),
@@ -93,15 +93,9 @@ const searchCityQuery = async (msg, flightFunctions = {}) => {
   return { response, bestFlight: bestFlights[0] };
 };
 
-const searchRegionalQuery = async (
-  bot,
-  msg,
-  fixedDay,
-  isMultipleOrigin,
-  flightFunctions
-) => {
+const searchRegionalQuery = async (bot, msg, fixedDay, isMultipleOrigin) => {
   const chatId = msg.chat.id;
-  const { getOne, createOne } = flightFunctions;
+  const { createOne, getOne } = getDbFunctions();
   const payload = isMultipleOrigin
     ? generatePayloadMultipleOrigins(msg.text, fixedDay)
     : generatePayloadMultipleDestinations(msg.text, fixedDay);
@@ -194,10 +188,10 @@ const searchRegionalQuery = async (
   }
 };
 
-const searchRoundTrip = async (bot, msg, flightFunctions) => {
+const searchRoundTrip = async (bot, msg) => {
   const chatId = msg.chat.id;
   const payload = generatePayloadRoundTrip(msg.text);
-  const { createOne, getOne } = flightFunctions;
+  const { createOne, getOne } = getDbFunctions();
   payload.preferences =
     (await getPreferencesDb(
       {
@@ -284,4 +278,8 @@ const searchRoundTrip = async (bot, msg, flightFunctions) => {
   }
 };
 
-module.exports = { searchCityQuery, searchRegionalQuery, searchRoundTrip };
+module.exports = {
+  searchCityQuery,
+  searchRegionalQuery,
+  searchRoundTrip,
+};

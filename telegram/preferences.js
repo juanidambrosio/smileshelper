@@ -1,7 +1,4 @@
-const {
-  getPreferencesDb,
-  setPreferencesDb,
-} = require("./dbMapper");
+const { getPreferencesDb, setPreferencesDb } = require("./dbMapper");
 
 const { preferencesParser } = require("../utils/parser");
 
@@ -13,9 +10,11 @@ const {
   preferencesMap,
 } = require("../config/constants");
 
-const setPreferences = async (bot, msg, preferencesFunctions) => {
+const { getDbFunctions } = require("../db/dbFunctions");
+
+const setPreferences = async (bot, msg) => {
   const chatId = msg.chat.id;
-  const { getOne, upsert } = preferencesFunctions;
+  const { getOne, upsert } = getDbFunctions();
 
   try {
     const previousPreferences =
@@ -47,8 +46,10 @@ const setPreferences = async (bot, msg, preferencesFunctions) => {
   }
 };
 
-const deletePreferences = async (bot, msg, deleteOne) => {
+const deletePreferences = async (bot, msg) => {
   const chatId = msg.chat.id;
+  const { deleteOne } = getDbFunctions();
+
   try {
     await deleteOne({
       author_id: msg.from.username || msg.from.id.toString(),
@@ -60,8 +61,9 @@ const deletePreferences = async (bot, msg, deleteOne) => {
   }
 };
 
-const getPreferences = async (bot, msg, getOne) => {
+const getPreferences = async (bot, msg) => {
   const chatId = msg.chat.id;
+  const { getOne } = getDbFunctions();
 
   try {
     const preferences = await getPreferencesDb(

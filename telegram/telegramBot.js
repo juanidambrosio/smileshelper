@@ -1,6 +1,5 @@
 const TelegramBot = require("node-telegram-bot-api");
 const { telegramApiToken } = require("../config/config");
-const dbOperations = require("../db/operations");
 const {
   telegramStart,
   cafecito,
@@ -37,11 +36,11 @@ const {
 
 const { buildError } = require("../utils/error");
 
-const listen = async () => {
-  const { createOne } = await dbOperations("flight_search");
-  const { upsert, getOne, deleteOne } = await dbOperations("preferences");
-  const bot = new TelegramBot(telegramApiToken, { polling: true });
+const { initializeDbFunctions } = require("../db/dbFunctions");
 
+const listen = async () => {
+  const bot = new TelegramBot(telegramApiToken, { polling: true });
+  await initializeDbFunctions();
   await checkDailyAlerts(bot);
 
   bot.onText(/\/start/, async (msg) =>
@@ -74,7 +73,7 @@ const listen = async () => {
   bot.onText(regexSingleCities, async (msg) => {
     try {
       bot.sendMessage(msg.chat.id, searching);
-      const { response } = await searchCityQuery(msg, { createOne, getOne });
+      const { response } = await searchCityQuery(msg);
       console.log(msg.text);
       bot.sendMessage(msg.chat.id, response, { parse_mode: "Markdown" });
     } catch (error) {
@@ -85,42 +84,35 @@ const listen = async () => {
 
   bot.onText(
     regexMultipleDestinationMonthly,
-    async (msg) =>
-      await searchRegionalQuery(bot, msg, false, false, { createOne, getOne })
+    async (msg) => await searchRegionalQuery(bot, msg, false, false)
   );
 
   bot.onText(
     regexMultipleDestinationFixedDay,
-    async (msg) =>
-      await searchRegionalQuery(bot, msg, true, false, { createOne, getOne })
+    async (msg) => await searchRegionalQuery(bot, msg, true, false)
   );
 
   bot.onText(
     regexMultipleOriginMonthly,
-    async (msg) =>
-      await searchRegionalQuery(bot, msg, false, true, { createOne, getOne })
+    async (msg) => await searchRegionalQuery(bot, msg, false, true)
   );
 
   bot.onText(
     regexMultipleOriginFixedDay,
-    async (msg) =>
-      await searchRegionalQuery(bot, msg, true, true, { createOne, getOne })
+    async (msg) => await searchRegionalQuery(bot, msg, true, true)
   );
 
-  bot.onText(
-    regexRoundTrip,
-    async (msg) => await searchRoundTrip(bot, msg, { createOne, getOne })
-  );
+  bot.onText(regexRoundTrip, async (msg) => await searchRoundTrip(bot, msg));
 
   bot.onText(regexFilters, async (msg) => {
-    await setPreferences(bot, msg, { getOne, upsert });
+    await setPreferences(bot, msg);
   });
 
   bot.onText(/\/filtroseliminar/, async (msg) => {
-    await deletePreferences(bot, msg, deleteOne);
+    await deletePreferences(bot, msg);
   });
   bot.onText(/\/filtros$/, async (msg) => {
-    await getPreferences(bot, msg, getOne);
+    await getPreferences(bot, msg);
   });
 };
 listen();

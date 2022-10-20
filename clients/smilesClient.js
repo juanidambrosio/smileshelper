@@ -44,7 +44,7 @@ const getFlights = async (parameters) => {
         adults,
         false,
         day,
-        preferences.brasilNonGol ? "true" : "false"
+        preferences?.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(smilesClient.get("/search", { params }));
     }
@@ -76,7 +76,7 @@ const getFlights = async (parameters) => {
     return {
       results: sortFlights(mappedFlightResults).slice(
         0,
-        getBestFlightsCount(preferences.maxresults)
+        getBestFlightsCount(preferences?.maxresults)
       ),
       departureMonth: departureDate.substring(5, 7),
     };

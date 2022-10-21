@@ -52,21 +52,25 @@ const getFlights = async (parameters) => {
     const mappedFlightResults = (
       await Promise.all(
         flightResults.map(async (flightResult) => {
-          const { flight, price, fareUid } = getBestFlight(
+          const { flight, price, money, fareUid } = getBestFlight(
             flightResult.data?.requestedFlightSegmentList[0],
-            cabinType
+            cabinType,
+            preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
           return {
             origin: flight.departure?.airport?.code,
             destination: flight.arrival?.airport?.code,
             price,
+            money,
             departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
             airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
-            tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            tax: fareUid
+              ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+              : undefined,
             fare: flight.sourceFare,
           };
         })
@@ -96,14 +100,8 @@ const getFlightsMultipleCities = async (
   fixedDay,
   isMultipleOrigin
 ) => {
-  const {
-    origin,
-    destination,
-    departureDate,
-    cabinType,
-    adults,
-    preferences,
-  } = parameters;
+  const { origin, destination, departureDate, cabinType, adults, preferences } =
+    parameters;
 
   const multipleCity = isMultipleOrigin ? origin : destination;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
@@ -131,21 +129,25 @@ const getFlightsMultipleCities = async (
     const mappedFlightResults = (
       await Promise.all(
         flightResults.map(async (flightResult) => {
-          const { flight, price, fareUid } = getBestFlight(
+          const { flight, price, money, fareUid } = getBestFlight(
             flightResult.data?.requestedFlightSegmentList[0],
-            cabinType
+            cabinType,
+            preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
           return {
             origin: flight.departure?.airport?.code,
             destination: flight.arrival?.airport?.code,
             price,
+            money,
             departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
             airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
-            tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            tax: fareUid
+              ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+              : undefined,
             fare: flight.sourceFare,
           };
         })
@@ -246,23 +248,27 @@ const getFlightsRoundTrip = async (parameters) => {
             flightResult.data?.requestedFlightSegmentList[0];
           const departureAirport =
             flightSegment?.airports?.departureAirportList[0]?.code;
-          const { flight, price, fareUid } = getBestFlight(
+          const { flight, price, money, fareUid } = getBestFlight(
             flightSegment,
             belongsToCity(departureAirport, origin)
               ? cabinTypeGoing
-              : cabinTypeComing
+              : cabinTypeComing,
+            preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
           return {
             origin: departureAirport,
             destination: flight.arrival?.airport?.code,
             price,
+            money,
             departureDay: new Date(flight.departure?.date),
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
             airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
-            tax: fareUid ? await getTax(flight.uid, fareUid) : undefined,
+            tax: fareUid
+              ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+              : undefined,
             fare: flight.sourceFare,
           };
         })
@@ -318,7 +324,7 @@ const buildParams = (
     : parseDate(departureDate, specificDay),
 });
 
-const getTax = async (uid, fareuid) => {
+const getTax = async (uid, fareuid, isSmilesMoney) => {
   const params = {
     adults: "1",
     children: "0",
@@ -326,7 +332,7 @@ const getTax = async (uid, fareuid) => {
     fareuid,
     uid,
     type: "SEGMENT_1",
-    highlightText: "SMILES_CLUB",
+    highlightText: isSmilesMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB",
   };
 
   try {

@@ -25,7 +25,7 @@ const { buildError } = require("../utils/error");
 
 const { getDbFunctions } = require("../db/dbFunctions");
 
-const searchCityQuery = async (msg, isAlert	) => {
+const searchCityQuery = async (msg, isAlert) => {
   const payload = generatePayloadMonthlySingleDestination(msg.text);
   const { createOne, getOne } = getDbFunctions();
   payload.preferences =
@@ -67,9 +67,9 @@ const searchCityQuery = async (msg, isAlert	) => {
               ) +
               ": " +
               applySimpleMarkdown(
-                `${current.price.toString()} + ${current.tax.miles}/${
-                  current.tax.money
-                }`,
+                `${current.price.toString()} + ${
+                  current.money ? "$" + current.money.toString() + " + " : ""
+                }${current.tax.miles}/${current.tax.money}`,
                 "*"
               ) +
               generateFlightOutput(current) +
@@ -160,9 +160,9 @@ const searchRegionalQuery = async (bot, msg, fixedDay, isMultipleOrigin) => {
           ) +
           ": " +
           applySimpleMarkdown(
-            `${current.price.toString()} + ${current.tax.miles}/${
-              current.tax.money
-            }`,
+            `${current.price.toString()} + ${
+              current.money ? "$" + current.money.toString() + " + " : ""
+            }${current.tax.miles}/${current.tax.money}`,
             "*"
           ) +
           generateFlightOutput(current) +
@@ -239,7 +239,15 @@ const searchRoundTrip = async (bot, msg) => {
             ) +
             ": " +
             applySimpleMarkdown(
-              `${current.departureFlight.price.toString()} + ${current.returnFlight.price.toString()} + ${Math.floor(
+              `${current.departureFlight.price.toString()} + ${
+                current.departureFlight.money
+                  ? "$" + current.departureFlight.money.toString() + " + "
+                  : ""
+              }${current.returnFlight.price.toString()} + ${
+                current.returnFlight.money
+                  ? "$" + current.returnFlight.money.toString() + " + "
+                  : ""
+              }${Math.floor(
                 (current.departureFlight.tax.milesNumber +
                   current.returnFlight.tax.milesNumber) /
                   1000

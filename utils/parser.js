@@ -62,9 +62,6 @@ const generateEmissionLink = (flight) =>
 const generateEmissionLinkRoundTrip = (flight) =>
   generateEmissionLink(flight).concat(`&returnDate=${flight.returnDate}`);
 
-const generateTaxLink = (flight) =>
-  `adults=1&children=0&infants=0&fareuid=${flight.fareUid}&uid=${flight.uid}&type=SEGMENT_1&highlightText=SMILES_CLUB`;
-
 const applySimpleMarkdown = (word, symbol, symbolEnd) =>
   symbol + word + (symbolEnd || symbol);
 
@@ -225,7 +222,7 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetResults = text.indexOf(" r:");
   const offsetVF = text.indexOf(" vf");
   const offsetBrasilNonGol = text.indexOf(" singol");
-  const offsetSmilesAndMoney = text.indexOf(" smilesAndMoney");
+  const offsetSmilesAndMoney = text.indexOf(" smilesandmoney");
 
   const result = {};
 
@@ -270,7 +267,6 @@ module.exports = {
   mapCabinType,
   generateEmissionLink,
   generateEmissionLinkRoundTrip,
-  generateTaxLink,
   applySimpleMarkdown,
   partitionArrays,
   belongsToCity,

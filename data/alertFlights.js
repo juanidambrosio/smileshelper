@@ -44,7 +44,8 @@ const alertFlightsInput = (flights) => {
             promoMiles: flight.promoMiles,
           }
         );
-      } else {
+      }
+      if (month <= currentMonth) {
         alertFlightsInput.push(
           {
             journey: flight.journey,

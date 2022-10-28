@@ -152,7 +152,7 @@ const searchRegionalQuery = async (bot, msg, fixedDay, isMultipleOrigin) => {
                 ? payload.destination
                 : current.destination,
               departureDate:
-                payload.departureDate + "-" + current.departureDay + " 09:",
+                fixedDay ? payload.departureDate : payload.departureDate.substring(0,7) + "-" + current.departureDay + " 09:",
               tripType: "2",
             }),
             "(",

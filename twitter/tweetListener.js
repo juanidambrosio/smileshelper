@@ -17,6 +17,8 @@ const {
   regexMultipleOriginMonthly,
 } = require("../utils/regex");
 
+const { initializeDbFunctions, getDbFunctions } = require("../db/dbFunctions");
+
 const lambdaClient = axios.create({
   baseURL: responseTweetUrl,
 });
@@ -25,7 +27,8 @@ const twitterClient = new TwitterApi(process.env.TWITTER_BEARER_TOKEN).v2;
 
 const listen = async () => {
   try {
-    const { createOne } = await dbOperations("flight_search");
+    await initializeDbFunctions();
+    const { createOne } = getDbFunctions();
 
     await twitterClient.updateStreamRules({
       add: [{ value: "to:smileshelper", tag: "Reply to Smiles bot" }],

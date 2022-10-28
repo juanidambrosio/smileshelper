@@ -26,7 +26,7 @@ const EUROPA = ["LIS", "MAD", "BCN", "PAR", "AMS", "ROM", "LON", "FRA", "IST"];
 
 const CEUROPA = ["BRU", "ATH", "BER", "ZRH", "VIE", "PRG"];
 
-const ESPANA = ["MAD", "BCN", "VLC", "PMI", "AGP", "IBZ", "SVQ"];
+const ESPANA = ["MAD", "BCN", "VLC", "PMI", "AGP", "IBZ", "SVQ", "BIO"];
 
 const ITALIA = ["ROM", "MIL", "BLQ", "VCE", "NAP"];
 

@@ -20,8 +20,6 @@ const {
   regexFilters,
 } = require("../utils/regex");
 
-const { checkDailyAlerts } = require("./alerts");
-
 const {
   searchRegionalQuery,
   searchCityQuery,
@@ -41,7 +39,6 @@ const { initializeDbFunctions } = require("../db/dbFunctions");
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
   await initializeDbFunctions();
-  await checkDailyAlerts(bot);
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })

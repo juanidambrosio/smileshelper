@@ -12,6 +12,7 @@ const initializeDbFunctions = async () => {
   const { upsert, getOne, deleteOne } = dbOperations(preferences);
 
   dbFunctions = { createOne, upsert, getOne, deleteOne };
+  return;
 };
 
 module.exports = { initializeDbFunctions, getDbFunctions };

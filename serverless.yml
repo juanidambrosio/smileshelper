@@ -25,6 +25,14 @@ functions:
       - http:
           path: /response
           method: POST
+  alerts:
+    handler: telegram/alerts.checkDailyAlerts
+    timeout: 600
+    events:
+      - schedule:
+          #rate: cron(0 11,19 * * ? *)
+          rate: rate(1 minute)
+          enabled: true
 plugins:
   - serverless-offline
   - serverless-dotenv-plugin

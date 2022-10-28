@@ -1,4 +1,3 @@
-const schedule = require("node-schedule");
 const { from, chat, texts } = require("../data/alertFlights");
 const { searchCityQuery } = require("./search");
 const {
@@ -7,41 +6,9 @@ const {
   delaySecondsRetriesAlerts,
 } = require("../config/constants");
 const sleep = require("../utils/sleep");
-const cliProgress = require("cli-progress");
-
-const rule = new schedule.RecurrenceRule();
-rule.hour = [13, 21];
-rule.minute = 0;
-
-const journeyAlerts = new Map();
-const progressBar = new cliProgress.SingleBar(
-  {},
-  cliProgress.Presets.shades_classic
-);
-
-const checkDailyAlerts = async (bot) => {
-  schedule.scheduleJob(rule, async () => {
-    let failedRequests = 0;
-    progressBar.start(texts.length, 0);
-    for (const text of texts) {
-      const success = await checkPromoFlight(text);
-      progressBar.increment();
-      if (!success) {
-        console.log(`Couldnt obtain result for alert query ${text.journey}`);
-        failedRequests++;
-      }
-    }
-    progressBar.stop();
-    console.log(`Failed ${failedRequests} requests`);
-    for (const journeyAlert of journeyAlerts.values()) {
-      bot.sendMessage(groupChatIdAlerts, journeyAlert, {
-        parse_mode: "Markdown",
-      });
-      await sleep(500);
-    }
-    journeyAlerts.clear();
-  });
-};
+const TelegramBot = require("node-telegram-bot-api");
+const { telegramAlertsApiToken } = require("../config/config");
+const { initializeDbFunctions } = require("../db/dbFunctions");
 
 const checkPromoFlight = async (text, retries = 0) => {
   try {
@@ -79,6 +46,7 @@ const checkPromoFlight = async (text, retries = 0) => {
     }
     return true;
   } catch (error) {
+    console.log(error);
     retries++;
     if (retries <= maxRetriesAlerts) {
       console.log(`Retry ${retries} for ${text.journey}`);
@@ -88,4 +56,31 @@ const checkPromoFlight = async (text, retries = 0) => {
   }
 };
 
-module.exports = { checkDailyAlerts };
+module.exports.checkDailyAlerts = async () => {
+  await initializeDbFunctions();
+  let failedRequests = 0;
+  const successArray = await Promise.all(checkPromoFlightPromises);
+  for (const success of successArray) {
+    if (!success) {
+      console.log(`Couldnt obtain result for alert query ${text.journey}`);
+      failedRequests++;
+    }
+  }
+  console.log(`Failed ${failedRequests} requests`);
+  for (const journeyAlert of journeyAlerts.values()) {
+    // bot.sendMessage(groupChatIdAlerts, journeyAlert, {
+    //   parse_mode: "Markdown",
+    // });
+    console.log(journeyAlert);
+    await sleep(500);
+  }
+  journeyAlerts.clear();
+};
+
+const bot = new TelegramBot(telegramAlertsApiToken, { polling: true });
+const journeyAlerts = new Map();
+
+const checkPromoFlightPromises = [];
+for (const text of texts) {
+  checkPromoFlightPromises.push(checkPromoFlight(text));
+}

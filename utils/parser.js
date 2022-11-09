@@ -220,6 +220,7 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetAirlines = text.indexOf(" a:");
   const offsetStops = text.indexOf(" e:");
   const offsetResults = text.indexOf(" r:");
+  const offsetHours = text.indexOf(" h:");
   const offsetVF = text.indexOf(" vf");
   const offsetBrasilNonGol = text.indexOf(" singol");
   const offsetSmilesAndMoney = text.indexOf(" smilesandmoney");
@@ -244,6 +245,10 @@ const preferencesParser = (text, booleanPreferences) => {
 
   if (offsetResults > 0) {
     result.maxresults = text.substring(offsetResults + 3, offsetResults + 5);
+  }
+
+  if (offsetHours > 0) {
+    result.maxhours = text.substring(offsetHours + 3, offsetHours + 5);
   }
 
   if (offsetVF > 0) {

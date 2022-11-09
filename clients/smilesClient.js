@@ -359,7 +359,8 @@ const validFlight = (flight, preferences) =>
       !preferences.airlines.includes(flight.airlineCode)) &&
       (!preferences.hasOwnProperty("stops") ||
         flight.stops <= preferences.stops) &&
-      (!preferences.hasOwnProperty("fare") || flight.fare == "AWARD")));
+      (!preferences.hasOwnProperty("fare") || flight.fare == "AWARD") &&
+      (!preferences.hasOwnProperty("maxhours") || Number(flight.duration) <= Number(preferences.maxhours))));
 
 const getBestFlightsCount = (preferencesMaxResults) =>
   !preferencesMaxResults

@@ -120,7 +120,7 @@ const getFlightsMultipleCities = async (
           adults,
           fixedDay,
           fixedDay ? undefined : day,
-          preferences.brasilNonGol ? "true" : "false"
+          preferences?.brasilNonGol ? "true" : "false"
         );
         getFlightPromises.push(smilesClient.get("/search", { params }));
       }
@@ -156,7 +156,7 @@ const getFlightsMultipleCities = async (
     return {
       results: sortFlights(mappedFlightResults.flat()).slice(
         0,
-        getBestFlightsCount(preferences.maxresults)
+        getBestFlightsCount(preferences?.maxresults)
       ),
     };
   } catch (error) {

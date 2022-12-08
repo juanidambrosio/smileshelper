@@ -25,6 +25,7 @@ module.exports.tweet = async (event) => {
     if (flightList.error) {
       const response = buildError(flightList.error);
       await twitterClient.reply(response, id);
+      //console.log(response)
       return {
         statusCode: flightList.statusError,
         body: JSON.stringify({ message: response }, null, 2),

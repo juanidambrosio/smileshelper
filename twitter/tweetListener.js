@@ -56,7 +56,7 @@ const listen = async () => {
         if (
           !regex.test(trimmedText) &&
           !regexRegionDestination.test(trimmedText) &&
-          !regexMultipleOriginMonthly.test(trimmedText)
+          !regexRegionOrigin.test(trimmedText)
         ) {
           return;
         }

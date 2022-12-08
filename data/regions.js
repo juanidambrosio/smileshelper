@@ -1,12 +1,14 @@
 const SAMERICA = ["SCL", "LIM", "BOG", "BUE", "MVD", "ASU", "UIO"];
 
+const LIMITROFE = ["SCL", "MVD", "ASU", "SAO", "RIO"]
+
 const ARGENTINA = ["BUE", "COR", "ROS", "MDZ", "NQN", "BRC", "IGR"];
 
 const BRASIL = ["RIO", "SAO", "FLN", "MCZ", "SSA", "REC", "NAT", "IGU"];
 
 const COLOMBIA = ["BOG", "ADZ", "CTG", "SMR"];
 
-const CARIBE = ["CUN", "PTY", "PUJ", "SJO", "AUA", "HAV", "CTG"];
+const CARIBE = ["CUN", "PTY", "PUJ", "SJO", "AUA", "HAV", "CTG", "SJU"];
 
 const NAMERICA = ["MEX", "CHI", "NYC", "LAX", "DFW", "SFO", "LAS"];
 
@@ -48,6 +50,7 @@ const OCEANIA = ["AKL", "SYD", "MEL"];
 
 const regions = {
   SAMERICA,
+  LIMITROFE,
   ARGENTINA,
   BRASIL,
   COLOMBIA,

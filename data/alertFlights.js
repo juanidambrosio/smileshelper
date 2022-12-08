@@ -6,14 +6,13 @@ const from = { username: "smileshelper" };
 const chat = { id: groupChatIdAlerts };
 
 const flights = [
-  { journey: "EZE MIA", promoMiles: 47700 },
-  { journey: "EZE JFK", promoMiles: 57200 },
+  { journey: "EZE MIA", promoMiles: 49600 },
+  { journey: "EZE JFK", promoMiles: 59400 },
   { journey: "EZE MAD", promoMiles: 95200 },
-  { journey: "EZE CDG", promoMiles: 79700 },
-  { journey: "EZE AMS", promoMiles: 82200 },
-  { journey: "EZE CUN", promoMiles: 45600 },
-  { journey: "EZE PUJ", promoMiles: 48400 },
-  { journey: "EZE ADZ", promoMiles: 42500 },
+  { journey: "EZE CDG", promoMiles: 83700 },
+  { journey: "EZE AMS", promoMiles: 86500 },
+  { journey: "EZE CUN", promoMiles: 47800 },
+  { journey: "EZE PUJ", promoMiles: 50800 },
 ];
 
 const currentDate = new Date();

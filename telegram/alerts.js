@@ -10,7 +10,7 @@ const sleep = require("../utils/sleep");
 const cliProgress = require("cli-progress");
 
 const rule = new schedule.RecurrenceRule();
-rule.hour = [13, 21];
+rule.hour = [12, 22];
 rule.minute = 0;
 
 const journeyAlerts = new Map();

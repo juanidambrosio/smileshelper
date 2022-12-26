@@ -86,6 +86,8 @@ const searchCityQuery = async (msg, isAlert) => {
         destination: payload.destination,
         departureDate: payload.departureDate,
         price: bestFlights[0].price,
+        searchType: "airport",
+        smilesAndMoney: payload.preferences?.smilesAndMoney || false,
       },
       createOne
     );
@@ -151,8 +153,12 @@ const searchRegionalQuery = async (bot, msg, fixedDay, isMultipleOrigin) => {
               destination: isMultipleOrigin
                 ? payload.destination
                 : current.destination,
-              departureDate:
-                fixedDay ? payload.departureDate : payload.departureDate.substring(0,7) + "-" + current.departureDay + " 09:",
+              departureDate: fixedDay
+                ? payload.departureDate
+                : payload.departureDate.substring(0, 7) +
+                  "-" +
+                  current.departureDay +
+                  " 09:",
               tripType: "2",
             }),
             "(",
@@ -178,6 +184,8 @@ const searchRegionalQuery = async (bot, msg, fixedDay, isMultipleOrigin) => {
           : payload.destination,
         departureDate: payload.departureDate,
         price: bestFlights[0].price,
+        searchType: "region",
+        smilesAndMoney: payload.preferences?.smilesAndMoney || false,
       },
       createOne
     );
@@ -276,6 +284,8 @@ const searchRoundTrip = async (bot, msg) => {
         price:
           bestFlights[0].departureFlight.price +
           bestFlights[0].returnFlight.price,
+        searchType: "airport",
+        smilesAndMoney: payload.preferences?.smilesAndMoney || false,
       },
       createOne
     );

@@ -1,6 +1,6 @@
 const SAMERICA = ["SCL", "LIM", "BOG", "BUE", "MVD", "ASU", "UIO"];
 
-const LIMITROFE = ["SCL", "MVD", "ASU", "SAO", "RIO"]
+const LIMITROFE = ["SCL", "MVD", "ASU", "SAO", "RIO"];
 
 const ARGENTINA = ["BUE", "COR", "ROS", "MDZ", "NQN", "BRC", "IGR"];
 
@@ -33,6 +33,8 @@ const ESPANA = ["MAD", "BCN", "VLC", "PMI", "AGP", "IBZ", "SVQ", "BIO"];
 const ITALIA = ["ROM", "MIL", "BLQ", "VCE", "NAP"];
 
 const FRANCIA = ["PAR", "MRS", "NCE", "LYS", "NTE", "TLS"];
+
+const NORDICO = ["CPH", "HEL", "STO", "OSL", "BGO", "SVG", "GOT"];
 
 const ASIA = ["DXB", "BKK", "TLV", "TYO", "SEL", "DPS"];
 
@@ -67,6 +69,7 @@ const regions = {
   ESPANA,
   ITALIA,
   FRANCIA,
+  NORDICO,
   ASIA,
   MORIENTE,
   SASIA,

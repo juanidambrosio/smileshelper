@@ -9,7 +9,9 @@ class FlightSearch {
     month,
     yearReturn,
     monthReturn,
-    bestPrice
+    bestPrice,
+    searchType,
+    smilesAndMoney
   ) {
     this.author_id = author_id;
     this.source = source;
@@ -21,6 +23,8 @@ class FlightSearch {
     this.yearReturn = yearReturn;
     this.monthReturn = monthReturn;
     this.bestPrice = bestPrice;
+    this.searchType = searchType;
+    this.smilesAndMoney = smilesAndMoney;
   }
 }
 

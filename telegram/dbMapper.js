@@ -1,7 +1,16 @@
 const FlightSearch = require("../models/FlightSearch");
 
 const createFlightSearch = async (data, createOne) => {
-  const { id, origin, destination, departureDate, returnDate, price } = data;
+  const {
+    id,
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    price,
+    searchType,
+    smilesAndMoney,
+  } = data;
 
   const flightSearch = new FlightSearch(
     id,
@@ -13,7 +22,9 @@ const createFlightSearch = async (data, createOne) => {
     departureDate.substring(5, 7),
     returnDate ? returnDate.substring(0, 4) : undefined,
     returnDate ? returnDate.substring(5, 7) : undefined,
-    price
+    price,
+    searchType,
+    smilesAndMoney
   );
   await createOne(flightSearch);
 };

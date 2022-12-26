@@ -6,7 +6,7 @@ const from = { username: "smileshelper" };
 const chat = { id: groupChatIdAlerts };
 
 const flights = [
-  { journey: "EZE MIA", promoMiles: 49600 },
+  { journey: "EZE MIA", promoMiles: 54500 },
   { journey: "EZE JFK", promoMiles: 59400 },
   { journey: "EZE MAD", promoMiles: 95200 },
   { journey: "EZE CDG", promoMiles: 83700 },

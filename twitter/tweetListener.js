@@ -88,7 +88,13 @@ const listen = async () => {
             : payload.destination,
           payload.departureDate.substring(0, 4),
           payload.departureDate.substring(5, 7),
-          data.bestPrice
+          null,
+          null,
+          data.bestPrice,
+          Array.isArray(payload.origin) || Array.isArray(payload.destination)
+            ? "region"
+            : "airport",
+          false
         );
         await createOne(flightSearch);
       } catch (error) {

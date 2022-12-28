@@ -27,24 +27,37 @@ const smilesTaxClient = axios.create({
   insecureHTTPParser: true,
 });
 
-async function searchFlights(params) {
-  const response = await backOff(async () => {
-    try {
-      const { data } = await smilesClient.get("/search", { params });
-      return { data };
-    } catch(error) {
-      const apiFailureRetryCodes = ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET'];
-      const isFlightListUndefinedError = error.response?.data?.error === "TypeError: Cannot read property 'flightList' of undefined";
-      const isServiceUnavailable = error.response?.data?.message === "Service Unavailable";
-      // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
-      const shouldRetryRequest = isFlightListUndefinedError || isServiceUnavailable || apiFailureRetryCodes.includes(error.code);
-      if (shouldRetryRequest) throw error;
-      return { error };
-    }
-  }, { jitter: 'full' });
-  if (response.error) throw error;
+const searchFlights = async (params) => {
+  const response = await backOff(
+    async () => {
+      try {
+        const { data } = await smilesClient.get("/search", { params });
+        return { data };
+      } catch (error) {
+        const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
+        const isFlightListUndefinedError =
+          error.response?.data?.error ===
+          "TypeError: Cannot read property 'flightList' of undefined";
+        const isServiceUnavailable =
+          error.response?.data?.message === "Service Unavailable";
+        // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
+        const shouldRetryRequest =
+          isFlightListUndefinedError ||
+          isServiceUnavailable ||
+          apiFailureRetryCodes.includes(error.code);
+        if (shouldRetryRequest) {
+          throw error;
+        }
+        return { error };
+      }
+    },
+    { jitter: "full" }
+  );
+  if (response.error) {
+    throw error;
+  }
   return response;
-}
+};
 
 const getFlights = async (parameters) => {
   const { origin, destination, departureDate, cabinType, adults, preferences } =
@@ -234,9 +247,7 @@ const getFlightsRoundTrip = async (parameters) => {
         undefined,
         preferences.brasilNonGol ? "true" : "false"
       );
-      getFlightPromises.push(
-        searchFlights(paramsGoing)
-      );
+      getFlightPromises.push(searchFlights(paramsGoing));
     }
 
     for (
@@ -253,9 +264,7 @@ const getFlightsRoundTrip = async (parameters) => {
         undefined,
         preferences.brasilNonGol ? "true" : "false"
       );
-      getFlightPromises.push(
-        searchFlights(paramsComing)
-      );
+      getFlightPromises.push(searchFlights(paramsComing));
     }
 
     const flightResults = (await Promise.all(getFlightPromises)).flat();
@@ -378,7 +387,8 @@ const validFlight = (flight, preferences) =>
       (!preferences.hasOwnProperty("stops") ||
         flight.stops <= preferences.stops) &&
       (!preferences.hasOwnProperty("fare") || flight.fare == "AWARD") &&
-      (!preferences.hasOwnProperty("maxhours") || Number(flight.duration) <= Number(preferences.maxhours))));
+      (!preferences.hasOwnProperty("maxhours") ||
+        Number(flight.duration) <= Number(preferences.maxhours))));
 
 const getBestFlightsCount = (preferencesMaxResults) =>
   !preferencesMaxResults

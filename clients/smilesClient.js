@@ -1,4 +1,5 @@
 const { default: axios } = require("axios");
+const { backOff } = require("exponential-backoff");
 const { SMILES_URL, SMILES_TAX_URL } = require("../config/constants.js");
 const { smiles, maxResults } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
@@ -26,6 +27,24 @@ const smilesTaxClient = axios.create({
   insecureHTTPParser: true,
 });
 
+async function searchFlights(params) {
+  const response = await backOff(async () => {
+    try {
+      const { data } = await smilesClient.get("/search", { params });
+      return { data };
+    } catch(error) {
+      const isFlightListUndefinedError = error.response?.data?.error === "TypeError: Cannot read property 'flightList' of undefined";
+      const isServiceUnavailable = error.response?.data?.message === "Service Unavailable";
+      // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
+      const shouldRetryRequest = isFlightListUndefinedError || isServiceUnavailable;
+      if (shouldRetryRequest) throw error;
+      return { error };
+    }
+  }, { jitter: 'full' });
+  if (response.error) throw error;
+  return response;
+}
+
 const getFlights = async (parameters) => {
   const { origin, destination, departureDate, cabinType, adults, preferences } =
     parameters;
@@ -46,7 +65,7 @@ const getFlights = async (parameters) => {
         day,
         preferences?.brasilNonGol ? "true" : "false"
       );
-      getFlightPromises.push(smilesClient.get("/search", { params }));
+      getFlightPromises.push(searchFlights(params));
     }
     const flightResults = (await Promise.all(getFlightPromises)).flat();
     const mappedFlightResults = (
@@ -122,7 +141,7 @@ const getFlightsMultipleCities = async (
           fixedDay ? undefined : day,
           preferences?.brasilNonGol ? "true" : "false"
         );
-        getFlightPromises.push(smilesClient.get("/search", { params }));
+        getFlightPromises.push(searchFlights(params));
       }
     }
     const flightResults = (await Promise.all(getFlightPromises)).flat();
@@ -215,7 +234,7 @@ const getFlightsRoundTrip = async (parameters) => {
         preferences.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(
-        smilesClient.get("/search", { params: paramsGoing })
+        searchFlights(paramsGoing)
       );
     }
 
@@ -234,9 +253,7 @@ const getFlightsRoundTrip = async (parameters) => {
         preferences.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(
-        smilesClient.get("/search", {
-          params: paramsComing,
-        })
+        searchFlights(paramsComing)
       );
     }
 

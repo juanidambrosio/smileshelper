@@ -14,6 +14,7 @@
     "axios": "^0.27.2",
     "cli-progress": "^3.11.2",
     "dotenv": "^16.0.1",
+    "exponential-backoff": "^3.1.0",
     "mongodb": "^4.9.0",
     "node-emoji": "^1.11.0",
     "node-schedule": "^2.1.0",

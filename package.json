@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "listen": "node twitter/tweetListener.js",
-    "telegram": "node telegram/telegramBot.js"
+    "telegram": "node telegram/telegramBot.js",
+    "cli": "node cli/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +16,8 @@
     "cli-progress": "^3.11.2",
     "dotenv": "^16.0.1",
     "exponential-backoff": "^3.1.0",
+    "marked": "^4.2.5",
+    "marked-terminal": "^5.1.1",
     "mongodb": "^4.9.0",
     "node-emoji": "^1.11.0",
     "node-schedule": "^2.1.0",

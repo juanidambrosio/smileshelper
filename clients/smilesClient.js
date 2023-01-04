@@ -33,10 +33,11 @@ async function searchFlights(params) {
       const { data } = await smilesClient.get("/search", { params });
       return { data };
     } catch(error) {
+      const apiFailureRetryCodes = ['ETIMEDOUT', 'EAI_AGAIN', 'ECONNRESET'];
       const isFlightListUndefinedError = error.response?.data?.error === "TypeError: Cannot read property 'flightList' of undefined";
       const isServiceUnavailable = error.response?.data?.message === "Service Unavailable";
       // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
-      const shouldRetryRequest = isFlightListUndefinedError || isServiceUnavailable;
+      const shouldRetryRequest = isFlightListUndefinedError || isServiceUnavailable || apiFailureRetryCodes.includes(error.code);
       if (shouldRetryRequest) throw error;
       return { error };
     }

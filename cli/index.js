@@ -17,14 +17,14 @@ const rl = readline.createInterface({
 
 const question = util.promisify(rl.question).bind(rl);
 
-async function makeQuestion(text) {
+const makeQuestion = async (text) => {
   const answer = await question(text);
   return answer.trim();
 }
 
 const questionText = "Ingrese búsqueda (q para salir): ";
 
-async function run() {
+const run = async () => {
   let query = await makeQuestion(questionText);
 
   while (query !== "q") {

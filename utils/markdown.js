@@ -14,7 +14,7 @@ const {
   regexRoundTrip,
 } = require("./regex");
 
-function parseSingleCityResult({ result, payload }) {
+const parseSingleCityResult = ({ result, payload }) => {
   const departureMonth = payload.departureDate.substring(5, 7);
   return emoji.get("airplane") + " " +
     applySimpleMarkdown(
@@ -42,7 +42,7 @@ function parseSingleCityResult({ result, payload }) {
     generateFlightOutput(result);
 }
 
-function parseRegionalResult({ result, payload, isMultipleOrigin, fixedDay }) {
+const parseRegionalResult = ({ result, payload, isMultipleOrigin, fixedDay }) => {
   const dateToShow = fixedDay ? "" : " " +
     result.departureDay +
     "/" +
@@ -80,7 +80,7 @@ function parseRegionalResult({ result, payload, isMultipleOrigin, fixedDay }) {
     generateFlightOutput(result);
 }
 
-function parseRoundTripResult({ result, payload }) {
+const parseRoundTripResult = ({ result, payload }) => {
   return emoji.get("airplane") + " " +
     applySimpleMarkdown(
       result.departureFlight.departureDay.getDate() +
@@ -134,7 +134,7 @@ function parseRoundTripResult({ result, payload }) {
     generateFlightOutput(result.returnFlight);
 }
 
-function parseFlightsFromQuery({ flights, payload, query }) {
+const parseFlightsFromQuery = ({ flights, payload, query }) => {
   let title, flightsMarkdown;
   if (regexSingleCities.test(query)) {
     title = payload.origin + " " + payload.destination;

@@ -17,7 +17,7 @@ const { getFlights, getFlightsMultipleCities, getFlightsRoundTrip } = require(
   "../clients/smilesClient",
 );
 
-async function searchForFlights(query) {
+const searchForFlights = async (query) => {
   let flightsResponse, payload;
   if (regexSingleCities.test(query)) {
     payload = generatePayloadMonthlySingleDestination(query);

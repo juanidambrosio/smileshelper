@@ -35,6 +35,7 @@ const run = async () => {
       const flightsMarkdown = marked.parse(
         markdown.parseFlightsFromQuery({ flights, payload, query }),
       );
+      console.log(flightsMarkdown)
     } catch (error) {
       console.error("Error: " + error.message);
     }

@@ -13,7 +13,7 @@ const smiles = {
 
 const responseTweetUrl = process.env.RESPONSE_TWEET_URL;
 
-const twitterClient = new TwitterApi({
+const twitterClient = process.env.TWITTER_API_KEY && new TwitterApi({
   appKey: process.env.TWITTER_API_KEY,
   appSecret: process.env.TWITTER_API_KEY_SECRET,
   accessToken: process.env.TWITTER_ACCESS_TOKEN,

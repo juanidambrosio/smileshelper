@@ -30,13 +30,11 @@ const run = async () => {
   let query = await makeQuestion(questionText);
 
   while (query !== "q") {
-    console.log(searching);
     try {
       const { flights, payload } = await searchForFlights(query);
       const flightsMarkdown = marked.parse(
         markdown.parseFlightsFromQuery({ flights, payload, query }),
       );
-      console.log(flightsMarkdown);
     } catch (error) {
       console.error("Error: " + error.message);
     }

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const marked = require("marked");
 const TerminalRenderer = require("marked-terminal");
 const readline = require("readline");

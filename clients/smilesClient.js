@@ -54,7 +54,7 @@ const searchFlights = async (params) => {
     { jitter: "full" }
   );
   if (response.error) {
-    throw error;
+    throw response.error;
   }
   return response;
 };

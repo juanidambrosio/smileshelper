@@ -6,8 +6,8 @@ dotenv.config();
 const maxResults = process.env.MAX_RESULTS || 10;
 
 const smiles = {
-  authorizationToken: process.env.SMILES_AUTH_TOKEN,
-  apiKey: process.env.SMILES_API_KEY,
+  authorizationToken: process.env.SMILES_AUTH_TOKEN || 'AHspTPDZ5YPWlYKNjD73SYe2QdsSD1E9IMibwMNwUM16V0Gjo2tEx9',
+  apiKey: process.env.SMILES_API_KEY || 'aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw',
   milePrice: process.env.SMILES_MILE_PRICE,
 };
 

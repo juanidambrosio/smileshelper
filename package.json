@@ -1,6 +1,6 @@
 {
   "name": "smiles-helper",
-  "version": "1.1.1",
+  "version": "1.2.3",
   "description": "",
   "main": "index.js",
   "bin": "./cli/index.js",

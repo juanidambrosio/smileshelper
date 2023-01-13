@@ -193,6 +193,7 @@ const getFlightsMultipleCities = async (
       ),
     };
   } catch (error) {
+    console.log(error)
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
@@ -310,6 +311,7 @@ const getFlightsRoundTrip = async (parameters) => {
       ).slice(0, getBestFlightsCount(preferences.maxresults)),
     };
   } catch (error) {
+    console.log(error)
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||

@@ -84,25 +84,79 @@ const listen = async () => {
 
   bot.onText(
     regexMultipleDestinationMonthly,
-    async (msg) => await searchRegionalQuery(bot, msg, false, false)
+    async (msg) => {
+      const chatId = msg.chat.id;
+      bot.sendMessage(chatId, searching);
+      const { response, error } = await searchRegionalQuery(msg, false, false);
+
+      if (error) {
+        bot.sendMessage(chatId, error);
+      }
+      else {
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+      }
+    }
   );
 
   bot.onText(
     regexMultipleDestinationFixedDay,
-    async (msg) => await searchRegionalQuery(bot, msg, true, false)
+    async (msg) => {
+      const chatId = msg.chat.id;
+      bot.sendMessage(chatId, searching);
+      const { response, error } = await searchRegionalQuery(msg, true, false);
+
+      if (error) {
+        bot.sendMessage(chatId, error);
+      }
+      else {
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+      }
+    }
   );
 
   bot.onText(
     regexMultipleOriginMonthly,
-    async (msg) => await searchRegionalQuery(bot, msg, false, true)
+    async (msg) => {
+      const chatId = msg.chat.id;
+      bot.sendMessage(chatId, searching);
+      const { response, error } = await searchRegionalQuery(msg, false, true);
+
+      if (error) {
+        bot.sendMessage(chatId, error);
+      }
+      else {
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+      }
+    }
   );
 
   bot.onText(
     regexMultipleOriginFixedDay,
-    async (msg) => await searchRegionalQuery(bot, msg, true, true)
+    async (msg) => {
+      const chatId = msg.chat.id;
+      bot.sendMessage(chatId, searching);
+      const { response, error } = await searchRegionalQuery(msg, true, true);
+
+      if (error) {
+        bot.sendMessage(chatId, error);
+      }
+      else {
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+      }
+    }
   );
 
-  bot.onText(regexRoundTrip, async (msg) => await searchRoundTrip(bot, msg));
+  bot.onText(regexRoundTrip, async (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+    const { response, error } = await searchRoundTrip(msg);
+    if (error) {
+      bot.sendMessage(chatId, error);
+    }
+    else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+    }
+  })
 
   bot.onText(regexFilters, async (msg) => {
     await setPreferences(bot, msg);

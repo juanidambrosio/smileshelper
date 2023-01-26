@@ -241,7 +241,7 @@ const getFlightsRoundTrip = async (parameters) => {
       const paramsGoing = buildParams(
         origin,
         destination,
-        date.toLocaleDateString("en-CA"),
+        date.toLocaleDateString("fr-CA"),
         adultsGoing,
         true,
         undefined,
@@ -258,7 +258,7 @@ const getFlightsRoundTrip = async (parameters) => {
       const paramsComing = buildParams(
         destination,
         origin,
-        dateReturn.toLocaleDateString("en-CA"),
+        dateReturn.toLocaleDateString("fr-CA"),
         adultsComing,
         true,
         undefined,

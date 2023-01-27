@@ -1,4 +1,5 @@
 const emoji = require("node-emoji");
+const { tripTypes } = require('../config/constants');
 const {
   applySimpleMarkdown,
   generateEmissionLink,
@@ -27,7 +28,7 @@ const parseSingleCityResult = ({ result, payload }) => {
         ...payload,
         departureDate: payload.departureDate + "-" + result.departureDay +
           " 09:",
-        tripType: "2",
+        tripType: tripTypes.ONE_WAY,
       }),
       "(",
       ")",
@@ -65,7 +66,7 @@ const parseRegionalResult = ({ result, payload, isMultipleOrigin, fixedDay }) =>
           ? payload.departureDate
           : payload.departureDate.substring(0, 7) + "-" + result.departureDay +
             " 09:",
-        tripType: "2",
+        tripType: tripTypes.ONE_WAY,
       }),
       "(",
       ")",
@@ -98,7 +99,7 @@ const parseRoundTripResult = ({ result, payload }) => {
         ...payload,
         departureDate: result.departureFlight.departureDay.setHours(9),
         returnDate: result.returnFlight.departureDay.setHours(9),
-        tripType: "1",
+        tripType: tripTypes.RETURN,
       }),
       "(",
       ")",

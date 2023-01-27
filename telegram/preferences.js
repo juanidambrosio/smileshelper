@@ -8,12 +8,12 @@ const {
   preferencesNone,
   preferencesSave,
   preferencesMap,
+  regionSave
 } = require("../config/constants");
 
 const { getDbFunctions } = require("../db/dbFunctions");
 
-const setPreferences = async (bot, msg) => {
-  const chatId = msg.chat.id;
+const setPreferences = async (msg) => {
   const { getOne, upsert } = getDbFunctions();
 
   try {
@@ -32,6 +32,7 @@ const setPreferences = async (bot, msg) => {
     if (previousPreferences.airlines && result.airlines) {
       result.airlines = [...previousPreferences.airlines, ...result.airlines];
     }
+
     await setPreferencesDb(
       {
         id: msg.from.username || msg.from.id.toString(),
@@ -39,30 +40,59 @@ const setPreferences = async (bot, msg) => {
       },
       upsert
     );
-    bot.sendMessage(chatId, preferencesSave, { parse_mode: "Markdown" });
+    return { response: preferencesSave };
   } catch (error) {
     console.log(error);
-    bot.sendMessage(chatId, preferencesError);
+    return { error: preferencesError };
   }
 };
 
-const deletePreferences = async (bot, msg) => {
-  const chatId = msg.chat.id;
+const setRegion = async (id, name, airports) => {
+  let result = {
+    regions: [{ name, airports }]
+  };
+  const { getOne, upsert } = getDbFunctions();
+
+  try {
+    const previousPreferences =
+      (await getPreferencesDb(
+        { id },
+        getOne
+      )) || {};
+
+    if (previousPreferences.regions) {
+      result.regions = [...previousPreferences.regions, { name, airports }];
+    }
+
+    await setPreferencesDb(
+      {
+        id,
+        result,
+      },
+      upsert
+    );
+    return { response: regionSave };
+  } catch (error) {
+    console.log(error);
+    return { error: preferencesError };
+  }
+};
+
+const deletePreferences = async (msg) => {
   const { deleteOne } = getDbFunctions();
 
   try {
     await deleteOne({
       author_id: msg.from.username || msg.from.id.toString(),
     });
-    bot.sendMessage(chatId, preferencesDelete, { parse_mode: "Markdown" });
+    return { response: preferencesDelete };
   } catch (error) {
     console.log(error);
-    bot.sendMessage(chatId, preferencesError);
+    return { error: preferencesError };
   }
 };
 
-const getPreferences = async (bot, msg) => {
-  const chatId = msg.chat.id;
+const getPreferences = async (msg) => {
   const { getOne } = getDbFunctions();
 
   try {
@@ -86,11 +116,11 @@ const getPreferences = async (bot, msg) => {
         }
       }
     }
-    bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    return { response };
   } catch (error) {
     console.log(error);
-    bot.sendMessage(chatId, preferencesError);
+    return { error: preferencesError };
   }
 };
 
-module.exports = { setPreferences, getPreferences, deletePreferences };
+module.exports = { setPreferences, setRegion, getPreferences, deletePreferences };

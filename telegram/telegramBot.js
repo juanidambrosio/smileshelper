@@ -18,6 +18,7 @@ const {
   regexMultipleOriginFixedDay,
   regexRoundTrip,
   regexFilters,
+  regexCustomRegion
 } = require("../utils/regex");
 
 const { checkDailyAlerts } = require("./alerts");
@@ -32,6 +33,7 @@ const {
   getPreferences,
   setPreferences,
   deletePreferences,
+  setRegion,
 } = require("./preferences");
 
 const { buildError } = require("../utils/error");
@@ -159,14 +161,49 @@ const listen = async () => {
   })
 
   bot.onText(regexFilters, async (msg) => {
-    await setPreferences(bot, msg);
+    const chatId = msg.chat.id;
+    const { response, error } = await setPreferences(msg);
+    if (error) {
+      bot.sendMessage(chatId, error);
+    }
+    else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    }
+  });
+
+  bot.onText(regexCustomRegion, async (msg, match) => {
+    const chatId = msg.chat.id;
+    const regionName = match[1];
+    const regionAirports = match[2];
+    const { response, error } = await setRegion(msg.from.username || msg.from.id.toString(), regionName, regionAirports);
+    if (error) {
+      bot.sendMessage(chatId, error);
+    }
+    else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    }
   });
 
   bot.onText(/\/filtroseliminar/, async (msg) => {
-    await deletePreferences(bot, msg);
+    const chatId = msg.chat.id;
+    const { response, error } = await deletePreferences(msg);
+    if (error) {
+      bot.sendMessage(chatId, error);
+    }
+    else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    }
   });
+
   bot.onText(/\/filtros$/, async (msg) => {
-    await getPreferences(bot, msg);
+    const chatId = msg.chat.id;
+    const { response, error } = await getPreferences(msg);
+    if (error) {
+      bot.sendMessage(chatId, error);
+    }
+    else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+    }
   });
 };
 listen();

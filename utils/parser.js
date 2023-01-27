@@ -11,13 +11,13 @@ const calculateIndex = (parameters, indexStart) => {
       case 5:
         return !isNaN(parameters[0])
           ? {
-              adults: indexStart,
-              cabinType: indexStart + 2,
-            }
+            adults: indexStart,
+            cabinType: indexStart + 2,
+          }
           : {
-              adults: indexStart + 4,
-              cabinType: indexStart,
-            };
+            adults: indexStart + 4,
+            cabinType: indexStart,
+          };
       case 3:
         return { cabinType: indexStart };
       case 1:
@@ -33,30 +33,27 @@ const generateFlightOutput = (flight) =>
     flight.airline,
     flight.stops + " escalas",
     emoji.get("clock1") +
-      flight.duration +
-      "hs," +
-      emoji.get("seat") +
-      flight.seats,
+    flight.duration +
+    "hs," +
+    emoji.get("seat") +
+    flight.seats,
   ];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
     ? "ECONOMIC"
     : cabinType === "EJE"
-    ? "BUSINESS"
-    : cabinType === "PEC"
-    ? "PREMIUM_ECONOMIC"
-    : "all";
+      ? "BUSINESS"
+      : cabinType === "PEC"
+        ? "PREMIUM_ECONOMIC"
+        : "all";
 
 const generateEmissionLink = (flight) =>
-  `${SMILES_EMISSION_URL}originAirportCode=${
-    flight.origin
+  `${SMILES_EMISSION_URL}originAirportCode=${flight.origin
   }&destinationAirportCode=${flight.destination}&departureDate=${new Date(
     flight.departureDate
-  ).getTime()}&adults=${
-    flight.adults || "1"
-  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${
-    flight.tripType
+  ).getTime()}&adults=${flight.adults || "1"
+  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${flight.tripType
   }`;
 
 const generateEmissionLinkRoundTrip = (flight) =>
@@ -224,6 +221,7 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetVF = text.indexOf(" vf");
   const offsetBrasilNonGol = text.indexOf(" singol");
   const offsetSmilesAndMoney = text.indexOf(" smilesandmoney");
+  const offsetCustomRegion = text.indexOf(" region");
 
   const result = {};
 
@@ -237,6 +235,12 @@ const preferencesParser = (text, booleanPreferences) => {
       .split(" ")
       .filter((airline) => airlines.includes(airline));
     result.airlines = airlinesArray;
+  }
+
+  if (offsetCustomRegion > 0) {
+    const [name, airportsString] = text.substring(offsetCustomRegion).split("/");
+    const airports = airportsString.toUpperCase().split(" ");
+    result.customRegions = { name, airports };
   }
 
   if (offsetStops > 0) {

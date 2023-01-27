@@ -59,6 +59,8 @@ const preferencesMap = new Map([
   ["smilesAndMoney", "smilesandmoney "],
 ]);
 
+const regionSave = "Se ha guardado la nueva region."
+
 module.exports = {
   badResponse,
   dailyTweet,
@@ -82,5 +84,6 @@ module.exports = {
   preferencesError,
   preferencesNone,
   preferencesMap,
+  regionSave,
   airlinesCodes,
 };

@@ -87,7 +87,7 @@ const getFlights = async (parameters) => {
         flightResults.map(async (flightResult) => {
           const { flight, price, money, fareUid } = getBestFlight(
             flightResult.data?.requestedFlightSegmentList[0],
-            cabinType,
+            { ...preferences, cabinType },
             preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
           return {
@@ -99,16 +99,14 @@ const getFlights = async (parameters) => {
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
-            airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid
               ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
               : undefined,
-            fare: flight.sourceFare,
           };
         })
       )
-    ).filter((flight) => validFlight(flight, preferences));
+    ).filter((flight) => validFlight(flight));
 
     return {
       results: sortFlights(mappedFlightResults).slice(
@@ -164,7 +162,7 @@ const getFlightsMultipleCities = async (
         flightResults.map(async (flightResult) => {
           const { flight, price, money, fareUid } = getBestFlight(
             flightResult.data?.requestedFlightSegmentList[0],
-            cabinType,
+            { ...preferences, cabinType },
             preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
           return {
@@ -176,16 +174,14 @@ const getFlightsMultipleCities = async (
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
-            airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid
               ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
               : undefined,
-            fare: flight.sourceFare,
           };
         })
       )
-    ).filter((flight) => validFlight(flight, preferences));
+    ).filter((flight) => validFlight(flight));
     return {
       results: sortFlights(mappedFlightResults.flat()).slice(
         0,
@@ -196,8 +192,8 @@ const getFlightsMultipleCities = async (
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message
+      error.response?.data?.errorMessage ||
+      error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
@@ -277,9 +273,11 @@ const getFlightsRoundTrip = async (parameters) => {
             flightSegment?.airports?.departureAirportList[0]?.code;
           const { flight, price, money, fareUid } = getBestFlight(
             flightSegment,
-            belongsToCity(departureAirport, origin)
-              ? cabinTypeGoing
-              : cabinTypeComing,
+            {
+              ...preferences, cabinType: belongsToCity(departureAirport, origin)
+                ? cabinTypeGoing
+                : cabinTypeComing
+            },
             preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
           return {
@@ -291,16 +289,14 @@ const getFlightsRoundTrip = async (parameters) => {
             stops: flight.stops?.toString(),
             duration: flight.duration?.hours?.toString(),
             airline: flight.airline?.name,
-            airlineCode: flight.airline?.code,
             seats: flight.availableSeats?.toString(),
             tax: fareUid
               ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
               : undefined,
-            fare: flight.sourceFare,
           };
         })
       )
-    ).filter((flight) => validFlight(flight, preferences));
+    ).filter((flight) => validFlight(flight));
     return {
       results: sortFlightsRoundTrip(
         mappedFlightResults,
@@ -313,8 +309,8 @@ const getFlightsRoundTrip = async (parameters) => {
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message
+      error.response?.data?.errorMessage ||
+      error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
@@ -377,18 +373,10 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
   }
 };
 
-const validFlight = (flight, preferences) =>
+const validFlight = (flight) =>
   flight.price &&
   flight.price !== Number.MAX_VALUE.toString() &&
-  flight.tax?.miles &&
-  (!preferences ||
-    ((!preferences.hasOwnProperty("airlines") ||
-      !preferences.airlines.includes(flight.airlineCode)) &&
-      (!preferences.hasOwnProperty("stops") ||
-        flight.stops <= preferences.stops) &&
-      (!preferences.hasOwnProperty("fare") || flight.fare == "AWARD") &&
-      (!preferences.hasOwnProperty("maxhours") ||
-        Number(flight.duration) <= Number(preferences.maxhours))));
+  flight.tax?.miles;
 
 const getBestFlightsCount = (preferencesMaxResults) =>
   !preferencesMaxResults

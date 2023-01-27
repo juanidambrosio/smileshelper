@@ -17,7 +17,7 @@ const {
   getFlightsRoundTrip,
 } = require("../clients/smilesClient");
 
-const { notFound, genericError } = require("../config/constants");
+const { notFound, genericError, tripTypes } = require("../config/constants");
 
 const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
 
@@ -60,7 +60,7 @@ const searchCityQuery = async (msg, isAlert) => {
               ...payload,
               departureDate:
                 payload.departureDate + "-" + current.departureDay + " 09:",
-              tripType: "2",
+              tripType: tripTypes.ONE_WAY,
             }),
             "(",
             ")"
@@ -159,7 +159,7 @@ const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
               "-" +
               current.departureDay +
               " 09:",
-            tripType: "2",
+            tripType: tripTypes.ONE_WAY,
           }),
           "(",
           ")"
@@ -236,7 +236,7 @@ const searchRoundTrip = async (msg) => {
               ...payload,
               departureDate: current.departureFlight.departureDay.setHours(9),
               returnDate: current.returnFlight.departureDay.setHours(9),
-              tripType: "1",
+              tripType: tripTypes.RETURN,
             }),
             "(",
             ")"

@@ -59,6 +59,12 @@ const preferencesMap = new Map([
   ["smilesAndMoney", "smilesandmoney "],
 ]);
 
+const tripTypes = {
+  RETURN: '1',
+  ONE_WAY: '2',
+};
+
+
 module.exports = {
   badResponse,
   dailyTweet,
@@ -83,4 +89,5 @@ module.exports = {
   preferencesNone,
   preferencesMap,
   airlinesCodes,
+  tripTypes
 };

@@ -1,6 +1,6 @@
 const { default: axios } = require("axios");
 const { backOff } = require("exponential-backoff");
-const { SMILES_URL, SMILES_TAX_URL } = require("../config/constants.js");
+const { SMILES_URL, SMILES_TAX_URL, tripTypes } = require("../config/constants.js");
 const { smiles, maxResults } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
@@ -337,7 +337,7 @@ const buildParams = (
   currencyCode: "ARS",
   infants: "0",
   isFlexibleDateChecked: "false",
-  tripType: "2",
+  tripType: tripTypes.ONE_WAY,
   forceCongener: brasilNonGol,
   r: "ar",
   originAirportCode: origin,

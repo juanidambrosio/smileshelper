@@ -11,7 +11,7 @@ const flights = [
   { journey: "EZE MAD", promoMiles: 95200 },
   { journey: "EZE CDG", promoMiles: 83700 },
   { journey: "EZE AMS", promoMiles: 86500 },
-  { journey: "EZE CUN", promoMiles: 47800 },
+  { journey: "EZE CUN", promoMiles: 55700 },
   { journey: "EZE PUJ", promoMiles: 50800 },
 ];
 

@@ -54,9 +54,9 @@ const preferencesMap = new Map([
   ["stops", "e: "],
   ["maxresults", "r: "],
   ["maxhours", "h: "],
-  ["fare", "vf "],
-  ["brasilNonGol", "singol "],
-  ["smilesAndMoney", "smilesandmoney "],
+  ["fare", "vf: "],
+  ["brasilNonGol", "singol: "],
+  ["smilesAndMoney", "smilesandmoney: "],
 ]);
 
 const regionSave = "Se ha guardado la nueva region."

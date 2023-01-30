@@ -102,7 +102,8 @@ const generatePayloadMonthlySingleDestination = (text) => {
   };
 };
 
-const generatePayloadMultipleDestinations = (text, fixedDay) => {
+const generatePayloadMultipleDestinations = (text, fixedDay, customRegions = []) => {
+  const regionsCopy = getCustomRegions(customRegions);
   const offset = fixedDay ? 10 : 7;
   const region = text.substring(4, text.indexOf(" ", 4)).toUpperCase();
   const startIndexAfterRegion = region.length + 5;
@@ -112,7 +113,7 @@ const generatePayloadMultipleDestinations = (text, fixedDay) => {
   );
   return {
     origin: text.substring(0, 3).toUpperCase(),
-    destination: regions[region],
+    destination: regionsCopy ? regionsCopy[region] : regions[region],
     departureDate: text.substring(
       startIndexAfterRegion,
       startIndexAfterRegion + offset
@@ -125,7 +126,8 @@ const generatePayloadMultipleDestinations = (text, fixedDay) => {
   };
 };
 
-const generatePayloadMultipleOrigins = (text, fixedDay) => {
+const generatePayloadMultipleOrigins = (text, fixedDay, customRegions = {}) => {
+  const regionsCopy = getCustomRegions(customRegions);
   const offset = fixedDay ? 10 : 7;
   const region = text.substring(0, text.indexOf(" ")).toUpperCase();
   const startIndexAfterRegion = region.length + 5;
@@ -134,7 +136,7 @@ const generatePayloadMultipleOrigins = (text, fixedDay) => {
     startIndexAfterRegion + offset + 1
   );
   return {
-    origin: regions[region],
+    origin: regionsCopy ? regionsCopy[region] : regions[region],
     destination: text
       .substring(region.length + 1, region.length + 4)
       .toUpperCase(),
@@ -148,6 +150,17 @@ const generatePayloadMultipleOrigins = (text, fixedDay) => {
       : "",
     region,
   };
+}
+
+const getCustomRegions = (customRegions) => {
+  let regionsCopy = undefined;
+  if (customRegions) {
+    regionsCopy = { ...regions };
+    for (const [name, airports] of Object.entries(customRegions)) {
+      regionsCopy[name] = airports;
+    }
+  }
+  return regionsCopy;
 };
 
 const generatePayloadRoundTrip = (text) => {

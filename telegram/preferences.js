@@ -8,7 +8,7 @@ const {
   preferencesNone,
   preferencesSave,
   preferencesMap,
-  regionSave
+  regionSave,
 } = require("../config/constants");
 
 const { getDbFunctions } = require("../db/dbFunctions");
@@ -48,9 +48,7 @@ const setPreferences = async (msg) => {
 };
 
 const setRegion = async (id, name, airports) => {
-  let result = {
-    regions: [{ name, airports }]
-  };
+  let result = { regions: { [name]: airports } };
   const { getOne, upsert } = getDbFunctions();
 
   try {
@@ -61,7 +59,7 @@ const setRegion = async (id, name, airports) => {
       )) || {};
 
     if (previousPreferences.regions) {
-      result.regions = [...previousPreferences.regions, { name, airports }];
+      result.regions = { ...previousPreferences.regions, [name]: airports };
     }
 
     await setPreferencesDb(
@@ -112,7 +110,7 @@ const getPreferences = async (msg) => {
           response +=
             preferencesMap.get(preference) +
             preferences[preference].toString() +
-            " ";
+            "\n";
         }
       }
     }
@@ -123,4 +121,26 @@ const getPreferences = async (msg) => {
   }
 };
 
-module.exports = { setPreferences, setRegion, getPreferences, deletePreferences };
+const getRegions = async (msg) => {
+  const { getOne } = getDbFunctions();
+
+  try {
+    const preferences = await getPreferencesDb(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    );
+
+    if (preferences === null || !preferences.regions) {
+      return {};
+    } else {
+      return preferences.regions;
+    }
+  } catch (error) {
+    console.log(error);
+    return { error: preferencesError };
+  }
+};
+
+module.exports = { setPreferences, setRegion, getPreferences, getRegions, deletePreferences };

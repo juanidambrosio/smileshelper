@@ -61,6 +61,8 @@ const preferencesMap = new Map([
 
 const regionSave = "Se ha guardado la nueva region."
 
+const maxAirports = 10;
+
 module.exports = {
   badResponse,
   dailyTweet,
@@ -86,4 +88,5 @@ module.exports = {
   preferencesMap,
   regionSave,
   airlinesCodes,
+  maxAirports
 };

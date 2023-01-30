@@ -6,6 +6,7 @@ const {
   links,
   airlinesCodes,
   searching,
+  maxAirports
 } = require("../config/constants");
 const regions = require("../data/regions");
 const { applySimpleMarkdown } = require("../utils/parser");
@@ -51,7 +52,7 @@ const listen = async () => {
   );
 
   bot.onText(/\/regiones/, async (msg) => {
-    const entries = {...regions, ...await getRegions(msg)};
+    const entries = { ...regions, ...await getRegions(msg) };
     const airports = Object.entries(entries).reduce(
       (phrase, current) =>
         phrase.concat(
@@ -175,8 +176,8 @@ const listen = async () => {
 
   bot.onText(regexCustomRegion, async (msg, match) => {
     const chatId = msg.chat.id;
-    const regionName = match[1];
-    const regionAirports = match[2].split(" ");
+    const regionName = match[1].toUpperCase();
+    const regionAirports = match[2].split(" ").slice(0, maxAirports).map(airport => airport.toUpperCase());
     const { response, error } = await setRegion(msg.from.username || msg.from.id.toString(), regionName, regionAirports);
     if (error) {
       bot.sendMessage(chatId, error);

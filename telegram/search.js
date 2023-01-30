@@ -96,17 +96,20 @@ const searchCityQuery = async (msg, isAlert) => {
 
 const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
   const { createOne, getOne } = getDbFunctions();
-  const payload = isMultipleOrigin
-    ? generatePayloadMultipleOrigins(msg.text, fixedDay)
-    : generatePayloadMultipleDestinations(msg.text, fixedDay);
 
-  payload.preferences =
+  const preferences =
     (await getPreferencesDb(
       {
         id: msg.from.username || msg.from.id.toString(),
       },
       getOne
     )) || {};
+
+  const payload = isMultipleOrigin
+    ? generatePayloadMultipleOrigins(msg.text, fixedDay, preferences.regions)
+    : generatePayloadMultipleDestinations(msg.text, fixedDay, preferences.regions);
+
+  payload.preferences = preferences;
 
   try {
     const flightList = await getFlightsMultipleCities(

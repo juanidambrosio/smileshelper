@@ -20,11 +20,11 @@ const parseDate = (monthDate, number) =>
   number >= 10 ? monthDate + "-" + number : monthDate + "-" + "0" + number;
 
 const calculateFirstDay = (departureMonth) => {
-  const today = new Date();
+  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
   const month = today.getMonth();
   const year = today.getFullYear();
 
-  const dateDepartureMonth = new Date(departureMonth);
+  const dateDepartureMonth = new Date(new Date(departureMonth).toLocaleString("en-us", { timeZone: "Europe/Madrid" }));
   if (
     month === dateDepartureMonth.getMonth() &&
     year === dateDepartureMonth.getFullYear()

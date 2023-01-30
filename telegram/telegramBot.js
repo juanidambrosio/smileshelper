@@ -31,6 +31,7 @@ const {
 
 const {
   getPreferences,
+  getRegions,
   setPreferences,
   deletePreferences,
   setRegion,
@@ -50,7 +51,8 @@ const listen = async () => {
   );
 
   bot.onText(/\/regiones/, async (msg) => {
-    const airports = Object.entries(regions).reduce(
+    const entries = {...regions, ...await getRegions(msg)};
+    const airports = Object.entries(entries).reduce(
       (phrase, current) =>
         phrase.concat(
           applySimpleMarkdown(current[0], "__") + ": " + current[1] + "\n\n"
@@ -174,7 +176,7 @@ const listen = async () => {
   bot.onText(regexCustomRegion, async (msg, match) => {
     const chatId = msg.chat.id;
     const regionName = match[1];
-    const regionAirports = match[2];
+    const regionAirports = match[2].split(" ");
     const { response, error } = await setRegion(msg.from.username || msg.from.id.toString(), regionName, regionAirports);
     if (error) {
       bot.sendMessage(chatId, error);

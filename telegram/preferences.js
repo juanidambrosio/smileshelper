@@ -102,9 +102,7 @@ const getPreferences = async (msg) => {
     );
 
     let response = "";
-    if (preferences === null) {
-      response = preferencesNone;
-    } else {
+    if (preferences !== null) {
       for (const preference in preferences) {
         if (preferencesMap.has(preference)) {
           response +=
@@ -114,7 +112,9 @@ const getPreferences = async (msg) => {
         }
       }
     }
-    return { response };
+    return {
+      response: response || preferencesNone
+    };
   } catch (error) {
     console.log(error);
     return { error: preferencesError };

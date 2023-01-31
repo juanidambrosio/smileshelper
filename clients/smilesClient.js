@@ -73,7 +73,7 @@ const getFlights = async (parameters) => {
       const params = buildParams(
         origin,
         destination,
-        departureDate,
+        departureDate.replace("/","-"),
         adults,
         false,
         day,
@@ -147,7 +147,7 @@ const getFlightsMultipleCities = async (
         const params = buildParams(
           isMultipleOrigin ? city : origin,
           isMultipleOrigin ? destination : city,
-          departureDate,
+          departureDate.replace("/","-"),
           adults,
           fixedDay,
           fixedDay ? undefined : day,

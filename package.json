@@ -7,7 +7,8 @@
   "scripts": {
     "test": "jest --config jest.config.js",
     "listen": "node twitter/tweetListener.js",
-    "telegram": "node telegram/telegramBot.js"
+    "telegram": "node telegram/telegramBot.js",
+    "prepare": "husky install"
   },
   "author": "",
   "license": "ISC",
@@ -28,6 +29,7 @@
     "@babel/preset-env": "^7.20.2",
     "babel-jest": "^29.4.0",
     "babel-polyfill": "^6.26.0",
+    "husky": "^8.0.3",
     "jest": "^29.4.0",
     "serverless-dotenv-plugin": "^4.0.1",
     "serverless-offline": "^8.8.0"

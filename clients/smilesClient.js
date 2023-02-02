@@ -35,14 +35,13 @@ const searchFlights = async (params) => {
         return { data };
       } catch (error) {
         const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
-        const isFlightListUndefinedError =
-          error.response?.data?.error ===
-          "TypeError: Cannot read property 'flightList' of undefined";
+        const isFlightListRelatedError =
+          ["TypeError: Cannot read properties of undefined (reading 'flightList')", "TypeError: Cannot read property 'flightList' of undefined"].includes(error.response?.data?.error);
         const isServiceUnavailable =
           error.response?.status === 503;
         // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
         const shouldRetryRequest =
-          isFlightListUndefinedError ||
+          isFlightListRelatedError ||
           isServiceUnavailable ||
           apiFailureRetryCodes.includes(error.code);
         if (shouldRetryRequest) {

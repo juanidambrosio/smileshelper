@@ -2,7 +2,14 @@ const emoji = require("node-emoji");
 const { SMILES_EMISSION_URL } = require("../config/constants");
 const regions = require("../data/regions");
 const airlines = require("../data/airlines");
-
+/*
+Parse the message string to object indicating the index of the cabin and/or adults preference
+Giving flexibility to include one or both of them in any order
+EZE LON 2023-12 ECO 3
+EZE LON 2023-12 3 ECO
+EZE LON 2023-12 ECO
+EZE LON 2023-12 3
+*/
 const calculateIndex = (parameters, indexStart) => {
   const regex = /^\d$|^(EJE|ECO|PEC)$|^\d (EJE|ECO|PEC)$|^(EJE|ECO|PEC) \d$/;
 

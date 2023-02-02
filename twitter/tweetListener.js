@@ -2,7 +2,6 @@ const { TwitterApi, ETwitterStreamEvent } = require("twitter-api-v2");
 const FlightSearch = require("../models/FlightSearch");
 const { default: axios } = require("axios");
 const { responseTweetUrl } = require("../config/config");
-const dotenv = require("dotenv").config();
 const {
   generatePayloadMonthlySingleDestination,
   generatePayloadMultipleDestinations,

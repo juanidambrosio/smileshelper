@@ -257,6 +257,7 @@ describe("Regex Utils", () => {
     });
 
     it("should validate combined filters", () => {
+      expect(regexFilters.test("/filtros a:AV e:0 r:30")).toBeTruthy()
       expect(regexFilters.test("/filtros a:AV e:0 r:30 vf")).toBeTruthy();
       expect(
         regexFilters.test("/filtros a:AV e:0 r:30 vf smilesandmoney")

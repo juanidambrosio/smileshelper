@@ -17,6 +17,8 @@ const {
 
 const { initializeDbFunctions, getDbFunctions } = require("../db/dbFunctions");
 
+require("dotenv").config();
+
 const lambdaClient = axios.create({
   baseURL: responseTweetUrl,
 });

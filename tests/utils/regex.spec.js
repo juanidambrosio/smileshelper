@@ -6,7 +6,7 @@ const {
   regexMultipleOriginFixedDay,
   regexRoundTrip,
   regexFilters,
-  regexCustomRegion,
+  regexCustomRegion
 } = require("../../utils/regex");
 
 describe("Regex Utils", () => {
@@ -264,6 +264,13 @@ describe("Regex Utils", () => {
       expect(
         regexFilters.test("/filtros a:AV e:0 r:30 vf singol smilesandmoney")
       ).toBeTruthy();
+
+      expect(
+        regexFilters.test("/filtros a:AV e:0 r:30 vfsingolsmilesandmoney")
+      ).toBeFalsy();
+      expect(
+        regexFilters.test("/filtros a:AV e:0 r:30 singolsmilesandmoney")
+      ).toBeFalsy();
     });
   });
 });

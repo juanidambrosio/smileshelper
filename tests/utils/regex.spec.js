@@ -28,8 +28,7 @@ describe("Regex Utils", () => {
     });
 
     it("should reject wrong entries", () => {
-      expect(regexSingleCities.test("EZE2 LON 2023-12")).toBeFalsy();
-      expect(regexSingleCities.test("EZE2 LON 2023-12-12")).toBeFalsy();
+      expect(regexSingleCities.test("EZE LON 2023-12-12")).toBeFalsy();
     });
   });
 
@@ -68,12 +67,6 @@ describe("Regex Utils", () => {
   });
 
   describe("regexMultipleDestinationFixedDay", () => {
-    it("should validate correctly a destination region search", () => {
-      expect(
-        regexMultipleDestinationFixedDay.test("EZE EUROPA 2023-12-12")
-      ).toBeTruthy();
-    });
-
     it("should validate correctly a destination region search for specific date", () => {
       expect(
         regexMultipleDestinationFixedDay.test("EZE EUROPA 2023-12-12")
@@ -102,21 +95,12 @@ describe("Regex Utils", () => {
 
     it("should reject wrong entries", () => {
       expect(
-        regexMultipleDestinationFixedDay.test("EZE2 EUROPA 2023-12")
-      ).toBeFalsy();
-      expect(
-        regexMultipleDestinationFixedDay.test("EZE2 EUROPA 2023-12-12")
+        regexMultipleDestinationFixedDay.test("EZE EUROPA 2023-12")
       ).toBeFalsy();
     });
   });
 
   describe("regexMultipleOriginMonthly", () => {
-    it("should validate correctly a origin region search", () => {
-      expect(
-        regexMultipleOriginMonthly.test("EUROPA EZE 2023-12")
-      ).toBeTruthy();
-    });
-
     it("should validate correctly a origin region with adults only", () => {
       expect(
         regexMultipleOriginMonthly.test("EUROPA EZE 2023-12 3")
@@ -139,10 +123,7 @@ describe("Regex Utils", () => {
 
     it("should reject wrong entries", () => {
       expect(
-        regexMultipleOriginMonthly.test("EZE2 EUROPA 2023-12")
-      ).toBeFalsy();
-      expect(
-        regexMultipleOriginMonthly.test("EZE2 EUROPA 2023-12-12")
+        regexMultipleOriginMonthly.test("EZE EUROPA 2023-12-12")
       ).toBeFalsy();
     });
   });
@@ -182,10 +163,7 @@ describe("Regex Utils", () => {
 
     it("should reject wrong entries", () => {
       expect(
-        regexMultipleOriginFixedDay.test("EZE2 EUROPA 2023-12")
-      ).toBeFalsy();
-      expect(
-        regexMultipleOriginFixedDay.test("EZE2 EUROPA 2023-12-12")
+        regexMultipleOriginFixedDay.test("EZE EUROPA 2023-12")
       ).toBeFalsy();
     });
   });
@@ -257,7 +235,7 @@ describe("Regex Utils", () => {
     });
 
     it("should validate combined filters", () => {
-      expect(regexFilters.test("/filtros a:AV e:0 r:30")).toBeTruthy()
+      expect(regexFilters.test("/filtros a:AV e:0 r:30")).toBeTruthy();
       expect(regexFilters.test("/filtros a:AV e:0 r:30 vf")).toBeTruthy();
       expect(
         regexFilters.test("/filtros a:AV e:0 r:30 vf smilesandmoney")

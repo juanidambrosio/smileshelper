@@ -55,6 +55,7 @@ const airlines = [
   "S7",
   "FA",
   "H2",
+  "VH"
 ];
 
 module.exports = airlines;

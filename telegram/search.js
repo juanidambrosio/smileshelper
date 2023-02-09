@@ -74,7 +74,7 @@ const searchCityQuery = async (msg, isAlert) => {
           generateFlightOutput(current) +
           "\n"
         ),
-    payload.origin + " " + payload.destination + "\n"
+    payload.origin + " " + payload.destination + " " + payload.departureDate + "\n"
   );
 
   if (!isAlert) {

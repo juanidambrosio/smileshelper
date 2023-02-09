@@ -138,7 +138,7 @@ const parseRoundTripResult = ({ result, payload }) => {
 const parseFlightsFromQuery = ({ flights, payload, query }) => {
   let title, flightsMarkdown;
   if (regexSingleCities.test(query)) {
-    title = payload.origin + " " + payload.destination;
+    title = `${payload.origin} ${payload.destination} ${payload.departureDate}`;
     flightsMarkdown = flights.map((result) =>
       parseSingleCityResult({ result, payload })
     );

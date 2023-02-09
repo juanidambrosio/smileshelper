@@ -97,12 +97,25 @@ const belongsToCity = (airport, city) => {
   }
 };
 
+const findMonthAndYearFromText = (text) => {
+  let [origin, destination, dateString] = text.split(' ');
+  if (dateString.includes('-')) return dateString;
+  const month = Number(dateString);
+  let year = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  if (month < currentMonth) {
+    year += 1;
+  }
+  return `${year}-${dateString}`;
+}
+
 const generatePayloadMonthlySingleDestination = (text) => {
+  const departureDate = findMonthAndYearFromText(text);
   const { adults, cabinType } = calculateIndex(text.substring(16), 16);
   return {
     origin: text.substring(0, 3).toUpperCase(),
     destination: text.substring(4, 7).toUpperCase(),
-    departureDate: text.substring(8, 15),
+    departureDate,
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
@@ -111,6 +124,7 @@ const generatePayloadMonthlySingleDestination = (text) => {
 };
 
 const generatePayloadMultipleDestinations = (text, fixedDay, customRegions = []) => {
+  const departureDate = findMonthAndYearFromText(text);
   const regionsCopy = getCustomRegions(customRegions);
   const offset = fixedDay ? 10 : 7;
   const region = text.substring(4, text.indexOf(" ", 4)).toUpperCase();
@@ -122,10 +136,7 @@ const generatePayloadMultipleDestinations = (text, fixedDay, customRegions = [])
   return {
     origin: text.substring(0, 3).toUpperCase(),
     destination: regionsCopy ? regionsCopy[region] : regions[region],
-    departureDate: text.substring(
-      startIndexAfterRegion,
-      startIndexAfterRegion + offset
-    ),
+    departureDate,
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
@@ -135,6 +146,7 @@ const generatePayloadMultipleDestinations = (text, fixedDay, customRegions = [])
 };
 
 const generatePayloadMultipleOrigins = (text, fixedDay, customRegions = {}) => {
+  const departureDate = findMonthAndYearFromText(text);
   const regionsCopy = getCustomRegions(customRegions);
   const offset = fixedDay ? 10 : 7;
   const region = text.substring(0, text.indexOf(" ")).toUpperCase();
@@ -148,10 +160,7 @@ const generatePayloadMultipleOrigins = (text, fixedDay, customRegions = {}) => {
     destination: text
       .substring(region.length + 1, region.length + 4)
       .toUpperCase(),
-    departureDate: text.substring(
-      startIndexAfterRegion,
-      startIndexAfterRegion + offset
-    ),
+    departureDate,
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()

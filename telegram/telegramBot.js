@@ -6,7 +6,8 @@ const {
   links,
   airlinesCodes,
   searching,
-  maxAirports
+  maxAirports,
+  monthSections,
 } = require("../config/constants");
 const regions = require("../data/regions");
 const { applySimpleMarkdown } = require("../utils/parser");
@@ -19,7 +20,7 @@ const {
   regexMultipleOriginFixedDay,
   regexRoundTrip,
   regexFilters,
-  regexCustomRegion
+  regexCustomRegion,
 } = require("../utils/regex");
 
 const { checkDailyAlerts } = require("./alerts");
@@ -52,7 +53,7 @@ const listen = async () => {
   );
 
   bot.onText(/\/regiones/, async (msg) => {
-    const entries = { ...regions, ...await getRegions(msg) };
+    const entries = { ...regions, ...(await getRegions(msg)) };
     const airports = Object.entries(entries).reduce(
       (phrase, current) =>
         phrase.concat(
@@ -75,81 +76,78 @@ const listen = async () => {
     bot.sendMessage(msg.chat.id, airlinesCodes, { parse_mode: "MarkdownV2" })
   );
 
-  bot.onText(regexSingleCities, async (msg) => {
+  bot.onText(regexSingleCities, async (msg, match) => {
     try {
+      const [origin, destination, departureMonth] = match.slice(1, 4);
+      console.log(origin + destination + departureMonth);
       bot.sendMessage(msg.chat.id, searching);
-      const { response } = await searchCityQuery(msg);
+      const { response } = await searchCityQuery(msg, match);
       console.log(msg.text);
-      bot.sendMessage(msg.chat.id, response, { parse_mode: "Markdown" });
+      const inlineKeyboardMonths = monthSections.map((monthSection) =>
+        monthSection.map((month) => ({
+          text: month.name,
+          callback_data: `${origin} ${destination} ${departureDate}`,
+        }))
+      );
+      bot.sendMessage(msg.chat.id, response, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: inlineKeyboardMonths,
+        },
+      });
     } catch (error) {
       console.log(error.message);
       bot.sendMessage(msg.chat.id, buildError(error.message));
     }
   });
 
-  bot.onText(
-    regexMultipleDestinationMonthly,
-    async (msg) => {
-      const chatId = msg.chat.id;
-      bot.sendMessage(chatId, searching);
-      const { response, error } = await searchRegionalQuery(msg, false, false);
+  bot.onText(regexMultipleDestinationMonthly, async (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+    const { response, error } = await searchRegionalQuery(msg, false, false);
 
-      if (error) {
-        bot.sendMessage(chatId, error);
-      }
-      else {
-        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
-      }
+    if (error) {
+      bot.sendMessage(chatId, error);
+    } else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
-  );
+  });
 
-  bot.onText(
-    regexMultipleDestinationFixedDay,
-    async (msg) => {
-      const chatId = msg.chat.id;
-      bot.sendMessage(chatId, searching);
-      const { response, error } = await searchRegionalQuery(msg, true, false);
+  bot.onText(regexMultipleDestinationFixedDay, async (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+    const { response, error } = await searchRegionalQuery(msg, true, false);
 
-      if (error) {
-        bot.sendMessage(chatId, error);
-      }
-      else {
-        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
-      }
+    if (error) {
+      bot.sendMessage(chatId, error);
+    } else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
-  );
+  });
 
-  bot.onText(
-    regexMultipleOriginMonthly,
-    async (msg) => {
-      const chatId = msg.chat.id;
-      bot.sendMessage(chatId, searching);
-      const { response, error } = await searchRegionalQuery(msg, false, true);
+  bot.onText(regexMultipleOriginMonthly, async (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+    const { response, error } = await searchRegionalQuery(msg, false, true);
 
-      if (error) {
-        bot.sendMessage(chatId, error);
-      }
-      else {
-        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
-      }
+    if (error) {
+      bot.sendMessage(chatId, error);
+    } else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
-  );
+  });
 
-  bot.onText(
-    regexMultipleOriginFixedDay,
-    async (msg) => {
-      const chatId = msg.chat.id;
-      bot.sendMessage(chatId, searching);
-      const { response, error } = await searchRegionalQuery(msg, true, true);
+  bot.onText(regexMultipleOriginFixedDay, async (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+    const { response, error } = await searchRegionalQuery(msg, true, true);
 
-      if (error) {
-        bot.sendMessage(chatId, error);
-      }
-      else {
-        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
-      }
+    if (error) {
+      bot.sendMessage(chatId, error);
+    } else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
-  );
+  });
 
   bot.onText(regexRoundTrip, async (msg) => {
     const chatId = msg.chat.id;
@@ -157,19 +155,28 @@ const listen = async () => {
     const { response, error } = await searchRoundTrip(msg);
     if (error) {
       bot.sendMessage(chatId, error);
+    } else {
+      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
-    else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
-    }
-  })
+  });
+
+  bot.on("callback_query", (query) => {
+    const action = query.data;
+    const opts = {
+      chatId: msg.chat.id,
+    };
+    bot.sendMessage(
+      opts.chatId,
+      `Finished callback with action ${action} and msg ${msg.text}`
+    );
+  });
 
   bot.onText(regexFilters, async (msg) => {
     const chatId = msg.chat.id;
     const { response, error } = await setPreferences(msg);
     if (error) {
       bot.sendMessage(chatId, error);
-    }
-    else {
+    } else {
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
   });
@@ -177,12 +184,18 @@ const listen = async () => {
   bot.onText(regexCustomRegion, async (msg, match) => {
     const chatId = msg.chat.id;
     const regionName = match[1].toUpperCase();
-    const regionAirports = match[2].split(" ").slice(0, maxAirports).map(airport => airport.toUpperCase());
-    const { response, error } = await setRegion(msg.from.username || msg.from.id.toString(), regionName, regionAirports);
+    const regionAirports = match[2]
+      .split(" ")
+      .slice(0, maxAirports)
+      .map((airport) => airport.toUpperCase());
+    const { response, error } = await setRegion(
+      msg.from.username || msg.from.id.toString(),
+      regionName,
+      regionAirports
+    );
     if (error) {
       bot.sendMessage(chatId, error);
-    }
-    else {
+    } else {
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
   });
@@ -192,8 +205,7 @@ const listen = async () => {
     const { response, error } = await deletePreferences(msg);
     if (error) {
       bot.sendMessage(chatId, error);
-    }
-    else {
+    } else {
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
   });
@@ -203,8 +215,7 @@ const listen = async () => {
     const { response, error } = await getPreferences(msg);
     if (error) {
       bot.sendMessage(chatId, error);
-    }
-    else {
+    } else {
       bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
     }
   });

@@ -19,13 +19,13 @@ const calculateIndex = (parameters, indexStart) => {
       case 5:
         return !isNaN(parameters[0])
           ? {
-            adults: indexStart,
-            cabinType: indexStart + 2,
-          }
+              adults: indexStart,
+              cabinType: indexStart + 2,
+            }
           : {
-            adults: indexStart + 4,
-            cabinType: indexStart,
-          };
+              adults: indexStart + 4,
+              cabinType: indexStart,
+            };
       case 3:
         return { cabinType: indexStart };
       case 1:
@@ -41,27 +41,30 @@ const generateFlightOutput = (flight) =>
     flight.airline,
     flight.stops + " escalas",
     emoji.get("clock1") +
-    flight.duration +
-    "hs," +
-    emoji.get("seat") +
-    flight.seats,
+      flight.duration +
+      "hs," +
+      emoji.get("seat") +
+      flight.seats,
   ];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
     ? "ECONOMIC"
     : cabinType === "EJE"
-      ? "BUSINESS"
-      : cabinType === "PEC"
-        ? "PREMIUM_ECONOMIC"
-        : "all";
+    ? "BUSINESS"
+    : cabinType === "PEC"
+    ? "PREMIUM_ECONOMIC"
+    : "all";
 
 const generateEmissionLink = (flight) =>
-  `${SMILES_EMISSION_URL}originAirportCode=${flight.origin
+  `${SMILES_EMISSION_URL}originAirportCode=${
+    flight.origin
   }&destinationAirportCode=${flight.destination}&departureDate=${new Date(
     flight.departureDate
-  ).getTime()}&adults=${flight.adults || "1"
-  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${flight.tripType
+  ).getTime()}&adults=${
+    flight.adults || "1"
+  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${
+    flight.tripType
   }`;
 
 const generateEmissionLinkRoundTrip = (flight) =>
@@ -98,8 +101,8 @@ const belongsToCity = (airport, city) => {
 };
 
 const findMonthAndYearFromText = (text) => {
-  let [origin, destination, dateString] = text.split(' ');
-  if (dateString.includes('-')) return dateString;
+  let [origin, destination, dateString] = text.split(" ");
+  if (dateString.includes("-")) return dateString;
   const month = Number(dateString);
   let year = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -107,23 +110,28 @@ const findMonthAndYearFromText = (text) => {
     year += 1;
   }
   return `${year}-${dateString}`;
-}
+};
 
-const generatePayloadMonthlySingleDestination = (text) => {
-  const departureDate = findMonthAndYearFromText(text);
-  const { adults, cabinType } = calculateIndex(text.substring(16), 16);
+const generatePayloadMonthlySingleDestination = (match) => {
+  const [origin, destination, departureMonth] = match.slice(1, 4);
+  const departureDate = findMonthAndYearFromText(match[0]);
+  const { adults, cabinType } = calculateIndex(match[0].substring(16), 16);
   return {
-    origin: text.substring(0, 3).toUpperCase(),
-    destination: text.substring(4, 7).toUpperCase(),
+    origin: match[0].substring(0, 3).toUpperCase(),
+    destination: match[0].substring(4, 7).toUpperCase(),
     departureDate,
-    adults: adults ? text.substring(adults, adults + 1) : "",
+    adults: adults ? match[0].substring(adults, adults + 1) : "",
     cabinType: cabinType
-      ? text.substring(cabinType, cabinType + 3).toUpperCase()
+      ? match[0].substring(cabinType, cabinType + 3).toUpperCase()
       : "",
   };
 };
 
-const generatePayloadMultipleDestinations = (text, fixedDay, customRegions = []) => {
+const generatePayloadMultipleDestinations = (
+  text,
+  fixedDay,
+  customRegions = []
+) => {
   const departureDate = findMonthAndYearFromText(text);
   const regionsCopy = getCustomRegions(customRegions);
   const offset = fixedDay ? 10 : 7;
@@ -167,7 +175,7 @@ const generatePayloadMultipleOrigins = (text, fixedDay, customRegions = {}) => {
       : "",
     region,
   };
-}
+};
 
 const getCustomRegions = (customRegions) => {
   let regionsCopy = undefined;
@@ -268,7 +276,9 @@ const preferencesParser = (text, booleanPreferences) => {
   }
 
   if (offsetCustomRegion > 0) {
-    const [name, airportsString] = text.substring(offsetCustomRegion).split("/");
+    const [name, airportsString] = text
+      .substring(offsetCustomRegion)
+      .split("/");
     const airports = airportsString.toUpperCase().split(" ");
     result.customRegions = { name, airports };
   }

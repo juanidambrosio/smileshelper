@@ -78,7 +78,8 @@ const listen = async () => {
 
   bot.onText(regexSingleCities, async (msg, match) => {
     try {
-      const [origin, destination, departureMonth] = match.slice(1, 4);
+      const [origin, destination, departureMonth, parameter1, parameter2] =
+        match.slice(1, 6);
       console.log(origin + destination + departureMonth);
       bot.sendMessage(msg.chat.id, searching);
       const { response } = await searchCityQuery(msg, match);
@@ -86,7 +87,7 @@ const listen = async () => {
       const inlineKeyboardMonths = monthSections.map((monthSection) =>
         monthSection.map((month) => ({
           text: month.name,
-          callback_data: `${origin} ${destination} ${departureDate}`,
+          callback_data: `${origin} ${destination} ${departureMonth} ${parameter1} ${parameter2}`,
         }))
       );
       bot.sendMessage(msg.chat.id, response, {
@@ -162,13 +163,8 @@ const listen = async () => {
 
   bot.on("callback_query", (query) => {
     const action = query.data;
-    const opts = {
-      chatId: msg.chat.id,
-    };
-    bot.sendMessage(
-      opts.chatId,
-      `Finished callback with action ${action} and msg ${msg.text}`
-    );
+    const chatId = query.message.chat.id;
+    bot.sendMessage(chatId, `Finished callback with action ${action}`);
   });
 
   bot.onText(regexFilters, async (msg) => {

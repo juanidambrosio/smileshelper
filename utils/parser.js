@@ -35,6 +35,21 @@ const calculateIndex = (parameters, indexStart) => {
   return { adults: undefined, cabinType: undefined };
 };
 
+const getAdultsAndCabinType = (parameters) => {
+  const regex = /^\d$|^(EJE|ECO|PEC)$/;
+  const parametersToReturn = { adults: undefined, cabinType: undefined };
+  for (const parameter of parameters) {
+    if (regex.test(parameter?.toUpperCase())) {
+      if (parameter.length === 3) {
+        parametersToReturn.cabinType = parameter.toUpperCase();
+      } else if (parameter.length === 1) {
+        parametersToReturn.adults = parameter;
+      }
+    }
+  }
+  return parametersToReturn;
+};
+
 const generateFlightOutput = (flight) =>
   " " +
   [
@@ -113,17 +128,17 @@ const findMonthAndYearFromText = (text) => {
 };
 
 const generatePayloadMonthlySingleDestination = (match) => {
-  const [origin, destination, departureMonth] = match.slice(1, 4);
+  const [origin, destination, departureMonth, parameter1, parameter2] =
+    match.slice(1, 6);
+  //TODO: Update below function to receive month when changing all payload generations
   const departureDate = findMonthAndYearFromText(match[0]);
-  const { adults, cabinType } = calculateIndex(match[0].substring(16), 16);
+  const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
   return {
-    origin: match[0].substring(0, 3).toUpperCase(),
-    destination: match[0].substring(4, 7).toUpperCase(),
+    origin: origin.toUpperCase(),
+    destination: destination.toUpperCase(),
     departureDate,
-    adults: adults ? match[0].substring(adults, adults + 1) : "",
-    cabinType: cabinType
-      ? match[0].substring(cabinType, cabinType + 3).toUpperCase()
-      : "",
+    adults: adults || "",
+    cabinType: cabinType || "",
   };
 };
 

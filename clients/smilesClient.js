@@ -1,6 +1,10 @@
 const { default: axios } = require("axios");
 const { backOff } = require("exponential-backoff");
-const { SMILES_URL, SMILES_TAX_URL, tripTypes } = require("../config/constants.js");
+const {
+  SMILES_URL,
+  SMILES_TAX_URL,
+  tripTypes,
+} = require("../config/constants.js");
 const { smiles, maxResults } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/calculate.js");
@@ -34,26 +38,33 @@ const searchFlights = async (params) => {
         const { data } = await smilesClient.get("/search", { params });
         return { data };
       } catch (error) {
+        return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
+      }
+    },
+    {
+      jitter: "full",
+      numOfAttempts: 3,
+      retry: (error, attemptNumber) => {
         const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
-        const isFlightListRelatedError =
-          ["TypeError: Cannot read properties of undefined (reading 'flightList')", "TypeError: Cannot read property 'flightList' of undefined"].includes(error.response?.data?.error);
-        const isServiceUnavailable =
-          error.response?.status === 503;
+        const isFlightListRelatedError = [
+          "TypeError: Cannot read properties of undefined (reading 'flightList')",
+          "TypeError: Cannot read property 'flightList' of undefined",
+        ].includes(error.response?.data?.error);
+        const isServiceUnavailable = error.response?.status === 503;
         // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
         const shouldRetryRequest =
           isFlightListRelatedError ||
           isServiceUnavailable ||
           apiFailureRetryCodes.includes(error.code);
         if (shouldRetryRequest) {
-          throw error;
+          return true;
         }
-        return { error };
-      }
-    },
-    { jitter: "full" }
+        return false;
+      },
+    }
   );
   if (response.error) {
-    throw response.error;
+    return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
   }
   return response;
 };
@@ -72,7 +83,7 @@ const getFlights = async (parameters) => {
       const params = buildParams(
         origin,
         destination,
-        departureDate.replace("/","-"),
+        departureDate.replace("/", "-"),
         adults,
         false,
         day,
@@ -146,7 +157,7 @@ const getFlightsMultipleCities = async (
         const params = buildParams(
           isMultipleOrigin ? city : origin,
           isMultipleOrigin ? destination : city,
-          departureDate.replace("/","-"),
+          departureDate.replace("/", "-"),
           adults,
           fixedDay,
           fixedDay ? undefined : day,
@@ -191,8 +202,8 @@ const getFlightsMultipleCities = async (
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
-      error.response?.data?.errorMessage ||
-      error.response?.data?.message
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
@@ -273,9 +284,10 @@ const getFlightsRoundTrip = async (parameters) => {
           const { flight, price, money, fareUid } = getBestFlight(
             flightSegment,
             {
-              ...preferences, cabinType: belongsToCity(departureAirport, origin)
+              ...preferences,
+              cabinType: belongsToCity(departureAirport, origin)
                 ? cabinTypeGoing
-                : cabinTypeComing
+                : cabinTypeComing,
             },
             preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );
@@ -308,8 +320,8 @@ const getFlightsRoundTrip = async (parameters) => {
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
-      error.response?.data?.errorMessage ||
-      error.response?.data?.message
+        error.response?.data?.errorMessage ||
+        error.response?.data?.message
     );
     return {
       statusError: error.response?.status,

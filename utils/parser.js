@@ -1,5 +1,6 @@
 const emoji = require("node-emoji");
 const { SMILES_EMISSION_URL } = require("../config/constants");
+const { padMonth } = require('./string');
 const regions = require("../data/regions");
 const airlines = require("../data/airlines");
 
@@ -300,6 +301,35 @@ const preferencesParser = (text, booleanPreferences) => {
   return result;
 };
 
+const getMarkupFromDate = (message, departureDate) => {
+  let now = new Date();
+  const [yearString, currentMonthString] = departureDate.split('-');
+  let currentMonthDate = new Date();
+  currentMonthDate.setFullYear(yearString);
+  // 0 indexed
+  currentMonthDate.setMonth(Number(currentMonthString) - 1);
+  const currentMonth = currentMonthDate.getMonth();
+  let prevMonthDate = new Date(currentMonthDate);
+  prevMonthDate.setMonth(currentMonth - 1);
+  const prevMonth = prevMonthDate.getMonth();
+  const prevMonthString = `${prevMonthDate.getFullYear()}-${padMonth(prevMonth + 1)}`;
+  const prevMonthMessage = message.includes(departureDate) ? message.replace(departureDate, prevMonthString) : message.replace(currentMonthString, prevMonthString);
+  let nextMonthDate = new Date(currentMonthDate);
+  nextMonthDate.setMonth(currentMonth + 1);
+  const nextMonth = nextMonthDate.getMonth();
+  const nextMonthString = `${nextMonthDate.getFullYear()}-${padMonth(nextMonth + 1)}`;
+  const nextMonthMessage = message.includes(departureDate) ? message.replace(departureDate, nextMonthString) : message.replace(currentMonthString, nextMonthString);
+  const shouldDisplayPrevMonth = prevMonth >= now.getMonth() || prevMonthDate.getFullYear() > now.getFullYear();
+  const shouldDisplayNextMonth = nextMonth <= now.getMonth() || prevMonthDate.getFullYear() === now.getFullYear();
+  return {
+    resize_keyboard: true,
+    one_time_keyboard: true,
+    keyboard: [
+      [shouldDisplayPrevMonth ? { text: prevMonthMessage} : null, shouldDisplayNextMonth ? { text: nextMonthMessage} : null].filter(Boolean)
+    ]
+  }
+}
+
 module.exports = {
   calculateIndex,
   generateFlightOutput,
@@ -313,5 +343,6 @@ module.exports = {
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,
   generatePayloadRoundTrip,
+  getMarkupFromDate,
   preferencesParser,
 };

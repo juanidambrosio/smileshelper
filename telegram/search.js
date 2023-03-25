@@ -91,7 +91,7 @@ const searchCityQuery = async (msg, isAlert) => {
       createOne
     );
   }
-  return { response, bestFlight: bestFlights[0] };
+  return { response, bestFlight: bestFlights[0], departureDate: payload.departureDate };
 };
 
 const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
@@ -189,7 +189,7 @@ const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
       createOne
     );
     console.log(msg.text);
-    return { response }
+    return { response, departureDate: payload.departureDate }
   } catch (error) {
     return { error: genericError }
   }

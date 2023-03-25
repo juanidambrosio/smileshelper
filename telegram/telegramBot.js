@@ -9,7 +9,7 @@ const {
   maxAirports
 } = require("../config/constants");
 const regions = require("../data/regions");
-const { applySimpleMarkdown } = require("../utils/parser");
+const { applySimpleMarkdown, getMarkupFromDate } = require("../utils/parser");
 
 const {
   regexSingleCities,
@@ -78,9 +78,12 @@ const listen = async () => {
   bot.onText(regexSingleCities, async (msg) => {
     try {
       bot.sendMessage(msg.chat.id, searching);
-      const { response } = await searchCityQuery(msg);
-      console.log(msg.text);
-      bot.sendMessage(msg.chat.id, response, { parse_mode: "Markdown" });
+      const { response, bestFlight, departureDate } = await searchCityQuery(msg);
+      let markup;
+      if (bestFlight) {
+        markup = getMarkupFromDate(msg.text, departureDate);
+      }
+      bot.sendMessage(msg.chat.id, response, { parse_mode: "Markdown", reply_markup: markup });
     } catch (error) {
       console.log(error.message);
       bot.sendMessage(msg.chat.id, buildError(error.message));
@@ -92,13 +95,14 @@ const listen = async () => {
     async (msg) => {
       const chatId = msg.chat.id;
       bot.sendMessage(chatId, searching);
-      const { response, error } = await searchRegionalQuery(msg, false, false);
+      const { response, departureDate, error } = await searchRegionalQuery(msg, false, false);
 
       if (error) {
         bot.sendMessage(chatId, error);
       }
       else {
-        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+        const markup = getMarkupFromDate(msg.text, departureDate);
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown", reply_markup: markup })
       }
     }
   );
@@ -124,13 +128,14 @@ const listen = async () => {
     async (msg) => {
       const chatId = msg.chat.id;
       bot.sendMessage(chatId, searching);
-      const { response, error } = await searchRegionalQuery(msg, false, true);
+      const { response, departureDate, error } = await searchRegionalQuery(msg, false, true);
 
       if (error) {
         bot.sendMessage(chatId, error);
       }
       else {
-        bot.sendMessage(chatId, response, { parse_mode: "Markdown" })
+        const markup = getMarkupFromDate(msg.text, departureDate);
+        bot.sendMessage(chatId, response, { parse_mode: "Markdown", reply_markup: markup })
       }
     }
   );

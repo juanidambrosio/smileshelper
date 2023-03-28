@@ -7,7 +7,6 @@ const {
   airlinesCodes,
   searching,
   maxAirports,
-  monthSections,
 } = require("../config/constants");
 const regions = require("../data/regions");
 const { applySimpleMarkdown } = require("../utils/parser");
@@ -25,11 +24,7 @@ const {
 
 const { checkDailyAlerts } = require("./alerts");
 
-const {
-  searchRegionalQuery,
-  searchCityQuery,
-  searchRoundTrip,
-} = require("./search");
+const { searchRegionalQuery, searchRoundTrip } = require("./search");
 
 const {
   getPreferences,
@@ -39,10 +34,8 @@ const {
   setRegion,
 } = require("./preferences");
 
-const { buildError } = require("../utils/error");
-
 const { initializeDbFunctions } = require("../db/dbFunctions");
-const { padMonth } = require("../utils/string");
+const { searchSingleDestination } = require("./telegramBotHandler");
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
@@ -78,31 +71,7 @@ const listen = async () => {
   );
 
   bot.onText(regexSingleCities, async (msg, match) => {
-    try {
-      const [origin, destination, departureMonth, parameter1, parameter2] =
-        match.slice(1, 6);
-      bot.sendMessage(msg.chat.id, searching);
-      const { response } = await searchCityQuery(msg, match);
-      console.log(msg.text);
-      const inlineKeyboardMonths = monthSections.map(
-        (monthSection, indexSection) =>
-          monthSection.map((month, indexMonth) => ({
-            text: month.name,
-            callback_data: `${origin} ${destination} ${padMonth(
-              monthSection.length * indexSection + (indexMonth + 1)
-            )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
-          }))
-      );
-      bot.sendMessage(msg.chat.id, response, {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: inlineKeyboardMonths,
-        },
-      });
-    } catch (error) {
-      console.log(error.message);
-      bot.sendMessage(msg.chat.id, buildError(error.message));
-    }
+    await searchSingleDestination(match, msg, bot);
   });
 
   bot.onText(regexMultipleDestinationMonthly, async (msg) => {
@@ -164,10 +133,15 @@ const listen = async () => {
     }
   });
 
-  bot.on("callback_query", (query) => {
-    const action = query.data;
-    const chatId = query.message.chat.id;
-    bot.sendMessage(chatId, `Finished callback with action ${action}`);
+  bot.on("callback_query", async (query) => {
+    const match = query.data.split(" ");
+    const entireCommand = [query.data];
+    //TODO: Create logic to see what search trigger based on parameters or some action id
+    await searchSingleDestination(
+      entireCommand.concat(match),
+      query.message,
+      bot
+    );
   });
 
   bot.onText(regexFilters, async (msg) => {

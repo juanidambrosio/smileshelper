@@ -19,13 +19,13 @@ const calculateIndex = (parameters, indexStart) => {
       case 5:
         return !isNaN(parameters[0])
           ? {
-            adults: indexStart,
-            cabinType: indexStart + 2,
-          }
+              adults: indexStart,
+              cabinType: indexStart + 2,
+            }
           : {
-            adults: indexStart + 4,
-            cabinType: indexStart,
-          };
+              adults: indexStart + 4,
+              cabinType: indexStart,
+            };
       case 3:
         return { cabinType: indexStart };
       case 1:
@@ -35,33 +35,51 @@ const calculateIndex = (parameters, indexStart) => {
   return { adults: undefined, cabinType: undefined };
 };
 
+const getAdultsAndCabinType = (parameters) => {
+  const regex = /^\d$|^(EJE|ECO|PEC)$/;
+  const parametersToReturn = { adults: undefined, cabinType: undefined };
+  for (const parameter of parameters) {
+    if (regex.test(parameter?.toUpperCase())) {
+      if (parameter.length === 3) {
+        parametersToReturn.cabinType = parameter.toUpperCase();
+      } else if (parameter.length === 1) {
+        parametersToReturn.adults = parameter;
+      }
+    }
+  }
+  return parametersToReturn;
+};
+
 const generateFlightOutput = (flight) =>
   " " +
   [
     flight.airline,
     flight.stops + " escalas",
     emoji.get("clock1") +
-    flight.duration +
-    "hs," +
-    emoji.get("seat") +
-    flight.seats,
+      flight.duration +
+      "hs," +
+      emoji.get("seat") +
+      flight.seats,
   ];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
     ? "ECONOMIC"
     : cabinType === "EJE"
-      ? "BUSINESS"
-      : cabinType === "PEC"
-        ? "PREMIUM_ECONOMIC"
-        : "all";
+    ? "BUSINESS"
+    : cabinType === "PEC"
+    ? "PREMIUM_ECONOMIC"
+    : "all";
 
 const generateEmissionLink = (flight) =>
-  `${SMILES_EMISSION_URL}originAirportCode=${flight.origin
+  `${SMILES_EMISSION_URL}originAirportCode=${
+    flight.origin
   }&destinationAirportCode=${flight.destination}&departureDate=${new Date(
     flight.departureDate
-  ).getTime()}&adults=${flight.adults || "1"
-  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${flight.tripType
+  ).getTime()}&adults=${
+    flight.adults || "1"
+  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${
+    flight.tripType
   }`;
 
 const generateEmissionLinkRoundTrip = (flight) =>
@@ -98,8 +116,8 @@ const belongsToCity = (airport, city) => {
 };
 
 const findMonthAndYearFromText = (text) => {
-  let [origin, destination, dateString] = text.split(' ');
-  if (dateString.includes('-')) return dateString;
+  let [origin, destination, dateString] = text.split(" ");
+  if (dateString.includes("-")) return dateString;
   const month = Number(dateString);
   let year = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -107,15 +125,29 @@ const findMonthAndYearFromText = (text) => {
     year += 1;
   }
   return `${year}-${dateString}`;
-}
+};
 
-const generatePayloadMonthlySingleDestination = (text) => {
-  const departureDate = findMonthAndYearFromText(text);
+const generatePayloadMonthlySingleDestination = (match) => {
+  const [origin, destination, departureMonth, parameter1, parameter2] =
+    match.slice(1, 6);
+  //TODO: Update below function to receive month when changing all payload generations
+  const departureDate = findMonthAndYearFromText(match[0]);
+  const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
+  return {
+    origin: origin.toUpperCase(),
+    destination: destination.toUpperCase(),
+    departureDate,
+    adults: adults || "",
+    cabinType: cabinType || "",
+  };
+};
+
+const generatePayloadMonthlySingleDestinationAlerts = (text) => {
   const { adults, cabinType } = calculateIndex(text.substring(16), 16);
   return {
     origin: text.substring(0, 3).toUpperCase(),
     destination: text.substring(4, 7).toUpperCase(),
-    departureDate,
+    departureDate: text.substring(8, 15),
     adults: adults ? text.substring(adults, adults + 1) : "",
     cabinType: cabinType
       ? text.substring(cabinType, cabinType + 3).toUpperCase()
@@ -123,7 +155,11 @@ const generatePayloadMonthlySingleDestination = (text) => {
   };
 };
 
-const generatePayloadMultipleDestinations = (text, fixedDay, customRegions = []) => {
+const generatePayloadMultipleDestinations = (
+  text,
+  fixedDay,
+  customRegions = []
+) => {
   const departureDate = findMonthAndYearFromText(text);
   const regionsCopy = getCustomRegions(customRegions);
   const offset = fixedDay ? 10 : 7;
@@ -167,7 +203,7 @@ const generatePayloadMultipleOrigins = (text, fixedDay, customRegions = {}) => {
       : "",
     region,
   };
-}
+};
 
 const getCustomRegions = (customRegions) => {
   let regionsCopy = undefined;
@@ -268,7 +304,9 @@ const preferencesParser = (text, booleanPreferences) => {
   }
 
   if (offsetCustomRegion > 0) {
-    const [name, airportsString] = text.substring(offsetCustomRegion).split("/");
+    const [name, airportsString] = text
+      .substring(offsetCustomRegion)
+      .split("/");
     const airports = airportsString.toUpperCase().split(" ");
     result.customRegions = { name, airports };
   }
@@ -310,6 +348,7 @@ module.exports = {
   partitionArrays,
   belongsToCity,
   generatePayloadMonthlySingleDestination,
+  generatePayloadMonthlySingleDestinationAlerts,
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,
   generatePayloadRoundTrip,

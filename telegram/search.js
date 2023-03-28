@@ -9,6 +9,7 @@ const {
   generateEmissionLink,
   generateFlightOutput,
   generateEmissionLinkRoundTrip,
+  generatePayloadMonthlySingleDestinationAlerts,
 } = require("../utils/parser");
 
 const {
@@ -26,7 +27,9 @@ const { buildError } = require("../utils/error");
 const { getDbFunctions } = require("../db/dbFunctions");
 
 const searchCityQuery = async (msg, match) => {
-  const payload = generatePayloadMonthlySingleDestination(match);
+  const payload = match
+    ? generatePayloadMonthlySingleDestination(match)
+    : generatePayloadMonthlySingleDestinationAlerts(msg.text);
   const { createOne, getOne } = getDbFunctions();
   payload.preferences =
     (await getPreferencesDb(

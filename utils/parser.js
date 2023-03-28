@@ -142,6 +142,19 @@ const generatePayloadMonthlySingleDestination = (match) => {
   };
 };
 
+const generatePayloadMonthlySingleDestinationAlerts = (text) => {
+  const { adults, cabinType } = calculateIndex(text.substring(16), 16);
+  return {
+    origin: text.substring(0, 3).toUpperCase(),
+    destination: text.substring(4, 7).toUpperCase(),
+    departureDate: text.substring(8, 15),
+    adults: adults ? text.substring(adults, adults + 1) : "",
+    cabinType: cabinType
+      ? text.substring(cabinType, cabinType + 3).toUpperCase()
+      : "",
+  };
+};
+
 const generatePayloadMultipleDestinations = (
   text,
   fixedDay,
@@ -335,6 +348,7 @@ module.exports = {
   partitionArrays,
   belongsToCity,
   generatePayloadMonthlySingleDestination,
+  generatePayloadMonthlySingleDestinationAlerts,
   generatePayloadMultipleDestinations,
   generatePayloadMultipleOrigins,
   generatePayloadRoundTrip,

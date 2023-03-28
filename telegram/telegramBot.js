@@ -42,6 +42,7 @@ const {
 const { buildError } = require("../utils/error");
 
 const { initializeDbFunctions } = require("../db/dbFunctions");
+const { padMonth } = require("../utils/string");
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
@@ -80,15 +81,17 @@ const listen = async () => {
     try {
       const [origin, destination, departureMonth, parameter1, parameter2] =
         match.slice(1, 6);
-      console.log(origin + destination + departureMonth);
       bot.sendMessage(msg.chat.id, searching);
       const { response } = await searchCityQuery(msg, match);
       console.log(msg.text);
-      const inlineKeyboardMonths = monthSections.map((monthSection) =>
-        monthSection.map((month) => ({
-          text: month.name,
-          callback_data: `${origin} ${destination} ${departureMonth} ${parameter1} ${parameter2}`,
-        }))
+      const inlineKeyboardMonths = monthSections.map(
+        (monthSection, indexSection) =>
+          monthSection.map((month, indexMonth) => ({
+            text: month.name,
+            callback_data: `${origin} ${destination} ${padMonth(
+              monthSection.length * indexSection + (indexMonth + 1)
+            )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
+          }))
       );
       bot.sendMessage(msg.chat.id, response, {
         parse_mode: "Markdown",

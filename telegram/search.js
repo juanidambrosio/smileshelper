@@ -34,7 +34,7 @@ const searchCityQuery = async (msg, match) => {
   payload.preferences =
     (await getPreferencesDb(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id: msg.chat.username || msg.chat.id.toString(),
       },
       getOne
     )) || {};
@@ -84,7 +84,7 @@ const searchCityQuery = async (msg, match) => {
   if (!msg.isAlert) {
     await createFlightSearch(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id: msg.chat.username || msg.chat.id.toString(),
         origin: payload.origin,
         destination: payload.destination,
         departureDate: payload.departureDate,
@@ -104,7 +104,7 @@ const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
   const preferences =
     (await getPreferencesDb(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id: msg.chat.username || msg.chat.id.toString(),
       },
       getOne
     )) || {};
@@ -185,7 +185,7 @@ const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
     }, flightTitle);
     await createFlightSearch(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id: msg.chat.username || msg.chat.id.toString(),
         origin: Array.isArray(payload.origin) ? payload.region : payload.origin,
         destination: Array.isArray(payload.destination)
           ? payload.region
@@ -210,7 +210,7 @@ const searchRoundTrip = async (msg) => {
   payload.preferences =
     (await getPreferencesDb(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id: msg.chat.username || msg.chat.id.toString(),
       },
       getOne
     )) || {};
@@ -281,7 +281,7 @@ const searchRoundTrip = async (msg) => {
     );
     await createFlightSearch(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id: msg.chat.username || msg.chat.id.toString(),
         origin: payload.origin,
         destination: payload.destination,
         departureDate: payload.departureDate,

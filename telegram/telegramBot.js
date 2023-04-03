@@ -162,7 +162,7 @@ const listen = async () => {
       .slice(0, maxAirports)
       .map((airport) => airport.toUpperCase());
     const { response, error } = await setRegion(
-      msg.from.username || msg.from.id.toString(),
+      msg.chat.username || msg.chat.id.toString(),
       regionName,
       regionAirports
     );

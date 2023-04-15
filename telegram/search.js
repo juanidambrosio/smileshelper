@@ -98,7 +98,7 @@ const searchCityQuery = async (msg, match) => {
   return { response, bestFlight: bestFlights[0] };
 };
 
-const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
+const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
   const { createOne, getOne } = getDbFunctions();
 
   const preferences =
@@ -110,12 +110,8 @@ const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
     )) || {};
 
   const payload = isMultipleOrigin
-    ? generatePayloadMultipleOrigins(msg.text, fixedDay, preferences.regions)
-    : generatePayloadMultipleDestinations(
-        msg.text,
-        fixedDay,
-        preferences.regions
-      );
+    ? generatePayloadMultipleOrigins(match, preferences.regions)
+    : generatePayloadMultipleDestinations(match, preferences.regions);
 
   payload.preferences = preferences;
 
@@ -197,7 +193,6 @@ const searchRegionalQuery = async (msg, fixedDay, isMultipleOrigin) => {
       },
       createOne
     );
-    console.log(msg.text);
     return { response };
   } catch (error) {
     return { error: genericError };

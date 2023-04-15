@@ -111,7 +111,7 @@ describe("parser", () => {
           "MAD",
           "05",
           "3",
-          "EJE"
+          "EJE",
         ])
       ).toEqual({
         destination: "MAD",
@@ -125,9 +125,12 @@ describe("parser", () => {
   describe("generatePayloadMultipleDestinations", () => {
     it("should generate payload when using a region (multiple destinations)", () => {
       const mockedRegion = "EUROPA";
-      const result = generatePayloadMultipleDestinations(
-        `EZE ${mockedRegion} 2023-05`
-      );
+      const result = generatePayloadMultipleDestinations([
+        `EZE ${mockedRegion} 2023-05`,
+        "EZE",
+        mockedRegion,
+        "2023-05",
+      ]);
 
       expect(result).toEqual({
         destination: regions["EUROPA"],
@@ -141,9 +144,14 @@ describe("parser", () => {
 
     it("should generate payload when using a region, cabinType and amount of adults", () => {
       const mockedRegion = "EUROPA";
-      const result = generatePayloadMultipleDestinations(
-        `EZE ${mockedRegion} 2023-05 EJE 3`
-      );
+      const result = generatePayloadMultipleDestinations([
+        `EZE ${mockedRegion} 2023-05 EJE 3`,
+        "EZE",
+        mockedRegion,
+        "2023-05",
+        "EJE",
+        "3",
+      ]);
 
       expect(result).toEqual({
         destination: regions["EUROPA"],
@@ -158,9 +166,12 @@ describe("parser", () => {
   describe("generatePayloadMultipleOrigins", () => {
     it("should generate payload when using a region (multiple origin)", () => {
       const mockedRegion = "EUROPA";
-      const result = generatePayloadMultipleOrigins(
-        `${mockedRegion} EZE 2023-05`
-      );
+      const result = generatePayloadMultipleOrigins([
+        `${mockedRegion} EZE 2023-05`,
+        mockedRegion,
+        "EZE",
+        "2023-05",
+      ]);
 
       expect(result).toEqual({
         origin: regions["EUROPA"],
@@ -174,9 +185,14 @@ describe("parser", () => {
 
     it("should generate payload when using a region, cabinType and amount of adults", () => {
       const mockedRegion = "EUROPA";
-      const result = generatePayloadMultipleOrigins(
-        `${mockedRegion} EZE 2023-05 EJE 3`
-      );
+      const result = generatePayloadMultipleOrigins([
+        `${mockedRegion} EZE 2023-05 EJE 3`,
+        mockedRegion,
+        "EZE",
+        "2023-05",
+        "EJE",
+        "3",
+      ]);
 
       expect(result).toEqual({
         origin: regions["EUROPA"],

@@ -24,7 +24,7 @@ const {
 
 const { checkDailyAlerts } = require("./alerts");
 
-const { searchRegionalQuery, searchRoundTrip } = require("./search");
+const { searchRoundTrip } = require("./search");
 
 const {
   getPreferences,
@@ -35,7 +35,10 @@ const {
 } = require("./preferences");
 
 const { initializeDbFunctions } = require("../db/dbFunctions");
-const { searchSingleDestination } = require("./telegramBotHandler");
+const {
+  searchSingleDestination,
+  searchMultipleDestination,
+} = require("./telegramBotHandler");
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
@@ -74,52 +77,20 @@ const listen = async () => {
     await searchSingleDestination(match, msg, bot);
   });
 
-  bot.onText(regexMultipleDestinationMonthly, async (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const { response, error } = await searchRegionalQuery(msg, false, false);
-
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+  bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
+    await searchMultipleDestination(match, msg, bot, false, false);
   });
 
-  bot.onText(regexMultipleDestinationFixedDay, async (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const { response, error } = await searchRegionalQuery(msg, true, false);
-
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+  bot.onText(regexMultipleDestinationFixedDay, async (msg, match) => {
+    await searchMultipleDestination(match, msg, bot, true, false);
   });
 
-  bot.onText(regexMultipleOriginMonthly, async (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const { response, error } = await searchRegionalQuery(msg, false, true);
-
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+  bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
+    await searchMultipleDestination(match, msg, bot, false, true);
   });
 
-  bot.onText(regexMultipleOriginFixedDay, async (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const { response, error } = await searchRegionalQuery(msg, true, true);
-
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+  bot.onText(regexMultipleOriginFixedDay, async (msg, match) => {
+    await searchMultipleDestination(match, msg, bot, true, true);
   });
 
   bot.onText(regexRoundTrip, async (msg) => {
@@ -136,12 +107,29 @@ const listen = async () => {
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");
     const entireCommand = [query.data];
-    //TODO: Create logic to see what search trigger based on parameters or some action id
-    await searchSingleDestination(
-      entireCommand.concat(match),
-      query.message,
-      bot
-    );
+    if (match[0].length > 3) {
+      await searchMultipleDestination(
+        entireCommand.concat(match),
+        query.message,
+        bot,
+        false,
+        true
+      );
+    } else if (match[1].length > 3) {
+      await searchMultipleDestination(
+        entireCommand.concat(match),
+        query.message,
+        bot,
+        false,
+        false
+      );
+    } else {
+      await searchSingleDestination(
+        entireCommand.concat(match),
+        query.message,
+        bot
+      );
+    }
   });
 
   bot.onText(regexFilters, async (msg) => {

@@ -155,52 +155,36 @@ const generatePayloadMonthlySingleDestinationAlerts = (text) => {
   };
 };
 
-const generatePayloadMultipleDestinations = (
-  text,
-  fixedDay,
-  customRegions = []
-) => {
-  const departureDate = findMonthAndYearFromText(text);
+const generatePayloadMultipleDestinations = (match, customRegions = []) => {
+  const [origin, destination, departureMonth, parameter1, parameter2] =
+    match.slice(1, 6);
+  const departureDate = findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
-  const offset = fixedDay ? 10 : 7;
-  const region = text.substring(4, text.indexOf(" ", 4)).toUpperCase();
-  const startIndexAfterRegion = region.length + 5;
-  const { adults, cabinType } = calculateIndex(
-    text.substring(startIndexAfterRegion + offset + 1),
-    startIndexAfterRegion + offset + 1
-  );
+  const region = destination.toUpperCase();
+  const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
   return {
-    origin: text.substring(0, 3).toUpperCase(),
+    origin: origin.toUpperCase(),
     destination: regionsCopy ? regionsCopy[region] : regions[region],
     departureDate,
-    adults: adults ? text.substring(adults, adults + 1) : "",
-    cabinType: cabinType
-      ? text.substring(cabinType, cabinType + 3).toUpperCase()
-      : "",
+    adults: adults || "",
+    cabinType: cabinType || "",
     region,
   };
 };
 
-const generatePayloadMultipleOrigins = (text, fixedDay, customRegions = {}) => {
-  const departureDate = findMonthAndYearFromText(text);
+const generatePayloadMultipleOrigins = (match, customRegions = {}) => {
+  const [origin, destination, departureMonth, parameter1, parameter2] =
+    match.slice(1, 6);
+  const departureDate = findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
-  const offset = fixedDay ? 10 : 7;
-  const region = text.substring(0, text.indexOf(" ")).toUpperCase();
-  const startIndexAfterRegion = region.length + 5;
-  const { adults, cabinType } = calculateIndex(
-    text.substring(startIndexAfterRegion + offset + 1),
-    startIndexAfterRegion + offset + 1
-  );
+  const region = origin.toUpperCase();
+  const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
   return {
     origin: regionsCopy ? regionsCopy[region] : regions[region],
-    destination: text
-      .substring(region.length + 1, region.length + 4)
-      .toUpperCase(),
+    destination: destination.toUpperCase(),
     departureDate,
-    adults: adults ? text.substring(adults, adults + 1) : "",
-    cabinType: cabinType
-      ? text.substring(cabinType, cabinType + 3).toUpperCase()
-      : "",
+    adults: adults || "",
+    cabinType: cabinType || "",
     region,
   };
 };

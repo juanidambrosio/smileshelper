@@ -39,6 +39,7 @@ const {
   searchSingleDestination,
   searchMultipleDestination,
 } = require("./telegramBotHandler");
+const { calculateMoney } = require("./telegramBotHandler");
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
@@ -107,6 +108,19 @@ const listen = async () => {
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");
     const entireCommand = [query.data];
+    if (match[0] === "calculadora") {
+      calculateMoney(
+        {
+          miles: match[1],
+          taxPrice: match[2],
+          milePrice: match[3],
+          dolarPrice: match[4],
+        },
+        query.message,
+        bot
+      );
+      return;
+    }
     if (match[0].length > 3) {
       await searchMultipleDestination(
         entireCommand.concat(match),

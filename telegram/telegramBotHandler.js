@@ -1,20 +1,26 @@
-const { monthSections, searching } = require("../config/constants");
+const {
+  monthSections,
+  searching,
+  convertedToMoney,
+} = require("../config/constants");
 const { buildError } = require("../utils/error");
 const { padMonth } = require("../utils/string");
 const { searchCityQuery, searchRegionalQuery } = require("./search");
+const { convertToMoney } = require("../utils/milesConverter");
 
 const searchSingleDestination = async (match, msg, bot) => {
   bot.sendMessage(msg.chat.id, searching);
   try {
     const [origin, destination, departureMonth, parameter1, parameter2] =
       match.slice(1, 6);
-    const { response } = await searchCityQuery(msg, match);
+    const { response, bestFlight } = await searchCityQuery(msg, match);
     console.log(match[0]);
-    const inlineKeyboardMonths = getInlineKeyboardMonths(
+    const inlineKeyboardMonths = getInlineKeyboard(
       origin,
       destination,
       parameter1,
-      parameter2
+      parameter2,
+      bestFlight
     );
     bot.sendMessage(msg.chat.id, response, {
       parse_mode: "Markdown",
@@ -39,7 +45,7 @@ const searchMultipleDestination = async (
   bot.sendMessage(chatId, searching);
   const [origin, destination, departureMonth, parameter1, parameter2] =
     match.slice(1, 6);
-  const { response, error } = await searchRegionalQuery(
+  const { response, error, bestFlight } = await searchRegionalQuery(
     msg,
     match,
     fixedDay,
@@ -49,11 +55,12 @@ const searchMultipleDestination = async (
   if (error) {
     bot.sendMessage(chatId, error);
   } else {
-    const inlineKeyboardMonths = getInlineKeyboardMonths(
+    const inlineKeyboardMonths = getInlineKeyboard(
       origin,
       destination,
       parameter1,
-      parameter2
+      parameter2,
+      bestFlight
     );
     bot.sendMessage(chatId, response, {
       parse_mode: "Markdown",
@@ -64,13 +71,28 @@ const searchMultipleDestination = async (
   }
 };
 
-const getInlineKeyboardMonths = (
+const calculateMoney = (parameters, msg, bot) => {
+  const { miles, taxPrice, milePrice, dolarPrice } = parameters;
+  const { arsPrice, usdPrice } = convertToMoney(
+    miles,
+    taxPrice,
+    milePrice,
+    dolarPrice
+  );
+  bot.sendMessage(
+    msg.chat.id,
+    convertedToMoney(miles, taxPrice, milePrice, dolarPrice, arsPrice, usdPrice)
+  );
+};
+
+const getInlineKeyboard = (
   origin,
   destination,
   parameter1,
-  parameter2
+  parameter2,
+  bestFlight
 ) => {
-  return monthSections.map((monthSection, indexSection) =>
+  const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
     monthSection.map((month, indexMonth) => ({
       text: month.name,
       callback_data: `${origin} ${destination} ${padMonth(
@@ -78,6 +100,17 @@ const getInlineKeyboardMonths = (
       )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
     }))
   );
+  inlineKeyboard.push([
+    {
+      text: "Calcular $",
+      callback_data: `calculadora ${bestFlight.price} ${bestFlight.tax.moneyNumber} ${process.env.MILE_PRICE} ${process.env.DOLAR_PRICE}`,
+    },
+  ]);
+  return inlineKeyboard;
 };
 
-module.exports = { searchSingleDestination, searchMultipleDestination };
+module.exports = {
+  searchSingleDestination,
+  searchMultipleDestination,
+  calculateMoney,
+};

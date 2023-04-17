@@ -7,7 +7,7 @@ const {
 } = require("../config/constants.js");
 const { smiles, maxResults } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
-const { getBestFlight } = require("../utils/calculate.js");
+const { getBestFlight } = require("../utils/bestFlight.js");
 const { sortFlights, sortFlightsRoundTrip } = require("../flightsHelper.js");
 const { belongsToCity } = require("../utils/parser");
 

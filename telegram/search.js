@@ -193,7 +193,7 @@ const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
       },
       createOne
     );
-    return { response };
+    return { response, bestFlight: bestFlights[0] };
   } catch (error) {
     return { error: genericError };
   }

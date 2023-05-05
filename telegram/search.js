@@ -95,7 +95,11 @@ const searchCityQuery = async (msg, match) => {
       createOne
     );
   }
-  return { response, bestFlight: bestFlights[0] };
+  return {
+    response,
+    bestFlight: bestFlights[0],
+    preferences: payload.preferences,
+  };
 };
 
 const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
@@ -193,7 +197,11 @@ const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
       },
       createOne
     );
-    return { response, bestFlight: bestFlights[0] };
+    return {
+      response,
+      bestFlight: bestFlights[0],
+      preferences: payload.preferences,
+    };
   } catch (error) {
     return { error: genericError };
   }
@@ -290,7 +298,7 @@ const searchRoundTrip = async (msg) => {
       createOne
     );
     console.log(msg.text);
-    return { response };
+    return { response, preferences: payload.preferences };
   } catch (error) {
     return { error: genericError };
   }

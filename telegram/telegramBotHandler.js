@@ -2,6 +2,7 @@ const {
   monthSections,
   searching,
   convertedToMoney,
+  mustCompletePrices,
 } = require("../config/constants");
 const { buildError } = require("../utils/error");
 const { padMonth } = require("../utils/string");
@@ -13,14 +14,18 @@ const searchSingleDestination = async (match, msg, bot) => {
   try {
     const [origin, destination, departureMonth, parameter1, parameter2] =
       match.slice(1, 6);
-    const { response, bestFlight } = await searchCityQuery(msg, match);
+    const { response, bestFlight, preferences } = await searchCityQuery(
+      msg,
+      match
+    );
     console.log(match[0]);
     const inlineKeyboardMonths = getInlineKeyboard(
       origin,
       destination,
       parameter1,
       parameter2,
-      bestFlight
+      bestFlight,
+      preferences
     );
     bot.sendMessage(msg.chat.id, response, {
       parse_mode: "Markdown",
@@ -45,12 +50,8 @@ const searchMultipleDestination = async (
   bot.sendMessage(chatId, searching);
   const [origin, destination, departureMonth, parameter1, parameter2] =
     match.slice(1, 6);
-  const { response, error, bestFlight } = await searchRegionalQuery(
-    msg,
-    match,
-    fixedDay,
-    isMultipleOrigin
-  );
+  const { response, error, bestFlight, preferences } =
+    await searchRegionalQuery(msg, match, fixedDay, isMultipleOrigin);
   console.log(match[0]);
   if (error) {
     bot.sendMessage(chatId, error);
@@ -60,7 +61,8 @@ const searchMultipleDestination = async (
       destination,
       parameter1,
       parameter2,
-      bestFlight
+      bestFlight,
+      preferences
     );
     bot.sendMessage(chatId, response, {
       parse_mode: "Markdown",
@@ -73,6 +75,12 @@ const searchMultipleDestination = async (
 
 const calculateMoney = (parameters, msg, bot) => {
   const { miles, taxPrice, milePrice, dolarPrice } = parameters;
+
+  if (milePrice === "undefined" || dolarPrice === "undefined") {
+    bot.sendMessage(msg.chat.id, mustCompletePrices);
+    return;
+  }
+
   const { arsPrice, usdPrice } = convertToMoney(
     miles,
     taxPrice,
@@ -90,7 +98,8 @@ const getInlineKeyboard = (
   destination,
   parameter1,
   parameter2,
-  bestFlight
+  bestFlight,
+  preferences
 ) => {
   const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
     monthSection.map((month, indexMonth) => ({
@@ -103,7 +112,7 @@ const getInlineKeyboard = (
   inlineKeyboard.push([
     {
       text: "Calcular $",
-      callback_data: `calculadora ${bestFlight.price} ${bestFlight.tax.moneyNumber} ${process.env.MILE_PRICE} ${process.env.DOLAR_PRICE}`,
+      callback_data: `calculadora ${bestFlight.price} ${bestFlight.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice}`,
     },
   ]);
   return inlineKeyboard;

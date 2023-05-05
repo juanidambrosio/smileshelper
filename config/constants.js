@@ -74,6 +74,8 @@ const preferencesMap = new Map([
   ["fare", "vf: "],
   ["brasilNonGol", "singol: "],
   ["smilesAndMoney", "smilesandmoney: "],
+  ["milePrice", "precio milla: "],
+  ["dolarPrice", "precio dolar: "],
 ]);
 
 const regionSave = "Se ha guardado la nueva region.";
@@ -116,6 +118,8 @@ const convertedToMoney = (
 ) =>
   `Millas: ${miles}\nTasas: ARS ${taxPrice}\nPrecio milla: ARS ${milePrice}\nPrecio en pesos: ARS ${arsPrice}\nCotización dolar: ARS ${dolarPrice}\nPrecio en dólares: USD ${usdPrice}`;
 
+const mustCompletePrices = `Debe indicar un valor para los filtros de precio milla y precio dolar. Por ejemplo: /filtros pm:1.30 pd:450`;
+
 module.exports = {
   badResponse,
   dailyTweet,
@@ -145,4 +149,5 @@ module.exports = {
   tripTypes,
   monthSections,
   convertedToMoney,
+  mustCompletePrices,
 };

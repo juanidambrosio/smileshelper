@@ -272,6 +272,8 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetBrasilNonGol = text.indexOf(" singol");
   const offsetSmilesAndMoney = text.indexOf(" smilesandmoney");
   const offsetCustomRegion = text.indexOf(" region");
+  const offsetMilePrice = text.indexOf(" pm:");
+  const offsetDolarPrice = text.indexOf(" pd:");
 
   const result = {};
 
@@ -305,6 +307,17 @@ const preferencesParser = (text, booleanPreferences) => {
 
   if (offsetHours > 0) {
     result.maxhours = text.substring(offsetHours + 3, offsetHours + 5);
+  }
+
+  if (offsetMilePrice > 0) {
+    result.milePrice = text.substring(offsetMilePrice + 4, offsetMilePrice + 8);
+  }
+
+  if (offsetDolarPrice > 0) {
+    result.dolarPrice = text.substring(
+      offsetDolarPrice + 4,
+      offsetDolarPrice + 7
+    );
   }
 
   if (offsetVF > 0) {

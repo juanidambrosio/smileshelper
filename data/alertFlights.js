@@ -8,9 +8,9 @@ const chat = { id: groupChatIdAlerts };
 const flights = [
   { journey: "EZE MIA", promoMiles: 54500 },
   { journey: "EZE JFK", promoMiles: 65400 },
-  { journey: "EZE MAD", promoMiles: 110100 },
-  { journey: "EZE CDG", promoMiles: 92100 },
-  { journey: "EZE AMS", promoMiles: 95100 },
+  { journey: "EZE MAD", promoMiles: 99200 },
+  { journey: "EZE CDG", promoMiles: 118400 },
+  { journey: "EZE AMS", promoMiles: 123900 },
   { journey: "EZE CUN", promoMiles: 61300 },
   { journey: "EZE PUJ", promoMiles: 55900 },
 ];

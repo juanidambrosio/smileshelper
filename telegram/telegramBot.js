@@ -7,9 +7,13 @@ const {
   airlinesCodes,
   searching,
   maxAirports,
+  askWhatFilters,
 } = require("../config/constants");
 const regions = require("../data/regions");
-const { applySimpleMarkdown } = require("../utils/parser");
+const {
+  applySimpleMarkdown,
+  getInlineKeyboardFilters,
+} = require("../utils/parser");
 
 const {
   regexSingleCities,
@@ -29,7 +33,6 @@ const { searchRoundTrip } = require("./search");
 const {
   getPreferences,
   getRegions,
-  setPreferences,
   deletePreferences,
   setRegion,
 } = require("./preferences");
@@ -38,8 +41,9 @@ const { initializeDbFunctions } = require("../db/dbFunctions");
 const {
   searchSingleDestination,
   searchMultipleDestination,
+  savePreferences,
+  calculateMoney,
 } = require("./telegramBotHandler");
-const { calculateMoney } = require("./telegramBotHandler");
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
@@ -108,6 +112,7 @@ const listen = async () => {
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");
     const entireCommand = [query.data];
+    // Calculator
     if (match[0] === "calculadora") {
       calculateMoney(
         {
@@ -115,12 +120,14 @@ const listen = async () => {
           taxPrice: match[2],
           milePrice: match[3],
           dolarPrice: match[4],
+          moneyPrice: match[5],
         },
         query.message,
         bot
       );
       return;
     }
+    // If first match is a region
     if (match[0].length > 3) {
       await searchMultipleDestination(
         entireCommand.concat(match),
@@ -129,6 +136,7 @@ const listen = async () => {
         false,
         true
       );
+      // If second match is a region
     } else if (match[1].length > 3) {
       await searchMultipleDestination(
         entireCommand.concat(match),
@@ -137,6 +145,7 @@ const listen = async () => {
         false,
         false
       );
+      // Default - search a single destination query
     } else {
       await searchSingleDestination(
         entireCommand.concat(match),
@@ -147,13 +156,7 @@ const listen = async () => {
   });
 
   bot.onText(regexFilters, async (msg) => {
-    const chatId = msg.chat.id;
-    const { response, error } = await setPreferences(msg);
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+    await savePreferences(msg, bot);
   });
 
   bot.onText(regexCustomRegion, async (msg, match) => {

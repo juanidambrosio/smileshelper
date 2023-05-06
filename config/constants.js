@@ -114,11 +114,16 @@ const convertedToMoney = (
   milePrice,
   dolarPrice,
   arsPrice,
-  usdPrice
+  usdPrice,
+  moneyPrice
 ) =>
-  `Millas: ${miles}\nTasas: ARS ${taxPrice}\nPrecio milla: ARS ${milePrice}\nPrecio en pesos: ARS ${arsPrice}\nCotización dolar: ARS ${dolarPrice}\nPrecio en dólares: USD ${usdPrice}`;
+  moneyPrice === "undefined"
+    ? `Millas: ${miles}\nTasas: ARS ${taxPrice}\nPrecio milla: ARS ${milePrice}\nPrecio en pesos: ARS ${arsPrice}\nCotización dolar: ARS ${dolarPrice}\nPrecio en dólares: USD ${usdPrice}`
+    : `Millas: ${miles}\nTasas: ARS ${taxPrice}\nPrecio Smiles & Money: ARS ${moneyPrice}\nPrecio milla: ARS ${milePrice}\nPrecio en pesos: ARS ${arsPrice}\nCotización dolar: ARS ${dolarPrice}\nPrecio en dólares: USD ${usdPrice}`;
 
 const mustCompletePrices = `Debe indicar un valor para los filtros de precio milla y precio dolar. Por ejemplo: /filtros pm:1.30 pd:450`;
+
+const askWhatFilters = `Qué filtro queres configurar?`;
 
 module.exports = {
   badResponse,
@@ -150,4 +155,5 @@ module.exports = {
   monthSections,
   convertedToMoney,
   mustCompletePrices,
+  askWhatFilters,
 };

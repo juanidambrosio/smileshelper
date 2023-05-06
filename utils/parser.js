@@ -1,7 +1,8 @@
 const emoji = require("node-emoji");
-const { SMILES_EMISSION_URL } = require("../config/constants");
+const { SMILES_EMISSION_URL, monthSections } = require("../config/constants");
 const regions = require("../data/regions");
 const airlines = require("../data/airlines");
+const { padMonth } = require("../utils/string");
 
 /*
 Parse the message string to object indicating the index of the cabin and/or adults preference
@@ -335,6 +336,33 @@ const preferencesParser = (text, booleanPreferences) => {
   return result;
 };
 
+const getInlineKeyboardSearch = (
+  origin,
+  destination,
+  parameter1,
+  parameter2,
+  bestFlight,
+  preferences
+) => {
+  const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
+    monthSection.map((month, indexMonth) => ({
+      text: month.name,
+      callback_data: `${origin} ${destination} ${padMonth(
+        monthSection.length * indexSection + (indexMonth + 1)
+      )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
+    }))
+  );
+  inlineKeyboard.push([
+    {
+      text: "Calcular $",
+      callback_data: `calculadora ${bestFlight?.price} ${bestFlight?.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice} ${bestFlight?.money}`,
+    },
+  ]);
+  return inlineKeyboard;
+};
+
+const getInlineKeyboardFilters = (filters) => {};
+
 module.exports = {
   calculateIndex,
   generateFlightOutput,
@@ -350,4 +378,6 @@ module.exports = {
   generatePayloadMultipleOrigins,
   generatePayloadRoundTrip,
   preferencesParser,
+  getInlineKeyboardSearch,
+  getInlineKeyboardFilters,
 };

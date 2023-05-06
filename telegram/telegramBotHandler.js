@@ -1,13 +1,13 @@
 const {
-  monthSections,
   searching,
   convertedToMoney,
   mustCompletePrices,
 } = require("../config/constants");
 const { buildError } = require("../utils/error");
-const { padMonth } = require("../utils/string");
 const { searchCityQuery, searchRegionalQuery } = require("./search");
 const { convertToMoney } = require("../utils/milesConverter");
+const { setPreferences } = require("./preferences");
+const { getInlineKeyboardSearch } = require("../utils/parser");
 
 const searchSingleDestination = async (match, msg, bot) => {
   bot.sendMessage(msg.chat.id, searching);
@@ -19,7 +19,7 @@ const searchSingleDestination = async (match, msg, bot) => {
       match
     );
     console.log(match[0]);
-    const inlineKeyboardMonths = getInlineKeyboard(
+    const inlineKeyboardMonths = getInlineKeyboardSearch(
       origin,
       destination,
       parameter1,
@@ -56,7 +56,7 @@ const searchMultipleDestination = async (
   if (error) {
     bot.sendMessage(chatId, error);
   } else {
-    const inlineKeyboardMonths = getInlineKeyboard(
+    const inlineKeyboardMonths = getInlineKeyboardSearch(
       origin,
       destination,
       parameter1,
@@ -74,7 +74,7 @@ const searchMultipleDestination = async (
 };
 
 const calculateMoney = (parameters, msg, bot) => {
-  const { miles, taxPrice, milePrice, dolarPrice } = parameters;
+  const { miles, taxPrice, milePrice, dolarPrice, moneyPrice } = parameters;
 
   if (milePrice === "undefined" || dolarPrice === "undefined") {
     bot.sendMessage(msg.chat.id, mustCompletePrices);
@@ -85,41 +85,36 @@ const calculateMoney = (parameters, msg, bot) => {
     miles,
     taxPrice,
     milePrice,
-    dolarPrice
+    dolarPrice,
+    moneyPrice
   );
   bot.sendMessage(
     msg.chat.id,
-    convertedToMoney(miles, taxPrice, milePrice, dolarPrice, arsPrice, usdPrice)
+    convertedToMoney(
+      miles,
+      taxPrice,
+      milePrice,
+      dolarPrice,
+      arsPrice,
+      usdPrice,
+      moneyPrice
+    )
   );
 };
 
-const getInlineKeyboard = (
-  origin,
-  destination,
-  parameter1,
-  parameter2,
-  bestFlight,
-  preferences
-) => {
-  const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
-    monthSection.map((month, indexMonth) => ({
-      text: month.name,
-      callback_data: `${origin} ${destination} ${padMonth(
-        monthSection.length * indexSection + (indexMonth + 1)
-      )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
-    }))
-  );
-  inlineKeyboard.push([
-    {
-      text: "Calcular $",
-      callback_data: `calculadora ${bestFlight.price} ${bestFlight.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice}`,
-    },
-  ]);
-  return inlineKeyboard;
+const savePreferences = async (msg, bot) => {
+  const chatId = msg.chat.id;
+  const { response, error } = await setPreferences(msg);
+  if (error) {
+    bot.sendMessage(chatId, error);
+  } else {
+    bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+  }
 };
 
 module.exports = {
   searchSingleDestination,
   searchMultipleDestination,
   calculateMoney,
+  savePreferences,
 };

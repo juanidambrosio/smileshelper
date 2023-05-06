@@ -117,7 +117,7 @@ const convertedToMoney = (
   usdPrice,
   moneyPrice
 ) =>
-  moneyPrice === "undefined"
+  moneyPrice === "0"
     ? `Millas: ${miles}\nTasas: ARS ${taxPrice}\nPrecio milla: ARS ${milePrice}\nPrecio en pesos: ARS ${arsPrice}\nCotización dolar: ARS ${dolarPrice}\nPrecio en dólares: USD ${usdPrice}`
     : `Millas: ${miles}\nTasas: ARS ${taxPrice}\nPrecio Smiles & Money: ARS ${moneyPrice}\nPrecio milla: ARS ${milePrice}\nPrecio en pesos: ARS ${arsPrice}\nCotización dolar: ARS ${dolarPrice}\nPrecio en dólares: USD ${usdPrice}`;
 

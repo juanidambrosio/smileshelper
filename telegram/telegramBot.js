@@ -46,7 +46,10 @@ const {
 } = require("./telegramBotHandler");
 
 const listen = async () => {
-  const bot = new TelegramBot(telegramApiToken, { polling: true });
+  const bot = new TelegramBot(telegramApiToken, {
+    polling: true,
+    onlyFirstMatch: true,
+  });
   await initializeDbFunctions();
   await checkDailyAlerts(bot);
 

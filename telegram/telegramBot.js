@@ -1,5 +1,8 @@
 const TelegramBot = require("node-telegram-bot-api");
-const { telegramApiToken } = require("../config/config");
+const {
+  telegramApiToken,
+  telegramAlertsApiToken,
+} = require("../config/config");
 const {
   telegramStart,
   cafecito,
@@ -51,7 +54,7 @@ const listen = async () => {
     onlyFirstMatch: true,
   });
   await initializeDbFunctions();
-  await checkDailyAlerts(bot);
+  await checkDailyAlerts();
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })

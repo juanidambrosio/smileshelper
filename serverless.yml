@@ -1,4 +1,4 @@
-service: twitter
+service: smiles-helper
 
 frameworkVersion: "3"
 
@@ -9,22 +9,14 @@ provider:
   runtime: nodejs14.x
 
 functions:
-  dailyTweet:
-    handler: twitter/dailyTweet.tweet
-    timeout: 45
-    events:
-      - schedule: 
-          rate: rate(1 day)
-          #enabled: false
-          enabled: true
-
-  responseTweet:
-    handler: twitter/responseTweet.tweet
+  promotions:
+    handler: aws/lambda/promotions.getPromotions
     timeout: 600
     events:
-      - http:
-          path: /response
-          method: POST
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:749264263523:smiles-helper-alerts
+          functionResponseType: ReportBatchItemFailures
+
 plugins:
   - serverless-offline
   - serverless-dotenv-plugin

@@ -31,13 +31,14 @@ const searchCityQuery = async (msg, match) => {
     ? generatePayloadMonthlySingleDestination(match)
     : generatePayloadMonthlySingleDestinationAlerts(msg.text);
   const { createOne, getOne } = getDbFunctions();
-  payload.preferences =
-    (await getPreferencesDb(
-      {
-        id: msg.chat.username || msg.chat.id.toString(),
-      },
-      getOne
-    )) || {};
+  payload.preferences = match
+    ? (await getPreferencesDb(
+        {
+          id: msg.chat.username || msg.chat.id.toString(),
+        },
+        getOne
+      )) || {}
+    : {};
 
   const flightList = await getFlights(payload);
   const bestFlights = flightList.results;

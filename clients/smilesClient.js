@@ -9,7 +9,6 @@ const { smiles, maxResults } = require("../config/config.js");
 const { parseDate, calculateFirstDay, lastDays } = require("../utils/days.js");
 const { getBestFlight } = require("../utils/bestFlight.js");
 const { sortFlights, sortFlightsRoundTrip } = require("../flightsHelper.js");
-const { belongsToCity } = require("../utils/parser");
 
 const headers = {
   authorization: `Bearer ${smiles.authorizationToken}`,
@@ -221,10 +220,8 @@ const getFlightsRoundTrip = async (parameters) => {
     destination,
     departureDate,
     returnDate,
-    adultsGoing,
-    cabinTypeGoing,
-    adultsComing,
-    cabinTypeComing,
+    adults,
+    cabinType,
     minDays,
     maxDays,
     preferences,
@@ -248,7 +245,7 @@ const getFlightsRoundTrip = async (parameters) => {
         origin,
         destination,
         date.toLocaleDateString("fr-CA"),
-        adultsGoing,
+        adults,
         true,
         undefined,
         preferences.brasilNonGol ? "true" : "false"
@@ -265,7 +262,7 @@ const getFlightsRoundTrip = async (parameters) => {
         destination,
         origin,
         dateReturn.toLocaleDateString("fr-CA"),
-        adultsComing,
+        adults,
         true,
         undefined,
         preferences.brasilNonGol ? "true" : "false"
@@ -285,9 +282,7 @@ const getFlightsRoundTrip = async (parameters) => {
             flightSegment,
             {
               ...preferences,
-              cabinType: belongsToCity(departureAirport, origin)
-                ? cabinTypeGoing
-                : cabinTypeComing,
+              cabinType,
             },
             preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
           );

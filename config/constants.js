@@ -123,8 +123,6 @@ const convertedToMoney = (
 
 const mustCompletePrices = `Debe indicar un valor para los filtros de precio milla y precio dolar. Por ejemplo: /filtros pm:1.30 pd:450`;
 
-const askWhatFilters = `Qué filtro queres configurar?`;
-
 module.exports = {
   badResponse,
   dailyTweet,
@@ -155,5 +153,4 @@ module.exports = {
   monthSections,
   convertedToMoney,
   mustCompletePrices,
-  askWhatFilters,
 };

@@ -1,4 +1,4 @@
-const { getPreferencesDb, setPreferencesDb } = require("./dbMapper");
+const { getPreferencesDb, setPreferencesDb } = require("../telegram/dbMapper");
 
 const { preferencesParser } = require("../utils/parser");
 
@@ -52,11 +52,7 @@ const setRegion = async (id, name, airports) => {
   const { getOne, upsert } = getDbFunctions();
 
   try {
-    const previousPreferences =
-      (await getPreferencesDb(
-        { id },
-        getOne
-      )) || {};
+    const previousPreferences = (await getPreferencesDb({ id }, getOne)) || {};
 
     if (previousPreferences.regions) {
       result.regions = { ...previousPreferences.regions, [name]: airports };
@@ -76,12 +72,12 @@ const setRegion = async (id, name, airports) => {
   }
 };
 
-const deletePreferences = async (msg) => {
+const deletePreferences = async (author_id) => {
   const { deleteOne } = getDbFunctions();
 
   try {
     await deleteOne({
-      author_id: msg.from.username || msg.from.id.toString(),
+      author_id,
     });
     return { response: preferencesDelete };
   } catch (error) {
@@ -90,13 +86,14 @@ const deletePreferences = async (msg) => {
   }
 };
 
-const getPreferences = async (msg) => {
+const getPreferences = async (id) => {
+  console.log(id);
   const { getOne } = getDbFunctions();
 
   try {
     const preferences = await getPreferencesDb(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id,
       },
       getOne
     );
@@ -113,7 +110,7 @@ const getPreferences = async (msg) => {
       }
     }
     return {
-      response: response || preferencesNone
+      response: response || preferencesNone,
     };
   } catch (error) {
     console.log(error);
@@ -121,13 +118,13 @@ const getPreferences = async (msg) => {
   }
 };
 
-const getRegions = async (msg) => {
+const getRegions = async (id) => {
   const { getOne } = getDbFunctions();
 
   try {
     const preferences = await getPreferencesDb(
       {
-        id: msg.from.username || msg.from.id.toString(),
+        id,
       },
       getOne
     );
@@ -143,4 +140,10 @@ const getRegions = async (msg) => {
   }
 };
 
-module.exports = { setPreferences, setRegion, getPreferences, getRegions, deletePreferences };
+module.exports = {
+  setPreferences,
+  setRegion,
+  getPreferences,
+  getRegions,
+  deletePreferences,
+};

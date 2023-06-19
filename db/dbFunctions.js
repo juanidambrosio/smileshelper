@@ -12,6 +12,7 @@ const initializeDbFunctions = async () => {
   const { upsert, getOne, deleteOne } = dbOperations(preferences);
 
   dbFunctions = { createOne, upsert, getOne, deleteOne };
+  console.log("You are connected to Mongo.")
 };
 
 module.exports = { initializeDbFunctions, getDbFunctions };

@@ -1,8 +1,5 @@
 const TelegramBot = require("node-telegram-bot-api");
-const {
-  telegramApiToken,
-  telegramAlertsApiToken,
-} = require("../config/config");
+const { telegramApiToken } = require("../config/config");
 const {
   telegramStart,
   cafecito,
@@ -10,13 +7,9 @@ const {
   airlinesCodes,
   searching,
   maxAirports,
-  askWhatFilters,
 } = require("../config/constants");
 const regions = require("../data/regions");
-const {
-  applySimpleMarkdown,
-  getInlineKeyboardFilters,
-} = require("../utils/parser");
+const { applySimpleMarkdown } = require("../utils/parser");
 
 const {
   regexSingleCities,
@@ -31,22 +24,21 @@ const {
 
 const { checkDailyAlerts } = require("./alerts");
 
-const { searchRoundTrip } = require("./search");
-
 const {
   getPreferences,
   getRegions,
   deletePreferences,
   setRegion,
-} = require("./preferences");
+} = require("../handlers/preferencesHandler");
 
 const { initializeDbFunctions } = require("../db/dbFunctions");
 const {
   searchSingleDestination,
   searchMultipleDestination,
+  searchRoundTrip,
   savePreferences,
   calculateMoney,
-} = require("./telegramBotHandler");
+} = require("../handlers/telegramBotHandler");
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, {
@@ -61,7 +53,10 @@ const listen = async () => {
   );
 
   bot.onText(/\/regiones/, async (msg) => {
-    const entries = { ...regions, ...(await getRegions(msg)) };
+    const entries = {
+      ...regions,
+      ...(await getRegions(msg.from.username || msg.from.id.toString())),
+    };
     const airports = Object.entries(entries).reduce(
       (phrase, current) =>
         phrase.concat(
@@ -104,15 +99,8 @@ const listen = async () => {
     await searchMultipleDestination(match, msg, bot, true, true);
   });
 
-  bot.onText(regexRoundTrip, async (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const { response, error } = await searchRoundTrip(msg);
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+  bot.onText(regexRoundTrip, async (msg, match) => {
+    await searchRoundTrip(match, msg, bot);
   });
 
   bot.on("callback_query", async (query) => {
@@ -186,7 +174,9 @@ const listen = async () => {
 
   bot.onText(/\/filtroseliminar/, async (msg) => {
     const chatId = msg.chat.id;
-    const { response, error } = await deletePreferences(msg);
+    const { response, error } = await deletePreferences(
+      msg.from.username || msg.from.id.toString()
+    );
     if (error) {
       bot.sendMessage(chatId, error);
     } else {
@@ -196,7 +186,9 @@ const listen = async () => {
 
   bot.onText(/\/filtros$/, async (msg) => {
     const chatId = msg.chat.id;
-    const { response, error } = await getPreferences(msg);
+    const { response, error } = await getPreferences(
+      msg.from.username || msg.from.id.toString()
+    );
     if (error) {
       bot.sendMessage(chatId, error);
     } else {

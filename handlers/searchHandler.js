@@ -20,7 +20,7 @@ const {
 
 const { notFound, genericError, tripTypes } = require("../config/constants");
 
-const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
+const { createFlightSearch, getPreferencesDb } = require("../telegram/dbMapper");
 
 const { buildError } = require("../utils/error");
 
@@ -208,8 +208,8 @@ const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
   }
 };
 
-const searchRoundTrip = async (msg) => {
-  const payload = generatePayloadRoundTrip(msg.text);
+const searchRoundTrip = async (msg, match) => {
+  const payload = generatePayloadRoundTrip(match);
   const { createOne, getOne } = getDbFunctions();
   payload.preferences =
     (await getPreferencesDb(

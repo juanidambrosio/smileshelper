@@ -8,7 +8,8 @@
     "test": "jest --config jest.config.js",
     "listen": "node twitter/tweetListener.js",
     "telegram": "node telegram/telegramBot.js",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "api": "node api/server.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +18,7 @@
     "axios": "^0.27.2",
     "dotenv": "^16.0.1",
     "exponential-backoff": "^3.1.0",
+    "fastify": "^4.18.0",
     "marked": "^4.2.5",
     "marked-terminal": "^5.1.1",
     "mongodb": "^4.9.0",

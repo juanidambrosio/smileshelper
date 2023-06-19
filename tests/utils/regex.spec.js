@@ -6,7 +6,7 @@ const {
   regexMultipleOriginFixedDay,
   regexRoundTrip,
   regexFilters,
-  regexCustomRegion
+  regexCustomRegion,
 } = require("../../utils/regex");
 
 describe("Regex Utils", () => {
@@ -183,13 +183,13 @@ describe("Regex Utils", () => {
 
     it("should validate correctly a round trip with a min and max dates with cabin and adults", () => {
       expect(
-        regexRoundTrip.test("EZE BCN 2023-03-01 EJE 2 2023-03-30 m7 ECO 3")
+        regexRoundTrip.test("EZE BCN 2023-03-01 2023-03-30 m7 ECO 3")
       ).toBeTruthy();
       expect(
-        regexRoundTrip.test("EZE BCN 2023-03-01 2 2023-03-30 m7 3")
+        regexRoundTrip.test("EZE BCN 2023-03-01 2023-03-30 m7 3")
       ).toBeTruthy();
       expect(
-        regexRoundTrip.test("EZE BCN 2023-03-01 EJE 2023-03-30 m7 ECO")
+        regexRoundTrip.test("EZE BCN 2023-03-01 2023-03-30 m7 ECO")
       ).toBeTruthy();
     });
   });

@@ -4,9 +4,13 @@ const {
   mustCompletePrices,
 } = require("../config/constants");
 const { buildError } = require("../utils/error");
-const { searchCityQuery, searchRegionalQuery } = require("./search");
+const {
+  searchCityQuery,
+  searchRegionalQuery,
+  searchRoundTrip: getSearchRoundTrip,
+} = require("./searchHandler");
 const { convertToMoney } = require("../utils/milesConverter");
-const { setPreferences } = require("./preferences");
+const { setPreferences } = require("./preferencesHandler");
 const { getInlineKeyboardSearch } = require("../utils/parser");
 
 const searchSingleDestination = async (match, msg, bot) => {
@@ -73,6 +77,27 @@ const searchMultipleDestination = async (
   }
 };
 
+const searchRoundTrip = async (match, msg, bot) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, searching);
+  const [
+    origin,
+    destination,
+    departureMinDate,
+    returnMaxDate,
+    minimumDays,
+    maximumDays,
+    parameter1,
+    parameter2,
+  ] = match.slice(1, 9);
+  const { response, error } = await getSearchRoundTrip(msg, match);
+  if (error) {
+    bot.sendMessage(chatId, error);
+  } else {
+    bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
+  }
+};
+
 const calculateMoney = (parameters, msg, bot) => {
   const { miles, taxPrice, milePrice, dolarPrice, moneyPrice } = parameters;
 
@@ -115,6 +140,7 @@ const savePreferences = async (msg, bot) => {
 module.exports = {
   searchSingleDestination,
   searchMultipleDestination,
+  searchRoundTrip,
   calculateMoney,
   savePreferences,
 };

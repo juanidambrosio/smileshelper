@@ -5,15 +5,15 @@ const uri = process.env.MONGO_URL;
 let client;
 
 const getDbCollection = async (collectionName) => {
-  if(client){
+  if (client) {
     return client.db("smiles_helper").collection(collectionName);
-  }else{
+  } else {
     client = new MongoClient(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverApi: ServerApiVersion.v1,
     });
-  
+
     try {
       await client.connect();
       return client.db("smiles_helper").collection(collectionName);

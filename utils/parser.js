@@ -201,63 +201,27 @@ const getCustomRegions = (customRegions) => {
   return regionsCopy;
 };
 
-const generatePayloadRoundTrip = (text) => {
-  // Get offset of coming date to know whether they exist options or not
-  const offsetComing = text.indexOf("202", 19);
-  const { adults: adultsGoing, cabinType: cabinTypeGoing } = calculateIndex(
-    text.substring(19, offsetComing - 1),
-    19
-  );
-
-  const minDaysStart = text.indexOf("m", offsetComing + 10) + 1;
-  const minDaysEnd = text.indexOf(" ", minDaysStart);
-
-  const maxDaysStart = text.indexOf("M", offsetComing + 10) + 1;
-  const spaceExistsAfterMaxDays = text.indexOf(" ", maxDaysStart) !== -1;
-  const maxDaysEnd =
-    maxDaysStart !== 0
-      ? spaceExistsAfterMaxDays
-        ? text.indexOf(" ", maxDaysStart)
-        : text.length + 2
-      : undefined;
-
-  const minDays = parseInt(
-    text.substring(
-      minDaysStart,
-      minDaysEnd !== -1 ? minDaysEnd + 1 : text.length + 1
-    ),
-    10
-  );
-  const maxDays = maxDaysEnd
-    ? parseInt(text.substring(maxDaysStart, maxDaysEnd + 1), 10)
-    : undefined;
-
-  const minDaysOffset = minDays.toString().length + 2;
-  const maxDaysOffset = maxDays ? maxDays.toString().length + 2 : 0;
-
-  const { adults: adultsComing, cabinType: cabinTypeComing } = calculateIndex(
-    text.substring(offsetComing + 11 + minDaysOffset + maxDaysOffset),
-    offsetComing + 11 + minDaysOffset + maxDaysOffset
-  );
-  return {
-    origin: text.substring(0, 3).toUpperCase(),
-    destination: text.substring(4, 7).toUpperCase(),
-    departureDate: text.substring(8, 18),
-    returnDate: text.substring(offsetComing, offsetComing + 10),
-    adultsGoing: adultsGoing
-      ? text.substring(adultsGoing, adultsGoing + 1)
-      : "",
-    cabinTypeGoing: cabinTypeGoing
-      ? text.substring(cabinTypeGoing, cabinTypeGoing + 3).toUpperCase()
-      : "",
-    adultsComing: adultsComing
-      ? text.substring(adultsComing, adultsComing + 1)
-      : "",
-    cabinTypeComing: cabinTypeComing
-      ? text.substring(cabinTypeComing, cabinTypeComing + 3).toUpperCase()
-      : "",
+const generatePayloadRoundTrip = (match) => {
+  const [
+    origin,
+    destination,
+    departureDate,
+    returnDate,
     minDays,
     maxDays,
+    parameter1,
+    parameter2,
+  ] = match.slice(1, 9);
+  const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
+  return {
+    origin: origin.toUpperCase(),
+    destination: destination.toUpperCase(),
+    departureDate,
+    returnDate,
+    adults: adults || "",
+    cabinType: cabinType || "",
+    minDays: parseInt(minDays.substring(1), 10),
+    maxDays: maxDays ? parseInt(maxDays.substring(1), 10) : undefined,
   };
 };
 

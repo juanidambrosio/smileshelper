@@ -5,7 +5,6 @@ const {
   cafecito,
   links,
   airlinesCodes,
-  searching,
   maxAirports,
 } = require("../config/constants");
 const regions = require("../data/regions");

@@ -156,10 +156,17 @@ const generatePayloadMonthlySingleDestinationAlerts = (text) => {
   };
 };
 
-const generatePayloadMultipleDestinations = (match, customRegions = []) => {
+const generatePayloadMultipleDestinations = (
+  match,
+  customRegions = {},
+  fixedDay
+) => {
   const [origin, destination, departureMonth, parameter1, parameter2] =
     match.slice(1, 6);
-  const departureDate = findMonthAndYearFromText(match[0]);
+  // If fixedDay, it would be departureDate and not departureMonth (we give entire date ex 2023-07-01)
+  const departureDate = fixedDay
+    ? departureMonth
+    : findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = destination.toUpperCase();
   const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
@@ -173,10 +180,17 @@ const generatePayloadMultipleDestinations = (match, customRegions = []) => {
   };
 };
 
-const generatePayloadMultipleOrigins = (match, customRegions = {}) => {
+const generatePayloadMultipleOrigins = (
+  match,
+  customRegions = {},
+  fixedDay
+) => {
   const [origin, destination, departureMonth, parameter1, parameter2] =
     match.slice(1, 6);
-  const departureDate = findMonthAndYearFromText(match[0]);
+  // If fixedDay, it would be departureDate and not departureMonth (we give entire date ex 2023-07-01)
+  const departureDate = fixedDay
+    ? departureMonth
+    : findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = origin.toUpperCase();
   const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);

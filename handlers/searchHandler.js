@@ -302,7 +302,11 @@ const searchRoundTrip = async (msg, match) => {
       createOne
     );
     console.log(msg.text);
-    return { response, preferences: payload.preferences };
+    return {
+      response,
+      bestFlight: bestFlights[0],
+      preferences: payload.preferences,
+    };
   } catch (error) {
     return { error: genericError };
   }

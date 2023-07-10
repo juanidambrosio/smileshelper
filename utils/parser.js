@@ -339,7 +339,23 @@ const getInlineKeyboardSearch = (
   return inlineKeyboard;
 };
 
-const getInlineKeyboardFilters = (filters) => {};
+const getInlineKeyboardSearchOnlyCalculator = (bestFlight, preferences) => [
+  [
+    {
+      text: "Calcular $",
+      callback_data: `calculadora ${
+        parseInt(bestFlight.departureFlight.price) +
+        parseInt(bestFlight.returnFlight.price)
+      } ${
+        parseInt(bestFlight.departureFlight.tax.moneyNumber) +
+        parseInt(bestFlight.returnFlight.tax.moneyNumber)
+      } ${preferences?.milePrice} ${preferences?.dolarPrice} ${
+        parseFloat(bestFlight.departureFlight.money) +
+        parseFloat(bestFlight.returnFlight.money)
+      }`,
+    },
+  ],
+];
 
 module.exports = {
   calculateIndex,
@@ -357,5 +373,5 @@ module.exports = {
   generatePayloadRoundTrip,
   preferencesParser,
   getInlineKeyboardSearch,
-  getInlineKeyboardFilters,
+  getInlineKeyboardSearchOnlyCalculator,
 };

@@ -1,14 +1,14 @@
 const TelegramBot = require("node-telegram-bot-api");
-const { telegramAlertsApiToken } = require("../../config/config");
+const { telegramAlertsApiToken } = require("../../config/config.js");
 
 const {
   groupChatIdAlerts,
   maxRetriesAlerts,
   delaySecondsRetriesAlerts,
-} = require("../../config/constants");
-const { alertFlightsInput } = require("../../data/alertFlights");
-const { searchCityQuery } = require("../../telegram/search.js");
-const sleep = require("../../utils/sleep");
+} = require("../../config/constants.js");
+const { alertFlightsInput } = require("../../data/alertFlights.js");
+const { searchCityQuery } = require("../../handlers/searchHandler.js");
+const sleep = require("../../utils/sleep.js");
 
 let bot;
 
@@ -80,7 +80,11 @@ const checkPromoFlight = async (
       isAlert: true,
     });
 
-    return bestFlight && bestFlight.price <= promoMiles ? response : "";
+    return bestFlight &&
+      bestFlight.price <= promoMiles &&
+      bestFlight.tax.milesNumber < 50000
+      ? response
+      : "";
   } catch (error) {
     console.log(error);
     retries++;

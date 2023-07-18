@@ -34,15 +34,6 @@ fastify.get("/regiones", async (request, reply) => {
   );
 });
 
-fastify.get("/filtroseliminar", async (request, reply) => {
-  const { response, error } = await deletePreferences(request.query.username);
-  if (response) {
-    return response;
-  }
-  reply.status(500);
-  reply.error(error);
-});
-
 // Run the server!
 fastify.listen({ port: 3000 }, async (err, address) => {
   if (err) {

@@ -28,6 +28,12 @@ functions:
       - httpApi:
           method: GET
           path: /search_month
+  getRegionalFlights:
+    handler: aws/lambda/search.getRegionalFlights
+    events:
+     - httpApi:
+        method: GET
+        path: /search_regional
 
 plugins:
   - serverless-offline

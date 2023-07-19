@@ -58,7 +58,9 @@ const searchCityQuery = async (msg, match) => {
         : previous.concat(
             emoji.get("airplane") +
               applySimpleMarkdown(
-                current.departureDay + "/" + flightList.departureMonth,
+                current.departureDay +
+                  "/" +
+                  payload.departureDate.substring(5, 7),
                 "[",
                 "]"
               ) +

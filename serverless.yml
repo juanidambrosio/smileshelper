@@ -16,12 +16,18 @@ functions:
       - sqs:
           arn: arn:aws:sqs:us-east-1:749264263523:smiles-helper-alerts
           functionResponseType: ReportBatchItemFailures
-  removeFilters:
-    handler: aws/lambda/filters.removeFilters
+  removePreferences:
+    handler: aws/lambda/preferences.removePreferences
     events:
       - httpApi:
           method: DELETE
-          path: /filters/{username}
+          path: /preferences/{username}
+  getMonthlyFlights:
+    handler: aws/lambda/search.getMonthlyFlights
+    events:
+      - httpApi:
+          method: GET
+          path: /search_month
 
 plugins:
   - serverless-offline

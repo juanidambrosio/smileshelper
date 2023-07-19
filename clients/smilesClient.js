@@ -122,7 +122,6 @@ const getFlights = async (parameters) => {
         0,
         getBestFlightsCount(preferences?.maxresults)
       ),
-      departureMonth: departureDate.substring(5, 7),
     };
   } catch (error) {
     return {

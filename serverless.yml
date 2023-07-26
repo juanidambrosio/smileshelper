@@ -34,6 +34,12 @@ functions:
      - httpApi:
         method: GET
         path: /search_regional
+  getRoundTripFlights:
+    handler: aws/lambda/search.getRoundTripFlights
+    events:
+      - httpApi:
+          method: GET
+          path: /search_round_trip
 
 plugins:
   - serverless-offline

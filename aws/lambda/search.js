@@ -51,6 +51,12 @@ const getRegionalFlights = async (event) => {
 };
 
 const getRoundTripFlights = async (event) => {
+  event.queryStringParameters.minDays = parseInt(
+    event.queryStringParameters.minDays
+  );
+  event.queryStringParameters.maxDays = event.queryStringParameters.maxDays
+    ? parseInt(event.queryStringParameters.maxDays)
+    : undefined;
   const { results, error, statusError } = await getFlightsRoundTrip(
     event.queryStringParameters
   );

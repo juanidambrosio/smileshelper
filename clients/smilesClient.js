@@ -247,11 +247,11 @@ const getFlightsRoundTrip = async (parameters) => {
         adults,
         true,
         undefined,
-        preferences.brasilNonGol ? "true" : "false"
+        preferences?.brasilNonGol ? "true" : "false"
       );
+
       getFlightPromises.push(searchFlights(paramsGoing));
     }
-
     for (
       let dateReturn = firstReturnDate;
       dateReturn <= new Date(returnDate);
@@ -264,7 +264,7 @@ const getFlightsRoundTrip = async (parameters) => {
         adults,
         true,
         undefined,
-        preferences.brasilNonGol ? "true" : "false"
+        preferences?.brasilNonGol ? "true" : "false"
       );
       getFlightPromises.push(searchFlights(paramsComing));
     }
@@ -308,7 +308,7 @@ const getFlightsRoundTrip = async (parameters) => {
         minDays,
         maxDays,
         origin
-      ).slice(0, getBestFlightsCount(preferences.maxresults)),
+      ).slice(0, getBestFlightsCount(preferences?.maxresults)),
     };
   } catch (error) {
     console.log(

@@ -24,18 +24,21 @@ functions:
           path: /preferences/{username}
   getMonthlyFlights:
     handler: aws/lambda/search.getMonthlyFlights
+    timeout: 120
     events:
       - httpApi:
           method: GET
           path: /search_month
   getRegionalFlights:
     handler: aws/lambda/search.getRegionalFlights
+    timeout: 120
     events:
      - httpApi:
         method: GET
         path: /search_regional
   getRoundTripFlights:
     handler: aws/lambda/search.getRoundTripFlights
+    timeout: 120
     events:
       - httpApi:
           method: GET

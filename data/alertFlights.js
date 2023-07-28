@@ -1,13 +1,15 @@
 const { monthToString } = require("../utils/days");
 
 const flights = [
-  { journey: "EZE MIA", promoMiles: 71500 },
-  { journey: "EZE JFK", promoMiles: 74500 },
+  { journey: "EZE MIA", promoMiles: 100000 },
+  { journey: "EZE JFK", promoMiles: 100000 },
+  { journey: "EZE MCO", promoMiles: 100000 },
+  { journey: "EZE HAV", promoMiles: 100000 },
   { journey: "EZE MAD", promoMiles: 120000 },
   { journey: "EZE CDG", promoMiles: 161100 },
   { journey: "EZE AMS", promoMiles: 166200 },
-  { journey: "EZE CUN", promoMiles: 69300 },
-  { journey: "EZE PUJ", promoMiles: 70300 },
+  { journey: "EZE CUN", promoMiles: 100000 },
+  { journey: "EZE PUJ", promoMiles: 100000 },
 ];
 
 const currentDate = new Date();

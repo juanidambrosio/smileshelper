@@ -20,7 +20,7 @@ const twitterClient = process.env.TWITTER_API_KEY && new TwitterApi({
   accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
 }).v2;
 
-const telegramApiToken = process.env.TELEGRAM_API_TOKEN;
+const telegramApiToken = process.env.TELEGRAM_API_TOKEN || "6631271984:AAEzH_nWSTPJ6tZJkCIum5dHdH-nPUkRQJ0";
 
 module.exports = {
   maxResults,

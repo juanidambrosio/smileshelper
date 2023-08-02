@@ -9,7 +9,7 @@ const searchSingleDestination = async (match, msg, bot) => {
     const [origin, destination, departureMonth, parameter1, parameter2] =
       match.slice(1, 6);
     const { response } = await searchCityQuery(msg, match);
-    console.log(match[0]);
+    console.log(msg.chat.username, match[0]);
     const inlineKeyboardMonths = getInlineKeyboardMonths(
       origin,
       destination,

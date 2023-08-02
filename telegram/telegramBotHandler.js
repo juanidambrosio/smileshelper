@@ -45,7 +45,7 @@ const searchMultipleDestination = async (
     fixedDay,
     isMultipleOrigin
   );
-  console.log(match[0]);
+  console.log(msg.chat.username, match[0]);
   if (error) {
     bot.sendMessage(chatId, error);
   } else {

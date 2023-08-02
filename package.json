@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.20.2",
+    "@flydotio/dockerfile": "^0.4.1",
     "babel-jest": "^29.4.0",
     "babel-polyfill": "^6.26.0",
     "husky": "^8.0.3",

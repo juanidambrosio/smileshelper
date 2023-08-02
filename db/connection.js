@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const { MongoClient, ServerApiVersion } = require("mongodb");
-const uri = process.env.MONGO_URL || "mongodb+srv://smiles:NbvxmTyxGZ8REjKj@smiles.hl9ibft.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.MONGO_URL
 let client;
 
 const getDbCollection = async (collectionName) => {

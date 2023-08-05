@@ -118,6 +118,10 @@ const belongsToCity = (airport, city) => {
 
 const findMonthAndYearFromText = (text) => {
   let [origin, destination, dateString] = text.split(" ");
+  // Safe check if the user inputs origin and destination as <ORIGIN>-<DESTINATION>
+  if (!dateString) {
+    dateString = destination;
+  }
   if (dateString.includes("-")) return dateString;
   const month = Number(dateString);
   let year = new Date().getFullYear();

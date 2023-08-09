@@ -183,13 +183,4 @@ const listen = async () => {
 };
 
 
-(async () => {
-  while (true) {
-    console.log("Listening");
-    try {
-      await listen();
-    } catch (e) {
-      console.log(e);
-    }
-  }
-})();
+listen();

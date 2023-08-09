@@ -181,4 +181,15 @@ const listen = async () => {
     }
   });
 };
-listen();
+
+
+while (true) {
+  console.log("Listening");
+  try {
+    listen();
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+

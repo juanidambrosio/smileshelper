@@ -186,7 +186,7 @@ const listen = async () => {
 while (true) {
   console.log("Listening");
   try {
-    listen();
+    await listen();
   } catch (e) {
     console.log(e)
   }

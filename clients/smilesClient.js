@@ -23,7 +23,7 @@ const smilesClient = axios.create({
   baseURL: SMILES_URL,
   headers,
   maxRedirects: 10000,
-  timeout: 1000 * 60,
+  timeout: 1000 * 60 * 10,
   httpsAgent: new https.Agent({ keepAlive: true }),
   insecureHTTPParser: true,
 });

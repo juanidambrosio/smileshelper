@@ -1,4 +1,5 @@
 const { default: axios } = require("axios");
+const https = require("https");
 const { backOff } = require("exponential-backoff");
 const {
   SMILES_URL,
@@ -21,6 +22,9 @@ const headers = {
 const smilesClient = axios.create({
   baseURL: SMILES_URL,
   headers,
+  maxRedirects: 10000,
+  timeout: 1000 * 60,
+  httpsAgent: new https.Agent({ keepAlive: true }),
   insecureHTTPParser: true,
 });
 
@@ -37,6 +41,7 @@ const searchFlights = async (params) => {
         const { data } = await smilesClient.get("/search", { params });
         return { data };
       } catch (error) {
+        console.log(error.message);
         return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
       }
     },
@@ -44,7 +49,12 @@ const searchFlights = async (params) => {
       jitter: "full",
       numOfAttempts: 3,
       retry: (error, attemptNumber) => {
-        const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
+        const apiFailureRetryCodes = [
+          "ETIMEDOUT",
+          "EAI_AGAIN",
+          "ECONNRESET",
+          "ERR_FR_TOO_MANY_REDIRECTS",
+        ];
         const isFlightListRelatedError = [
           "TypeError: Cannot read properties of undefined (reading 'flightList')",
           "TypeError: Cannot read property 'flightList' of undefined",

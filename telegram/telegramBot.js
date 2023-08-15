@@ -182,5 +182,5 @@ const listen = async () => {
   });
 };
 
-
+process.env.TZ = 'America/Argentina/Buenos_Aires'
 listen();

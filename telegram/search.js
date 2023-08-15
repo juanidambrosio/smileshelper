@@ -289,7 +289,7 @@ const searchRoundTrip = async (msg) => {
       },
       createOne
     );
-    console.log(msg.chat.username, msg.text);
+    console.log((new Date()).toISOString(), msg.chat.username, msg.text);
     return { response };
   } catch (error) {
     return { error: genericError };

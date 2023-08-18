@@ -17,6 +17,7 @@ const headers = {
   "Content-Type": "application/json",
   Accept: "application/json",
   region: "ARGENTINA",
+  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
 };
 
 const smilesClient = axios.create({
@@ -38,7 +39,7 @@ const searchFlights = async (params) => {
         const { data } = await smilesClient.get("/search", { params });
         return { data };
       } catch (error) {
-        console.log(error);
+        console.log("error", error);
         return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
       }
     },
@@ -46,7 +47,7 @@ const searchFlights = async (params) => {
       jitter: "full",
       numOfAttempts: 3,
       retry: (error, attemptNumber) => {
-        console.log(error);
+        console.log("error", error);
         const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
         const isFlightListRelatedError = [
           "TypeError: Cannot read properties of undefined (reading 'flightList')",

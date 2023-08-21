@@ -39,7 +39,7 @@ const searchFlights = async (params) => {
         const { data } = await smilesClient.get("/search", { params });
         return { data };
       } catch (error) {
-        console.log("error", error);
+        console.log("error", error.toString());
         return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
       }
     },
@@ -47,7 +47,7 @@ const searchFlights = async (params) => {
       jitter: "full",
       numOfAttempts: 3,
       retry: (error, attemptNumber) => {
-        console.log("error", error);
+        console.log("error", error.toString());
         const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
         const isFlightListRelatedError = [
           "TypeError: Cannot read properties of undefined (reading 'flightList')",

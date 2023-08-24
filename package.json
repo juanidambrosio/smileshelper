@@ -8,6 +8,7 @@
     "test": "jest --config jest.config.js",
     "listen": "node twitter/tweetListener.js",
     "telegram": "node telegram/telegramBot.js",
+    "index": "node cli/index.js",
     "prepare": "husky install"
   },
   "author": "",

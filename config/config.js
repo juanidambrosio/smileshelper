@@ -6,7 +6,7 @@ dotenv.config();
 const maxResults = process.env.MAX_RESULTS || 10;
 
 const smiles = {
-    authorizationToken: process.env.SMILES_AUTH_TOKEN || [
+    authorizationToken: [
         'AHspTPDZ5YPWlYKNjD73SYe2QdsSD1E9IMibwMNwUM16V0Gjo2tEx9',
         'NM4SvkQQRy4xyfCDOPfHbID1bmLPQo8BMRUmVLpjGLveqKqhUJxRgL',
         'xCSiLD1cMabeT3x1wzpgQdu05RsR1G32PIM6ijmbMh8lleM7TJ2GMS',

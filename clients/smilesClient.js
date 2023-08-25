@@ -36,47 +36,45 @@ const smilesTaxClient = axios.create({
 });
 
 const searchFlights = async (params) => {
-  const response = await backOff(
-    async () => {
-      try {
-        const { data } = await smilesClient.get("/search", { params });
-        return { data };
-      } catch (error) {
-        console.log(error.message);
-        return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
-      }
-    },
-    {
-      jitter: "full",
-      numOfAttempts: 3,
-      retry: (error, attemptNumber) => {
-        const apiFailureRetryCodes = [
-          "ETIMEDOUT",
-          "EAI_AGAIN",
-          "ECONNRESET",
-          "ERR_FR_TOO_MANY_REDIRECTS",
-        ];
-        const isFlightListRelatedError = [
-          "TypeError: Cannot read properties of undefined (reading 'flightList')",
-          "TypeError: Cannot read property 'flightList' of undefined",
-        ].includes(error.response?.data?.error);
-        const isServiceUnavailable = error.response?.status === 503;
-        // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
-        const shouldRetryRequest =
-          isFlightListRelatedError ||
-          isServiceUnavailable ||
-          apiFailureRetryCodes.includes(error.code);
-        if (shouldRetryRequest) {
-          return true;
-        }
-        return false;
+  try {
+    const response = await backOff(
+      async () => {
+        return await smilesClient.get("/search", { params });
       },
-    }
-  );
-  if (response.error) {
+      {
+        jitter: "full",
+        numOfAttempts: 3,
+        retry: (error, attemptNumber) => {
+          console.log(error.message);
+          const apiFailureRetryCodes = [
+            "ETIMEDOUT",
+            "EAI_AGAIN",
+            "ECONNRESET",
+            "ERR_FR_TOO_MANY_REDIRECTS",
+          ];
+          const isFlightListRelatedError = [
+            "TypeError: Cannot read properties of undefined (reading 'flightList')",
+            "TypeError: Cannot read property 'flightList' of undefined",
+          ].includes(error.response?.data?.error);
+          const isServiceUnavailable = error.response?.status === 503;
+          // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
+          const shouldRetryRequest =
+            isFlightListRelatedError ||
+            isServiceUnavailable ||
+            apiFailureRetryCodes.includes(error.code);
+          if (shouldRetryRequest) {
+            console.log(`retry ${params.departureDate} #${attemptNumber}`)
+            return true;
+          }
+          return false;
+        }
+      }
+    );
+    return response;
+  } catch(error) {
+    console.log(error.message);
     return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
   }
-  return response;
 };
 
 const getFlights = async (parameters) => {

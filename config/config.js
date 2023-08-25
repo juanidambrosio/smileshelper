@@ -11,6 +11,11 @@ const smiles = {
         'NM4SvkQQRy4xyfCDOPfHbID1bmLPQo8BMRUmVLpjGLveqKqhUJxRgL',
         'xCSiLD1cMabeT3x1wzpgQdu05RsR1G32PIM6ijmbMh8lleM7TJ2GMS',
         'FFwHJtP8PqHmvLoNFM22tXajnsgrk9LsXJf79Vb8dY5nE1cryDhaG6',
+        'JgKkltHgHCcscGqW5C54Yhje0OiYmLkVJMbtu5gkHKd8XYZ2OZWLBs',
+        'P2IEmkORj8HQMOba0fRikZmSSwTcBIrjqUQWqDwBz70FVBhUQ53A6d',
+        '5LGskr24z4WToqcmVNLSJSiNyLAeEcNwYh4dyg1xH7geKp8zUqJL39',
+        'sPnkZUWia8CNvmcaoi3QWiKn1iV5IrVh5aFfBckV07rT6Kmirkg4an',
+        'dXqxIJquj4Yn532UiGsd4XvItoYiQnE4AVRtpcTycHuIsz8Eq0pKk6'
     ],
     apiKey: process.env.SMILES_API_KEY || 'aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw',
     milePrice: process.env.SMILES_MILE_PRICE,

@@ -12,8 +12,8 @@ const {sortFlights, sortFlightsRoundTrip} = require("../flightsHelper.js");
 const {belongsToCity} = require("../utils/parser");
 
 const headers = {
-//    authorization: `Bearer ${smiles.authorizationToken}`,
-//    "x-api-key": smiles.apiKey,
+    authorization: `Bearer ${smiles.authorizationToken[Math.floor(Math.random() * smiles.authorizationToken.length)]}`,
+    "x-api-key": smiles.apiKey,
     "Content-Type": "application/json",
     Accept: "application/json",
     region: "ARGENTINA",

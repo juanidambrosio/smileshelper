@@ -12,21 +12,44 @@ const { getBestFlight } = require("../utils/bestFlight.js");
 const { sortFlights, sortFlightsRoundTrip } = require("../flightsHelper.js");
 
 const headers = {
-  authorization: `Bearer ${smiles.authorizationToken}`,
-  "x-api-key": smiles.apiKey,
+  Accept: "application/json, */*",
   "Content-Type": "application/json",
-  Accept: "application/json",
-  region: "ARGENTINA",
-  "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0" 
-};
+  Region: "ARGENTINA",
+  "User-Agent": "",
+  "x-api-key":""
+}
+
+const userAgents = [
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
+"Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36",
+"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
+"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",
+"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1",
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.54"
+];
 
 const smilesClient = axios.create({
   baseURL: SMILES_URL,
   headers,
-  maxRedirects: 10000,
-  timeout: 1000 * 60 * 10,
+  maxRedirects: 0, //hace un redirect infinito x eso el timeout
+  timeout: 1000 * 60,
+  httpsAgent: new https.Agent({ keepAlive: true }),
+  insecureHTTPParser: true
+});
+
+const smilesClientOptions = axios.create({
+  baseURL: SMILES_URL,
+  maxRedirects: 0, //hace un redirect infinito x eso el timeout
+  timeout: 1000 * 60,
   httpsAgent: new https.Agent({ keepAlive: true }),
   insecureHTTPParser: true,
+  headers: {
+    "Origin":"https://www.smiles.com.ar",
+    "User-Agent":""
+  },
+  validateStatus: (status) =>
+    status >= 200 && status <= 302
 });
 
 const smilesTaxClient = axios.create({
@@ -39,11 +62,18 @@ const searchFlights = async (params) => {
   try {
     const response = await backOff(
       async () => {
-        return await smilesClient.get("/search", { params });
+        const headerUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+        const optionsResponse = await smilesClientOptions.options("/search", { params, headers: {"User-Agent":headerUserAgent} });
+        const cookies = optionsResponse.headers['set-cookie']?.map(c => {
+          return c.split(" ")[0];
+        }).join(" ");
+        return await smilesClient.get("/search", { params, headers: {Cookie: cookies, "User-Agent":headerUserAgent} });
       },
       {
         jitter: "full",
         numOfAttempts: 3,
+        startingDelay: 1000,
+        delayFirstAttempt: true,
         retry: (error, attemptNumber) => {
           console.log(error.message);
           const apiFailureRetryCodes = [
@@ -71,7 +101,7 @@ const searchFlights = async (params) => {
       }
     );
     return response;
-  } catch(error) {
+  } catch (error) {
     console.log(error.message);
     return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
   }
@@ -209,8 +239,8 @@ const getFlightsMultipleCities = async (
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message
+      error.response?.data?.errorMessage ||
+      error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
@@ -323,8 +353,8 @@ const getFlightsRoundTrip = async (parameters) => {
     console.log(
       "Error while getting flights: ",
       error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message
+      error.response?.data?.errorMessage ||
+      error.response?.data?.message
     );
     return {
       statusError: error.response?.status,
@@ -373,7 +403,8 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
   };
 
   try {
-    const { data } = await smilesTaxClient.get("/boardingtax", { params });
+    const headerUserAgent = {"User-Agent": userAgents[Math.floor(Math.random() * userAgents.length)]};
+    const { data } = await smilesTaxClient.get("/boardingtax", { params, headers: headerUserAgent });
     const milesNumber = data?.totals?.totalBoardingTax?.miles;
     const moneyNumber = data?.totals?.totalBoardingTax?.money;
     return {

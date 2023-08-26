@@ -3,95 +3,70 @@ const {buildError} = require("../utils/error");
 const {padMonth} = require("../utils/string");
 const {searchCityQuery, searchRegionalQuery} = require("./search");
 
-const searchSingleDestination = async (match, msg, bot) => {
-    bot.sendMessage(msg.chat.id, searching);
-    try {
-        const [origin, destination, departureMonth, parameter1, parameter2] =
-            match.slice(1, 6);
-        const {response} = await searchCityQuery(msg, match);
-        console.log((new Date()).toLocaleTimeString(), msg.chat.username, match[0]);
-        const inlineKeyboardMonths = getInlineKeyboardMonths(
-            origin,
-            destination,
-            parameter1,
-            parameter2
-        );
-        bot.sendMessage(msg.chat.id, response, {
-            parse_mode: "Markdown",
-            reply_markup: {
-                inline_keyboard: inlineKeyboardMonths,
-            },
-        });
-    } catch (error) {
-        console.log(error.message);
-        bot.sendMessage(msg.chat.id, buildError(error.message));
-    }
+const sendMessageWithKeyboard = async (bot, chatId, message, keyboard) => {
+    await bot.sendMessage(chatId, message, {
+        parse_mode: "Markdown", reply_markup: {
+            inline_keyboard: keyboard,
+        },
+    });
 };
+const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) => {
+    const lines = response.split("\n");
+    lines[0] = `${lines[0]} ${lines.length} resultados`;
 
-const searchMultipleDestination = async (
-    match,
-    msg,
-    bot,
-    fixedDay,
-    isMultipleOrigin
-) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const [origin, destination, departureMonth, parameter1, parameter2] =
-        match.slice(1, 6);
-    const {response, error} = await searchRegionalQuery(
-        msg,
-        match,
-        fixedDay,
-        isMultipleOrigin
-    );
-    console.log((new Date()).toLocaleTimeString(), msg.chat.username, match[0]);
-    if (error) {
-        bot.sendMessage(chatId, error);
-    } else {
-        const inlineKeyboardMonths = getInlineKeyboardMonths(
-            origin,
-            destination,
-            parameter1,
-            parameter2
-        );
-        lines = response.split("\n")
-        let chunk = [];
-        for (let i = 0; i < lines.length; i++) {
-            chunk.push(lines[i]);
-            if (chunk.length === 35 || i === lines.length - 1) {
-                let options = {
-                    parse_mode: "Markdown",
-                };
-
-                // Include inline keyboard only in the last message
-                if (i === lines.length - 1) {
-                    options.reply_markup = {
-                        inline_keyboard: inlineKeyboardMonths,
-                    };
-                }
-
-                await bot.sendMessage(chatId, chunk.join("\n"), options);
-                chunk = [];  // Reset the chunk
-            }
+    let chunk = [];
+    for (let i = 0; i < lines.length; i++) {
+        chunk.push(lines[i]);
+        if (chunk.length === 35 || i === lines.length - 1) {
+            const options = {
+                parse_mode: "Markdown",
+                reply_markup: i === lines.length - 1 ? {inline_keyboard: inlineKeyboardMonths} : undefined,
+            };
+            await bot.sendMessage(chatId, chunk.join("\n"), options);
+            chunk = [];
         }
     }
 };
 
-const getInlineKeyboardMonths = (
-    origin,
-    destination,
-    parameter1,
-    parameter2
-) => {
-    return monthSections.map((monthSection, indexSection) =>
-        monthSection.map((month, indexMonth) => ({
-            text: month.name,
-            callback_data: `${origin} ${destination} ${padMonth(
-                monthSection.length * indexSection + (indexMonth + 1)
-            )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
-        }))
-    );
+const searchSingleDestination = async (match, msg, bot) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+
+    try {
+        const [, origin, destination] = match;
+        const {response} = await searchCityQuery(msg, match);
+
+        console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
+
+        const inlineKeyboardMonths = getInlineKeyboardMonths(origin, destination);
+        await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+    } catch (error) {
+        console.error(error.message);
+        bot.sendMessage(chatId, buildError(error.message));
+    }
+};
+const searchMultipleDestination = async (match, msg, bot, fixedDay, isMultipleOrigin) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, searching);
+
+    try {
+        const [, origin, destination] = match;
+        const {response} = await searchRegionalQuery(msg, match, fixedDay, isMultipleOrigin);
+
+        console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
+
+        const inlineKeyboardMonths = getInlineKeyboardMonths(origin, destination);
+        await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+    } catch (error) {
+        console.error(error.message);
+        bot.sendMessage(chatId, buildError(error.message));
+    }
+};
+const getInlineKeyboardMonths = (origin, destination) => {
+    return monthSections.map((section, sectionIndex) => section.map((month, monthIndex) => ({
+        text: month.name,
+        callback_data: `${origin} ${destination} ${padMonth(section.length * sectionIndex + (monthIndex + 1))}`.trim(),
+    })));
 };
 
 module.exports = {searchSingleDestination, searchMultipleDestination};

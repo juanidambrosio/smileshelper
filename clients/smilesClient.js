@@ -1,217 +1,161 @@
-const {default: axios} = require("axios");
-const {backOff} = require("exponential-backoff");
-const {
-    SMILES_URL,
-    SMILES_TAX_URL,
-    tripTypes,
-} = require("../config/constants.js");
-const {smiles, maxResults} = require("../config/config.js");
-const {parseDate, calculateFirstDay, lastDays} = require("../utils/days.js");
-const {getBestFlight} = require("../utils/calculate.js");
-const {sortFlights, sortFlightsRoundTrip} = require("../flightsHelper.js");
-const {belongsToCity} = require("../utils/parser");
+const axios = require('axios');
+const {backOff} = require('exponential-backoff');
+const {SMILES_URL, SMILES_TAX_URL, tripTypes} = require('../config/constants');
+const {smiles, maxResults} = require('../config/config');
+const {parseDate, calculateFirstDay, lastDays} = require('../utils/days');
+const {getBestFlight} = require('../utils/calculate');
+const {sortFlights, sortFlightsRoundTrip} = require('../flightsHelper');
+const {belongsToCity} = require('../utils/parser');
 
 const headers = {
     authorization: `Bearer ${smiles.authorizationToken[Math.floor(Math.random() * smiles.authorizationToken.length)]}`,
-    "x-api-key": smiles.apiKey,
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    region: "ARGENTINA",
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
+    'x-api-key': smiles.apiKey,
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    region: 'ARGENTINA',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
 };
 
-const smilesClient = axios.create({
-    baseURL: SMILES_URL,
+const createAxiosClient = (baseURL) => axios.create({
+    baseURL,
     headers,
     insecureHTTPParser: true,
 });
 
-const smilesTaxClient = axios.create({
-    baseURL: SMILES_TAX_URL,
-    headers,
-    insecureHTTPParser: true,
-});
+const smilesClient = createAxiosClient(SMILES_URL);
+const smilesTaxClient = createAxiosClient(SMILES_TAX_URL);
+
+const safeStringify = (obj, indent = 2) => {
+    let cache = [];
+    const retVal = JSON.stringify(
+        obj,
+        (key, value) =>
+            typeof value === "object" && value !== null
+                ? cache.includes(value)
+                    ? undefined // Duplicate reference found, discard key
+                    : cache.push(value) && value // Store value in our collection
+                : value,
+        indent
+    );
+    cache = null;
+    return retVal;
+};
+
+const handleError = (error, attempts, maxAttempts) => {
+    if (attempts >= maxAttempts) {
+        const errorDetails = {
+            message: error.message,
+            code: error.code,
+            config: error.config,
+            // Add any other properties you're interested in
+        };
+        console.error("Persistent error after all retries:", JSON.stringify(errorDetails));
+    }
+    return {data: {requestedFlightSegmentList: [{flightList: []}]}};
+};
+
 
 const searchFlights = async (params) => {
+    const maxAttempts = 10; // Set your maximum number of attempts here
+    let attempts = 0;
+
     const response = await backOff(
         async () => {
             try {
+                attempts++;
                 const {data} = await smilesClient.get("/search", {params});
                 return {data};
             } catch (error) {
-                console.log("error", error.toString());
-                return {data: {requestedFlightSegmentList: [{flightList: []}]}};
+                if (attempts >= maxAttempts) {
+                    console.error("Persistent error after all retries:", error.toString());
+                }
+                throw error;
             }
         },
         {
             jitter: "full",
-            numOfAttempts: 3,
+            numOfAttempts: maxAttempts,
             retry: (error, attemptNumber) => {
-                console.log("error", error.toString());
                 const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
                 const isFlightListRelatedError = [
                     "TypeError: Cannot read properties of undefined (reading 'flightList')",
                     "TypeError: Cannot read property 'flightList' of undefined",
                 ].includes(error.response?.data?.error);
                 const isServiceUnavailable = error.response?.status === 503;
-                // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
                 return isFlightListRelatedError || isServiceUnavailable || apiFailureRetryCodes.includes(error.code);
             },
         }
     );
-    if (response.error) {
-        console.log("error", response.error.toString());
-        return {data: {requestedFlightSegmentList: [{flightList: []}]}};
+
+    if (response.error && attempts >= maxAttempts) {
+        return handleError(response.error, attempts, maxAttempts);
     }
+
     return response;
 };
 
-const getFlights = async (parameters) => {
-    const {origin, destination, departureDate, cabinType, adults, preferences} =
-        parameters;
-    const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
-    try {
-        const getFlightPromises = [];
-        for (
-            let day = calculateFirstDay(departureDate);
-            day <= lastDayOfMonthDeparture;
-            day++
-        ) {
-            const params = buildParams(
-                origin,
-                destination,
-                departureDate.replace("/", "-"),
-                adults,
-                false,
-                day,
-                preferences?.brasilNonGol ? "true" : "false"
-            );
-            getFlightPromises.push(searchFlights(params));
-        }
-        const flightResults = (await Promise.all(getFlightPromises)).flat();
-        const mappedFlightResults = (
-            await Promise.all(
-                flightResults.map(async (flightResult) => {
-                    const {flight, price, money, fareUid} = getBestFlight(
-                        flightResult.data?.requestedFlightSegmentList[0],
-                        {...preferences, cabinType},
-                        preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
-                    );
-                    return {
-                        origin: flight.departure?.airport?.code,
-                        destination: flight.arrival?.airport?.code,
-                        price,
-                        money,
-                        departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
-                        stops: flight.stops?.toString(),
-                        duration: flight.duration?.hours?.toString(),
-                        airline: flight.airline?.name,
-                        seats: flight.availableSeats?.toString(),
-                        tax: fareUid
-                            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
-                            : undefined,
-                    };
-                })
-            )
-        ).filter((flight) => validFlight(flight));
 
-        return {
-            results: sortFlights(mappedFlightResults).slice(
-                0,
-                getBestFlightsCount(preferences?.maxresults)
-            ),
-            departureMonth: departureDate.substring(5, 7),
-        };
-    } catch (error) {
-        return {
-            statusError: error.response?.status,
-            error:
-                error.response?.data?.error ||
-                error.response?.data?.errorMessage ||
-                error.response?.data?.message,
-        };
-    }
+const createFlightObject = async (flightResult, preferences, cabinType) => {
+    const {flight, price, money, fareUid} = getBestFlight(
+        flightResult.data?.requestedFlightSegmentList[0],
+        {...preferences, cabinType},
+        preferences?.smilesAndMoney ? 'SMILES_MONEY_CLUB' : 'SMILES_CLUB'
+    );
+    return {
+        origin: flight.departure?.airport?.code,
+        destination: flight.arrival?.airport?.code,
+        price,
+        money,
+        departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+        stops: flight.stops?.toString(),
+        duration: flight.duration?.hours?.toString(),
+        airline: flight.airline?.name,
+        seats: flight.availableSeats?.toString(),
+        tax: fareUid
+            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+            : undefined,
+    };
 };
 
-const getFlightsMultipleCities = async (
-    parameters,
-    fixedDay,
-    isMultipleOrigin
-) => {
-    const {origin, destination, departureDate, cabinType, adults, preferences} =
-        parameters;
+const getFlights = async (parameters) => {
+    const {origin, destination, departureDate, cabinType, adults, preferences} = parameters;
+    const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
+    const getFlightPromises = [];
 
+    for (let day = calculateFirstDay(departureDate); day <= lastDayOfMonthDeparture; day++) {
+        const params = buildParams(origin, destination, departureDate.replace("/", "-"), adults, false, day, preferences?.brasilNonGol ? "true" : "false");
+        getFlightPromises.push(searchFlights(params));
+    }
+
+    const flightResults = (await Promise.all(getFlightPromises)).flat();
+    const mappedFlightResults = (await Promise.all(flightResults.map(flightResult => createFlightObject(flightResult, preferences, cabinType)))).filter(flight => validFlight(flight));
+
+    return {
+        results: sortFlights(mappedFlightResults).slice(0, getBestFlightsCount(preferences?.maxresults)),
+        departureMonth: departureDate.substring(5, 7),
+    };
+};
+
+const getFlightsMultipleCities = async (parameters, fixedDay, isMultipleOrigin) => {
+    const {origin, destination, departureDate, cabinType, adults, preferences} = parameters;
     const multipleCity = isMultipleOrigin ? origin : destination;
     const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
     const getFlightPromises = [];
-    try {
-        for (const city of multipleCity) {
-            for (
-                let day = fixedDay ? 0 : calculateFirstDay(departureDate);
-                day < (fixedDay ? 1 : lastDayOfMonthDeparture);
-                day++
-            ) {
-                const params = buildParams(
-                    isMultipleOrigin ? city : origin,
-                    isMultipleOrigin ? destination : city,
-                    departureDate.replace("/", "-"),
-                    adults,
-                    fixedDay,
-                    fixedDay ? undefined : day,
-                    preferences?.brasilNonGol ? "true" : "false"
-                );
-                getFlightPromises.push(searchFlights(params));
-            }
-        }
-        const flightResults = (await Promise.all(getFlightPromises)).flat();
-        const mappedFlightResults = (
-            await Promise.all(
-                flightResults.map(async (flightResult) => {
-                    const {flight, price, money, fareUid} = getBestFlight(
-                        flightResult.data?.requestedFlightSegmentList[0],
-                        {...preferences, cabinType},
-                        preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
-                    );
-                    return {
-                        origin: flight.departure?.airport?.code,
-                        destination: flight.arrival?.airport?.code,
-                        price,
-                        money,
-                        departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
-                        stops: flight.stops?.toString(),
-                        duration: flight.duration?.hours?.toString(),
-                        airline: flight.airline?.name,
-                        seats: flight.availableSeats?.toString(),
-                        tax: fareUid
-                            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
-                            : undefined,
-                    };
-                })
-            )
-        ).filter((flight) => validFlight(flight));
-        return {
-            results: sortFlights(mappedFlightResults.flat()).slice(
-                0,
-                getBestFlightsCount(preferences?.maxresults)
-            ),
-        };
-    } catch (error) {
-        console.log(
-            "Error while getting flights: ",
-            error.response?.data?.error ||
-            error.response?.data?.errorMessage ||
-            error.response?.data?.message
-        );
-        return {
-            statusError: error.response?.status,
-            error:
-                error.response?.data?.error ||
-                error.response?.data?.errorMessage ||
-                error.response?.data?.message,
-        };
-    }
-};
 
+    for (const city of multipleCity) {
+        for (let day = fixedDay ? 0 : calculateFirstDay(departureDate); day < (fixedDay ? 1 : lastDayOfMonthDeparture); day++) {
+            const params = buildParams(isMultipleOrigin ? city : origin, isMultipleOrigin ? destination : city, departureDate.replace("/", "-"), adults, fixedDay, fixedDay ? undefined : day, preferences?.brasilNonGol ? "true" : "false");
+            getFlightPromises.push(searchFlights(params));
+        }
+    }
+
+    const flightResults = (await Promise.all(getFlightPromises)).flat();
+    const mappedFlightResults = (await Promise.all(flightResults.map(flightResult => createFlightObject(flightResult, preferences, cabinType)))).filter(flight => validFlight(flight));
+
+    return {
+        results: sortFlights(mappedFlightResults.flat()).slice(0, getBestFlightsCount(preferences?.maxresults)),
+    };
+};
 const getFlightsRoundTrip = async (parameters) => {
     const {
         origin,
@@ -224,111 +168,36 @@ const getFlightsRoundTrip = async (parameters) => {
         cabinTypeComing,
         minDays,
         maxDays,
-        preferences,
+        preferences
     } = parameters;
-
     const lastDepartureDate = new Date(returnDate);
     const firstReturnDate = new Date(departureDate);
+    const getFlightPromises = [];
 
     lastDepartureDate.setDate(lastDepartureDate.getDate() - minDays);
     firstReturnDate.setDate(firstReturnDate.getDate() + minDays);
 
-    const getFlightPromises = [];
-
-    try {
-        for (
-            let date = new Date(departureDate);
-            date <= lastDepartureDate;
-            date.setDate(date.getDate() + 1)
-        ) {
-            const paramsGoing = buildParams(
-                origin,
-                destination,
-                date.toLocaleDateString("fr-CA"),
-                adultsGoing,
-                true,
-                undefined,
-                preferences.brasilNonGol ? "true" : "false"
-            );
-            getFlightPromises.push(searchFlights(paramsGoing));
-        }
-
-        for (
-            let dateReturn = firstReturnDate;
-            dateReturn <= new Date(returnDate);
-            dateReturn.setDate(dateReturn.getDate() + 1)
-        ) {
-            const paramsComing = buildParams(
-                destination,
-                origin,
-                dateReturn.toLocaleDateString("fr-CA"),
-                adultsComing,
-                true,
-                undefined,
-                preferences.brasilNonGol ? "true" : "false"
-            );
-            getFlightPromises.push(searchFlights(paramsComing));
-        }
-
-        const flightResults = (await Promise.all(getFlightPromises)).flat();
-        const mappedFlightResults = (
-            await Promise.all(
-                flightResults.map(async (flightResult) => {
-                    const flightSegment =
-                        flightResult.data?.requestedFlightSegmentList[0];
-                    const departureAirport =
-                        flightSegment?.airports?.departureAirportList[0]?.code;
-                    const {flight, price, money, fareUid} = getBestFlight(
-                        flightSegment,
-                        {
-                            ...preferences,
-                            cabinType: belongsToCity(departureAirport, origin)
-                                ? cabinTypeGoing
-                                : cabinTypeComing,
-                        },
-                        preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
-                    );
-                    return {
-                        origin: departureAirport,
-                        destination: flight.arrival?.airport?.code,
-                        price,
-                        money,
-                        departureDay: new Date(flight.departure?.date),
-                        stops: flight.stops?.toString(),
-                        duration: flight.duration?.hours?.toString(),
-                        airline: flight.airline?.name,
-                        seats: flight.availableSeats?.toString(),
-                        tax: fareUid
-                            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
-                            : undefined,
-                    };
-                })
-            )
-        ).filter((flight) => validFlight(flight));
-        return {
-            results: sortFlightsRoundTrip(
-                mappedFlightResults,
-                minDays,
-                maxDays,
-                origin
-            ).slice(0, getBestFlightsCount(preferences.maxresults)),
-        };
-    } catch (error) {
-        console.log(
-            "Error while getting flights: ",
-            error.response?.data?.error ||
-            error.response?.data?.errorMessage ||
-            error.response?.data?.message
-        );
-        return {
-            statusError: error.response?.status,
-            error:
-                error.response?.data?.error ||
-                error.response?.data?.errorMessage ||
-                error.response?.data?.message,
-        };
+    for (let date = new Date(departureDate); date <= lastDepartureDate; date.setDate(date.getDate() + 1)) {
+        const paramsGoing = buildParams(origin, destination, date.toLocaleDateString("fr-CA"), adultsGoing, true, undefined, preferences?.brasilNonGol ? "true" : "false");
+        getFlightPromises.push(searchFlights(paramsGoing));
     }
+
+    for (let dateReturn = firstReturnDate; dateReturn <= new Date(returnDate); dateReturn.setDate(dateReturn.getDate() + 1)) {
+        const paramsComing = buildParams(destination, origin, dateReturn.toLocaleDateString("fr-CA"), adultsComing, true, undefined, preferences?.brasilNonGol ? "true" : "false");
+        getFlightPromises.push(searchFlights(paramsComing));
+    }
+
+    const flightResults = (await Promise.all(getFlightPromises)).flat();
+    const mappedFlightResults = (await Promise.all(flightResults.map(flightResult => {
+        const cabinType = belongsToCity(flightResult.data?.requestedFlightSegmentList[0]?.airports?.departureAirportList[0]?.code, origin) ? cabinTypeGoing : cabinTypeComing;
+        return createFlightObject(flightResult, preferences, cabinType);
+    }))).filter(flight => validFlight(flight));
+
+    return {
+        results: sortFlightsRoundTrip(mappedFlightResults, minDays, maxDays, origin).slice(0, getBestFlightsCount(preferences?.maxresults)),
+    };
 };
+
 
 const buildParams = (
     origin,

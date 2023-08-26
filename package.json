@@ -9,13 +9,14 @@
     "listen": "node twitter/tweetListener.js",
     "telegram": "node telegram/telegramBot.js",
     "prepare": "husky install",
-    "api": "node api/server.js"
+    "api": "node api/server.js",
+    "index": "node cli/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1379.0",
-    "axios": "^0.27.2",
+    "axios": "^1.4.0",
     "dotenv": "^16.0.1",
     "exponential-backoff": "^3.1.0",
     "fastify": "^4.18.0",

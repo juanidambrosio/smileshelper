@@ -11,19 +11,25 @@ const sendMessageWithKeyboard = async (bot, chatId, message, keyboard) => {
     });
 };
 const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) => {
-    const lines = response.split("\n");
-    lines[0] = `${lines[0]} ${lines.length} resultados`;
+    if (!response) return;
 
-    let chunk = [];
+    const maxResultsPerMessage = 35;
+    const lines = response.split("\n");
+
+    if (lines.length > 1) {
+        lines[0] = `${lines[0]} ${lines.length - 1} resultados`;
+    }
+
+    let results = [];
     for (let i = 0; i < lines.length; i++) {
-        chunk.push(lines[i]);
-        if (chunk.length === 35 || i === lines.length - 1) {
+        results.push(lines[i]);
+        if (results.length === maxResultsPerMessage || i === lines.length - 1) {
             const options = {
                 parse_mode: "Markdown",
                 reply_markup: i === lines.length - 1 ? {inline_keyboard: inlineKeyboardMonths} : undefined,
             };
-            await bot.sendMessage(chatId, chunk.join("\n"), options);
-            chunk = [];
+            await bot.sendMessage(chatId, results.join("\n"), options);
+            results = [];
         }
     }
 };

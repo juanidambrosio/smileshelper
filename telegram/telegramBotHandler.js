@@ -3,13 +3,6 @@ const {buildError} = require("../utils/error");
 const {padMonth} = require("../utils/string");
 const {searchCityQuery, searchRegionalQuery} = require("./search");
 
-const sendMessageWithKeyboard = async (bot, chatId, message, keyboard) => {
-    await bot.sendMessage(chatId, message, {
-        parse_mode: "Markdown", reply_markup: {
-            inline_keyboard: keyboard,
-        },
-    });
-};
 const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) => {
     if (!response) return;
 

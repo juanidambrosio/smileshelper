@@ -51,6 +51,7 @@ const AFRICA = ["CAI", "SEZ", "CPT", "DAR", "ADD", "RBA"];
 const OCEANIA = ["AKL", "SYD", "MEL"];
 
 const regions = {
+    /*
   SAMERICA,
   LIMITROFE,
   ARGENTINA,
@@ -77,6 +78,7 @@ const regions = {
   INDIA,
   AFRICA,
   OCEANIA,
+  */
 };
 
 module.exports = regions;

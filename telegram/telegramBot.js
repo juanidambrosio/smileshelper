@@ -6,6 +6,7 @@ const {
   links,
   airlinesCodes,
   maxAirports,
+  emptyRegions
 } = require("../config/constants");
 const regions = require("../data/regions");
 const { applySimpleMarkdown } = require("../utils/parser");
@@ -63,7 +64,11 @@ const listen = async () => {
         ),
       ""
     );
-    bot.sendMessage(msg.chat.id, airports, { parse_mode: "MarkdownV2" });
+    if(airports.length == 0) {
+      bot.sendMessage(msg.chat.id, emptyRegions);
+    } else {
+      bot.sendMessage(msg.chat.id, airports, { parse_mode: "MarkdownV2" });
+    }
   });
 
   bot.onText(/\/cafecito/, async (msg) =>

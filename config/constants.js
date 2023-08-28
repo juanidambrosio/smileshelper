@@ -79,6 +79,7 @@ const preferencesMap = new Map([
 ]);
 
 const regionSave = "Se ha guardado la nueva region.";
+const emptyRegions = "No tiene regiones guardadas."
 
 const maxAirports = 2;
 
@@ -147,6 +148,7 @@ module.exports = {
   preferencesNone,
   preferencesMap,
   regionSave,
+  emptyRegions,
   airlinesCodes,
   maxAirports,
   tripTypes,

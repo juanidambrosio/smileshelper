@@ -80,7 +80,7 @@ const preferencesMap = new Map([
 
 const regionSave = "Se ha guardado la nueva region.";
 
-const maxAirports = 10;
+const maxAirports = 2;
 
 const tripTypes = {
   RETURN: "1",

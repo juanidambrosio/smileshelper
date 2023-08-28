@@ -10,7 +10,7 @@ const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) 
     const lines = response.split("\n");
 
     if (lines.length > 1) {
-        lines[0] = `${lines[0]} ${lines.length - 1} resultados`;
+        lines[0] = `${lines[0]} ${lines.length - 2} resultados`;
     }
 
     let results = [];

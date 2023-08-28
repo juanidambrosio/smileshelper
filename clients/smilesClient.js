@@ -25,22 +25,6 @@ const createAxiosClient = (baseURL) => axios.create({
 const smilesClient = createAxiosClient(SMILES_URL);
 const smilesTaxClient = createAxiosClient(SMILES_TAX_URL);
 
-const safeStringify = (obj, indent = 2) => {
-    let cache = [];
-    const retVal = JSON.stringify(
-        obj,
-        (key, value) =>
-            typeof value === "object" && value !== null
-                ? cache.includes(value)
-                    ? undefined // Duplicate reference found, discard key
-                    : cache.push(value) && value // Store value in our collection
-                : value,
-        indent
-    );
-    cache = null;
-    return retVal;
-};
-
 const handleError = (error, attempts, maxAttempts) => {
     if (attempts >= maxAttempts) {
         const errorDetails = {

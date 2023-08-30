@@ -41,7 +41,7 @@ const {
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, {
-    polling: true,
+    polling: { interval: 10000, params: { offset: -1, limit: 1 } },
     onlyFirstMatch: true,
   });
   await initializeDbFunctions();

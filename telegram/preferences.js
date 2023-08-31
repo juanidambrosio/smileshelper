@@ -116,7 +116,7 @@ const deletePreferences = async (msg) => {
 
     try {
         await deleteOne({
-            author_id: msg.from.username || msg.from.id.toString(),
+            author_id: msg.chat.id,
         });
         return {response: preferencesDelete};
     } catch (error) {

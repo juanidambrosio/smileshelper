@@ -248,6 +248,7 @@ const listen = async () => {
     bot.onText(/\/filtroseliminar/, async (msg) => {
         const chatId = msg.chat.id;
         const {response, error} = await deletePreferences(msg);
+        const preferences = await getPreferences(msg);
         await reloadCrons(bot)
         if (error) {
             bot.sendMessage(chatId, error);

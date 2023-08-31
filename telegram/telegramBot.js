@@ -48,59 +48,69 @@ const {
     searchMultipleDestination,
 } = require("./telegramBotHandler");
 
-async function checkForCrons(msg) {
-  let crons;
-  if (msg !== null) {
-    crons = await getCrons(msg)
-  } else {
-    crons = await getAllCrons()
-  }
-  if (crons.length !== 0) {
-    for (const c of crons) {
-      runCron(c.chroncmd, c.cmd, c.id)
-    }
-  }
-  console.log(crons)
-  return crons
+async function reloadCrons(bot) {
+    await deleteAllCrons()
+    await loadCrons(null, bot)
 }
 
-function runCron(chronCmd, searchText, chatId) {
-  cron.schedule(chronCmd, () => {
-    switch (true) {
-      case regexSingleCities.test(searchText):
-        console.log("Match 1");
-        const groups1 = regexSingleCities.exec(searchText);
-        const msg = {
-          "chat": {
-            "id": chatId
-          }
-        }
-        searchSingleDestination(groups1, msg, bot);
-        break;
-      case regexMultipleDestinationMonthly.test(searchText):
-        console.log("Match 2");
-        const groups2 = regexMultipleDestinationMonthly.exec(searchText);
-        searchMultipleDestination(groups2, msg, bot, false, false);
-        break;
-      case regexMultipleDestinationFixedDay.test(searchText):
-        console.log("Match 3");
-        const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
-        searchMultipleDestination(groups3, msg, bot, true, false);
-        break;
-      case regexMultipleOriginMonthly.test(searchText):
-        console.log("Match 4");
-        const groups4 = regexMultipleOriginMonthly.exec(searchText);
-        searchMultipleDestination(groups4, msg, bot, false, true);
-        break;
-      case regexMultipleOriginFixedDay.test(searchText):
-        console.log("Match 5");
-        const groups5 = regexMultipleOriginFixedDay.exec(searchText);
-        searchMultipleDestination(groups5, msg, bot, true, true);
-        break;        
-      default:
-        console.log("El comando no matcheo con ningún formato");
+async function deleteAllCrons() {
+    cron.getTasks().forEach(task => task.stop())
+}
+
+async function loadCrons(msg, bot) {
+    let crons;
+    if (msg !== null) {
+        crons = await getCrons(msg)
+    } else {
+        crons = await getAllCrons()
     }
-  })
+    if (crons.length !== 0) {
+        for (const c of crons) {
+            try {
+                loadCron(bot, c.chroncmd, c.cmd, c.id)
+                console.log(`loaded cron ${c.chroncmd} ${c.cmd} ${c.id}`)
+            } catch (e) {
+                console.log(`could not run cron ${c.chroncmd} ${c.cmd} ${c.id}`)
+            }
+
+        }
+    }
+    return crons
+}
+
+function loadCron(bot, chronCmd, searchText, chatId) {
+    cron.schedule(chronCmd, () => {
+        const msg = {
+            "chat": {
+                "id": chatId
+            }
+        }
+        switch (true) {
+            case regexSingleCities.test(searchText):
+                const groups1 = regexSingleCities.exec(searchText);
+                searchSingleDestination(groups1, msg, bot);
+                break;
+            case regexMultipleDestinationMonthly.test(searchText):
+                const groups2 = regexMultipleDestinationMonthly.exec(searchText);
+                searchMultipleDestination(groups2, msg, bot, false, false);
+                break;
+            case regexMultipleDestinationFixedDay.test(searchText):
+                const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
+                searchMultipleDestination(groups3, msg, bot, true, false);
+                break;
+            case regexMultipleOriginMonthly.test(searchText):
+                const groups4 = regexMultipleOriginMonthly.exec(searchText);
+                searchMultipleDestination(groups4, msg, bot, false, true);
+                break;
+            case regexMultipleOriginFixedDay.test(searchText):
+                const groups5 = regexMultipleOriginFixedDay.exec(searchText);
+                searchMultipleDestination(groups5, msg, bot, true, true);
+                break;
+            default:
+                console.log(`error: ${searchText} does not match any case`);
+        }
+    })
+
 }
 
 const getTelegramToken = () => {
@@ -111,17 +121,16 @@ const getTelegramToken = () => {
     }
 }
 const listen = async () => {
-  let bot; // Declare the bot variable outside the if-else block
+    let bot; // Declare the bot variable outside the if-else block
 
-  if (isLocal) {
-    bot = new TelegramBot(telegramApiTokenLocal, { polling: true });
-  } else {
-    bot = new TelegramBot(telegramApiToken, { polling: true });
-  }
-  await initializeDbFunctions();
-  await checkDailyAlerts(bot);
-
-  await checkForCrons(null);
+    if (isLocal) {
+        bot = new TelegramBot(telegramApiTokenLocal, {polling: true});
+    } else {
+        bot = new TelegramBot(telegramApiToken, {polling: true});
+    }
+    await initializeDbFunctions();
+    await checkDailyAlerts(bot);
+    await loadCrons(null, bot);
 
     bot.onText(/\/start/, async (msg) =>
         bot.sendMessage(msg.chat.id, telegramStart, {parse_mode: "MarkdownV2"})
@@ -242,6 +251,7 @@ const listen = async () => {
     bot.onText(/\/filtroseliminar/, async (msg) => {
         const chatId = msg.chat.id;
         const {response, error} = await deletePreferences(msg);
+        await reloadCrons(bot)
         if (error) {
             bot.sendMessage(chatId, error);
         } else {
@@ -259,28 +269,26 @@ const listen = async () => {
         }
     });
 
-  bot.onText(regexCron, async (msg, match) => {
-    console.log("Match cron regex")
-    const chatId = msg.chat.id;
-    const hour = match[1]
-    const minute = match[2]
-    const searchText = match[3]
-    const chronCmd = `0 ${minute} ${hour} * * *`
-    await setCron(chatId, chronCmd, searchText)
-    runCron(chronCmd, searchText, chatId)
-    bot.sendMessage(chatId, "Se agregó el cron correctamente");
-  })
+    bot.onText(regexCron, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const hour = match[1]
+        const minute = match[2]
+        const searchText = match[3]
+        const chronCmd = `0 ${minute} ${hour} * * *`
+        await setCron(chatId, chronCmd, searchText)
+        loadCron(chronCmd, searchText, chatId)
+        bot.sendMessage(chatId, "Se agregó el cron correctamente");
+    })
 
-  bot.onText(/\/cargarcrons/, async (msg) => {
-    const chatId = msg.chat.id;  
-    const crons = await checkForCrons(msg)
-    console.log(crons)
-    if (Object.keys(crons).length === 0) {
-      bot.sendMessage(chatId, "No hay crons");
-    } else {
-      bot.sendMessage(chatId, "Se cargaron los crons");
-    }
-  })
+    bot.onText(/\/cargarcrons/, async (msg) => {
+        const chatId = msg.chat.id;
+        const crons = await loadCrons(msg)
+        if (Object.keys(crons).length === 0) {
+            bot.sendMessage(chatId, "No hay crons");
+        } else {
+            bot.sendMessage(chatId, "Se cargaron los crons");
+        }
+    })
 };
 
 process.env.TZ = 'America/Argentina/Buenos_Aires'

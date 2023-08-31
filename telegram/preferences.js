@@ -78,11 +78,13 @@ const setRegion = async (id, name, airports) => {
 };
 
 const setCron = async (id, croncmd, cmd) => {
-  let result = { crons: { 
-    [croncmd]: cmd,
-    "chat_id": id
-  } };
-  const { getOne, upsert } = getDbFunctions();
+    let result = {
+        crons: {
+            [croncmd]: cmd,
+            "chat_id": id
+        }
+    };
+    const {getOne, upsert} = getDbFunctions();
 
     try {
         const previousPreferences =
@@ -183,25 +185,23 @@ const getAllCrons = async () => {
         const preferences = await getAllPreferencesDb(
             getAll
         );
-
-    console.log(preferences)
-    if (preferences === null) {
-      return {};
-    } else {
-      return preferences
-      .filter(obj => obj.crons) // Keep objects with 'crons' property
-      .flatMap(obj =>
-        Object.entries(obj.crons).map(([chroncmd, cmd]) => ({
-          id: obj.author_id, 
-          chroncmd,
-          cmd
-        }))
-      ); // Convert to desired format
+        if (preferences === null) {
+            return {};
+        } else {
+            return preferences
+                .filter(obj => obj.crons) // Keep objects with 'crons' property
+                .flatMap(obj =>
+                    Object.entries(obj.crons).map(([chroncmd, cmd]) => ({
+                        id: obj.author_id,
+                        chroncmd,
+                        cmd
+                    }))
+                ); // Convert to desired format
+        }
+    } catch (error) {
+        console.log(error);
+        return {error: preferencesError};
     }
-  } catch (error) {
-    console.log(error);
-    return { error: preferencesError };
-  }
 };
 
 const getCrons = async (msg) => {

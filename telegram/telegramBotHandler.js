@@ -28,6 +28,8 @@ const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) 
 };
 
 const searchSingleDestination = async (match, msg, bot) => {
+    console.log("Message")
+    console.log(msg)
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, searching);
 

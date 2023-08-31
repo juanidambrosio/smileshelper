@@ -43,7 +43,7 @@ const {
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, { polling: true });
   await initializeDbFunctions();
-  await checkDailyAlerts(bot);
+  //await checkDailyAlerts(bot);
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })

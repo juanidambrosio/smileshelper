@@ -1,4 +1,4 @@
-const { getPreferencesDb, setPreferencesDb } = require("./dbMapper");
+const { getPreferencesDb, setPreferencesDb, getAllPreferencesDb } = require("./dbMapper");
 
 const { preferencesParser } = require("../utils/parser");
 
@@ -9,6 +9,7 @@ const {
   preferencesSave,
   preferencesMap,
   regionSave,
+  cronSave
 } = require("../config/constants");
 
 const { getDbFunctions } = require("../db/dbFunctions");
@@ -70,6 +71,35 @@ const setRegion = async (id, name, airports) => {
       upsert
     );
     return { response: regionSave };
+  } catch (error) {
+    console.log(error);
+    return { error: preferencesError };
+  }
+};
+
+const setCron = async (id, croncmd, cmd) => {
+  let result = { crons: { [croncmd]: cmd } };
+  const { getOne, upsert } = getDbFunctions();
+
+  try {
+    const previousPreferences =
+      (await getPreferencesDb(
+        { id },
+        getOne
+      )) || {};
+
+    if (previousPreferences.crons) {
+      result.crons = { ...previousPreferences.crons, [croncmd]: cmd };
+    }
+
+    await setPreferencesDb(
+      {
+        id,
+        result,
+      },
+      upsert
+    );
+    return { response: cronSave };
   } catch (error) {
     console.log(error);
     return { error: preferencesError };
@@ -143,4 +173,45 @@ const getRegions = async (msg) => {
   }
 };
 
-module.exports = { setPreferences, setRegion, getPreferences, getRegions, deletePreferences };
+const getAllCrons = async () => {
+  const { getAll } = getDbFunctions();
+
+  try {
+    const preferences = await getAllPreferencesDb(
+      getAll
+    );
+
+    if (preferences === null || !preferences.crons) {
+      return {};
+    } else {
+      return preferences.crons;
+    }
+  } catch (error) {
+    console.log(error);
+    return { error: preferencesError };
+  }
+};
+
+const getCrons = async (msg) => {
+  const { getOne } = getDbFunctions();
+
+  try {
+    const preferences = await getPreferencesDb(
+      {
+        id: msg.from.username || msg.from.id.toString(),
+      },
+      getOne
+    );
+
+    if (preferences === null || !preferences.crons) {
+      return {};
+    } else {
+      return preferences.crons;
+    }
+  } catch (error) {
+    console.log(error);
+    return { error: preferencesError };
+  }
+};
+
+module.exports = { setPreferences, setRegion, getPreferences, getRegions, deletePreferences, setCron, getCrons, getAllCrons };

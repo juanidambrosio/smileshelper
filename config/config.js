@@ -85,6 +85,7 @@ const twitterClient = process.env.TWITTER_API_KEY && new TwitterApi({
 }).v2;
 
 const telegramApiToken = process.env.TELEGRAM_API_TOKEN
+const telegramApiTokenLocal = process.env.TELEGRAM_API_TOKEN_LOCAL
 
 module.exports = {
     maxResults,
@@ -92,5 +93,6 @@ module.exports = {
     responseTweetUrl,
     twitterClient,
     telegramApiToken,
+    telegramApiTokenLocal,
     ApiResponseError
 };

@@ -39,8 +39,13 @@ const getPreferencesDb = async (data, getOne) => {
   return await getOne({ author_id: id });
 };
 
+const getAllPreferencesDb = async (getAll) => {
+  return await getAll();
+};
+
 module.exports = {
   createFlightSearch,
   setPreferencesDb,
   getPreferencesDb,
+  getAllPreferencesDb,
 };

@@ -121,13 +121,10 @@ const getTelegramToken = () => {
     }
 }
 const listen = async () => {
-    let bot; // Declare the bot variable outside the if-else block
+    let bot = new TelegramBot(getTelegramToken(), {polling: true});
+    await initializeDbFunctions();
+    //await checkDailyAlerts(bot);
 
-    if (isLocal) {
-        bot = new TelegramBot(telegramApiTokenLocal, {polling: true});
-    } else {
-        bot = new TelegramBot(telegramApiToken, {polling: true});
-    }
     await initializeDbFunctions();
     await checkDailyAlerts(bot);
     await loadCrons(null, bot);

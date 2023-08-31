@@ -8,6 +8,7 @@
     "test": "jest --config jest.config.js",
     "listen": "node twitter/tweetListener.js",
     "telegram": "node telegram/telegramBot.js",
+    "telegramLocal": "TELEGRAM_LOCAL=true node telegram/telegramBot.js",
     "prepare": "husky install"
   },
   "author": "",
@@ -20,6 +21,7 @@
     "marked": "^4.2.5",
     "marked-terminal": "^5.1.1",
     "mongodb": "^4.9.0",
+    "node-cron": "^3.0.2",
     "node-emoji": "^1.11.0",
     "node-schedule": "^2.1.0",
     "node-telegram-bot-api": "^0.58.0",

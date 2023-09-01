@@ -142,14 +142,17 @@ const updateAlert = async (alert, result) => {
 };
 
 
-const saveAlert = async (id, search) => {
+const saveAlert = async (msg, search) => {
+    const chatId = msg.chat.id;
+
     // Initialize a new alert object
     const newAlert = {
         "id": uuidv4(),
         "cron": `0 0 */3 * * *`, // Every 3 hours
         "search": search,
-        "chat_id": id,
+        "chat_id": chatId,
         "previous_result": null,
+        "username": msg.from.username || msg.from.id.toString(),
     };
 
     const {getOne, upsert} = getDbFunctions();

@@ -134,7 +134,7 @@ async function handleSearch(searchText, msg, bot, send_message) {
 }
 
 async function loadAlert(bot, alert, just_created = false) {
-    const msg = {"chat": {"id": alert.chat_id}};
+    const msg = {"chat": {"id": alert.chat_id, "username": `cron: ${alert.username}`}};
     const searchText = alert.search;
 
     if (just_created) {
@@ -344,12 +344,11 @@ const listen = async () => {
     bot.onText(regexAlert, async (msg, match) => {
         const chatId = msg.chat.id;
         const searchText = match[1]
+        const {alert} = await saveAlert(msg, searchText);
 
-        const {alert} = await saveAlert(chatId, searchText);
-
-        bot.sendMessage(chatId, "Procesando la alerta");
+        await bot.sendMessage(chatId, "Procesando la alerta");
         await loadAlert(bot, alert, true)
-        bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
+        await bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
     })
 
     bot.onText(regexCron, async (msg, match) => {
@@ -359,12 +358,12 @@ const listen = async () => {
         const searchText = match[3]
 
         if (hour !== "*" && (parseInt(hour) > 23 || parseInt(hour) < 0)) {
-            bot.sendMessage(chatId, "La hora debe estar entre 0 y 23");
+            await bot.sendMessage(chatId, "La hora debe estar entre 0 y 23");
             return
         }
 
         if (minute !== "*" && (parseInt(minute) > 59 || parseInt(minute) < 0)) {
-            bot.sendMessage(chatId, "El minuto debe estar entre 0 y 59");
+            await bot.sendMessage(chatId, "El minuto debe estar entre 0 y 59");
             return
         }
 
@@ -372,18 +371,18 @@ const listen = async () => {
 
         await setCron(chatId, chronCmd, searchText)
         loadCron(bot, chronCmd, searchText, chatId)
-        bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
+        await bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
     })
 
     bot.onText(/\/vercrons/, async (msg) => {
         const chatId = msg.chat.id;
         const crons = await getCrons(msg)
         if (crons.length === 0) {
-            bot.sendMessage(chatId, "No hay crons");
+            await bot.sendMessage(chatId, "No hay crons");
         } else {
-            bot.sendMessage(chatId, "Lista de crons:");
+            await bot.sendMessage(chatId, "Lista de crons:");
             for (const cron of crons) {
-                bot.sendMessage(chatId, `${cron.chroncmd} - ${cron.cmd}`);
+                await bot.sendMessage(chatId, `${cron.chroncmd} - ${cron.cmd}`);
             }
         }
     })

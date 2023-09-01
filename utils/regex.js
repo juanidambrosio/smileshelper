@@ -19,7 +19,7 @@ const regexCustomRegion = /^\/nuevaregion (\w{4,})\s((?:\w{3}\s?)+)$/i;
 
 const regexCron = /\/agregarcron\s+([\d\*]+)\s+([\d\*]+)\s+([A-Z\s\d-]+)/;
 
-const regexAlert = /\/agregaralerta\s+([A-Z\s\d-]+)\s+([A-Z\s\d-]+)\s+([\d-]+)/;
+const regexAlert =  /\/agregaralerta\s+([A-Z\s\d-]+)/;
 
 module.exports = {
   regexSingleCities,

@@ -11,7 +11,8 @@ const {
     preferencesSave,
     preferencesMap,
     regionSave,
-    cronSave, alertSave
+    cronSave,
+    alertSave
 } = require("../config/constants");
 
 const {getDbFunctions} = require("../db/dbFunctions");
@@ -80,40 +81,40 @@ const setRegion = async (id, name, airports) => {
 };
 
 const findAlert = async (targetAlert) => {
-    const { getOne } = getDbFunctions();
+    const {getOne} = getDbFunctions();
 
     try {
         // Fetch existing preferences for the chat ID associated with the target alert
         const chatId = targetAlert.chat_id; // Assuming the targetAlert object has a chat_id field
-        const previousPreferences = (await getPreferencesDb({ id: chatId }, getOne)) || {};
+        const previousPreferences = (await getPreferencesDb({id: chatId}, getOne)) || {};
 
         // If there are existing alerts, find the one that matches the target alert
         if (Array.isArray(previousPreferences.alerts)) {
             const foundAlert = previousPreferences.alerts.find(existingAlert => existingAlert.id === targetAlert.id);
 
             if (foundAlert) {
-                return { response: 'Alert found', alert: foundAlert };
+                return {response: 'Alert found', alert: foundAlert};
             } else {
-                return { error: 'Alert not found' };
+                return {error: 'Alert not found'};
             }
         } else {
-            return { error: 'No existing alerts' };
+            return {error: 'No existing alerts'};
         }
     } catch (error) {
         console.log(error);
-        return { error: 'Failed to find alert' };
+        return {error: 'Failed to find alert'};
     }
 };
 
 
 const updateAlert = async (alert, result) => {
     // Initialize database functions
-    const { getOne, upsert } = getDbFunctions();
+    const {getOne, upsert} = getDbFunctions();
 
     try {
         // Fetch existing preferences for the chat ID
         const chatId = alert.chat_id; // Assuming the alert object has a chat_id field
-        const previousPreferences = (await getPreferencesDb({ id: chatId }, getOne)) || {};
+        const previousPreferences = (await getPreferencesDb({id: chatId}, getOne)) || {};
 
         // If there are existing alerts, find the one with the same ID and update it
         if (Array.isArray(previousPreferences.alerts)) {
@@ -124,37 +125,38 @@ const updateAlert = async (alert, result) => {
                 previousPreferences.alerts[alertIndex].previous_result = result;
 
                 // Save the updated preferences back to the database
-                await setPreferencesDb({ id: chatId, result: previousPreferences }, upsert);
+                await setPreferencesDb({id: chatId, result: previousPreferences}, upsert);
 
-                return { response: 'Alert updated successfully', alert: previousPreferences.alerts[alertIndex] };
+                return {response: 'Alert updated successfully', alert: previousPreferences.alerts[alertIndex]};
             } else {
                 console.log('Alert not found')
-                return { error: 'Alert not found' };
+                return {error: 'Alert not found'};
             }
         } else {
-            return { error: 'No existing alerts' };
+            return {error: 'No existing alerts'};
         }
     } catch (error) {
         console.log(error);
-        return { error: 'Failed to update alert' };
+        return {error: 'Failed to update alert'};
     }
 };
 
 
-const setAlert = async (id, alert) => {
+const saveAlert = async (id, search) => {
     // Initialize a new alert object
     const newAlert = {
         "id": uuidv4(),
-        "search": alert,
+        "cron": `0 0 */3 * * *`, // Every 3 hours
+        "search": search,
         "chat_id": id,
         "previous_result": null,
     };
 
-    const { getOne, upsert } = getDbFunctions();
+    const {getOne, upsert} = getDbFunctions();
 
     try {
         // Fetch existing preferences for the chat ID
-        const previousPreferences = (await getPreferencesDb({ id }, getOne)) || {};
+        const previousPreferences = (await getPreferencesDb({id}, getOne)) || {};
 
         // Initialize result object
         let result = {
@@ -173,12 +175,12 @@ const setAlert = async (id, alert) => {
         };
 
         // Insert or update the preferences in the database
-        await setPreferencesDb({ id, result: updatedPreferences }, upsert);
+        await setPreferencesDb({id, result: updatedPreferences}, upsert);
 
-        return { response: 'Alert saved successfully', alert: newAlert };
+        return {response: alertSave, alert: newAlert};
     } catch (error) {
         console.log(error);
-        return { error: 'Failed to save preferences' };
+        return {error: 'Failed to save preferences'};
     }
 };
 
@@ -283,6 +285,26 @@ const getRegions = async (msg) => {
     }
 };
 
+const getAllAlerts = async () => {
+    const {getAll} = getDbFunctions();
+
+    try {
+        const preferences = await getAllPreferencesDb(getAll);
+
+        if (preferences === null) {
+            return [];
+        } else {
+            return preferences
+                .filter(obj => Array.isArray(obj.alerts) && obj.alerts.length > 0) // Keep objects with 'alerts' property that is an array and not empty
+                .flatMap(obj => obj.alerts); // Return the alerts as they are
+        }
+    } catch (error) {
+        console.log(error);
+        return {error: 'Failed to fetch all alerts'};
+    }
+};
+
+
 const getAllCrons = async () => {
     const {getAll} = getDbFunctions();
 
@@ -342,9 +364,10 @@ module.exports = {
     getRegions,
     deletePreferences,
     setCron,
-    setAlert,
+    saveAlert,
     updateAlert,
     findAlert,
     getCrons,
-    getAllCrons
+    getAllCrons,
+    getAllAlerts
 };

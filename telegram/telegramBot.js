@@ -37,26 +37,48 @@ const {
     deletePreferences,
     setRegion,
     setCron,
-    setAlert,
     updateAlert,
     findAlert,
     getCrons,
-    getAllCrons
+    getAllCrons,
+    getAllAlerts,
+    saveAlert,
 } = require("./preferences");
 
 const {initializeDbFunctions} = require("../db/dbFunctions");
 const {
     searchSingleDestination,
     searchMultipleDestination,
+    sendMessageInChunks,
+    getInlineKeyboardMonths,
 } = require("./telegramBotHandler");
 
 async function reloadCrons(bot) {
+    console.log("reloading crons and alerts")
     await deleteAllCrons()
     await loadCrons(null, bot)
+    await loadAlerts(bot)
+    console.log("crons and alerts reloaded")
 }
 
 async function deleteAllCrons() {
     cron.getTasks().forEach(task => task.stop())
+}
+
+async function loadAlerts(bot) {
+    let alerts = await getAllAlerts()
+    if (alerts.length !== 0) {
+        for (const c of alerts) {
+            try {
+                loadAlert(bot, c)
+                console.log(`loaded alert ${c.cron} ${c.search}`)
+            } catch (e) {
+                console.log(`could not load alert ${c.cron} ${c.search}`)
+            }
+
+        }
+    }
+    return alerts
 }
 
 async function loadCrons(msg, bot) {
@@ -80,109 +102,79 @@ async function loadCrons(msg, bot) {
     return crons
 }
 
-function loadAlert(bot, chronCmd, alert) {
-    cron.schedule(chronCmd, () => {
-        const msg = {
-            "chat": {
-                "id": alert.chat_id
-            }
-        }
-        const searchText = alert.search
-        let res;
-        switch (true) {
-            case regexSingleCities.test(searchText):
-                const groups1 = regexSingleCities.exec(searchText);
-                res = searchSingleDestination(groups1, msg, bot, false);
-                break;
-            case regexMultipleDestinationMonthly.test(searchText):
-                const groups2 = regexMultipleDestinationMonthly.exec(searchText);
-                res = searchMultipleDestination(groups2, msg, bot, false, false, false);
-                break;
-            case regexMultipleDestinationFixedDay.test(searchText):
-                const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
-                res = searchMultipleDestination(groups3, msg, bot, true, false, false);
-                break;
-            case regexMultipleOriginMonthly.test(searchText):
-                const groups4 = regexMultipleOriginMonthly.exec(searchText);
-                res = searchMultipleDestination(groups4, msg, bot, false, true, false);
-                break;
-            case regexMultipleOriginFixedDay.test(searchText):
-                const groups5 = regexMultipleOriginFixedDay.exec(searchText);
-                res = searchMultipleDestination(groups5, msg, bot, true, true, false);
-                break;
-            default:
-                console.log(`error: ${searchText} does not match any case`);
-        }
-        if (!res) {
-            return
-        }
-        const previous_response = await findAlert(alert)
-        if (previous_response === res || previous_response == null) {
-            const res = await updateAlert(alert, res)
-            return
-        }
-
-
-        switch (true) {
-            case regexSingleCities.test(searchText):
-                const groups1 = regexSingleCities.exec(searchText);
-                res = searchSingleDestination(groups1, msg, bot);
-                break;
-            case regexMultipleDestinationMonthly.test(searchText):
-                const groups2 = regexMultipleDestinationMonthly.exec(searchText);
-                res = searchMultipleDestination(groups2, msg, bot, false, false);
-                break;
-            case regexMultipleDestinationFixedDay.test(searchText):
-                const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
-                res = searchMultipleDestination(groups3, msg, bot, true, false);
-                break;
-            case regexMultipleOriginMonthly.test(searchText):
-                const groups4 = regexMultipleOriginMonthly.exec(searchText);
-                res = searchMultipleDestination(groups4, msg, bot, false, true);
-                break;
-            case regexMultipleOriginFixedDay.test(searchText):
-                const groups5 = regexMultipleOriginFixedDay.exec(searchText);
-                res = searchMultipleDestination(groups5, msg, bot, true, true);
-                break;
-            default:
-                console.log(`error: ${searchText} does not match any case`);
-        }
-
-    })
+async function handleSearch(searchText, msg, bot, send_message) {
+    let res;
+    let groups;
+    switch (true) {
+        case regexSingleCities.test(searchText):
+            groups = regexSingleCities.exec(searchText);
+            res = await searchSingleDestination(groups, msg, bot, send_message);
+            break;
+        case regexMultipleDestinationMonthly.test(searchText):
+            groups = regexMultipleDestinationMonthly.exec(searchText);
+            res = await searchMultipleDestination(groups, msg, bot, false, false, send_message);
+            break;
+        case regexMultipleDestinationFixedDay.test(searchText):
+            groups = regexMultipleDestinationFixedDay.exec(searchText);
+            res = await searchMultipleDestination(groups, msg, bot, true, false, send_message);
+            break;
+        case regexMultipleOriginMonthly.test(searchText):
+            groups = regexMultipleOriginMonthly.exec(searchText);
+            res = await searchMultipleDestination(groups, msg, bot, false, true, send_message);
+            break;
+        case regexMultipleOriginFixedDay.test(searchText):
+            groups = regexMultipleOriginFixedDay.exec(searchText);
+            res = await searchMultipleDestination(groups, msg, bot, true, true, send_message);
+            break;
+        default:
+            console.log(`error: ${searchText} does not match any case`);
+            res = null;
+    }
+    return {res: res, groups: groups}
 }
 
-function loadCron(bot, chronCmd, searchText, chatId) {
-    cron.schedule(chronCmd, () => {
-        const msg = {
-            "chat": {
-                "id": chatId
+async function loadAlert(bot, alert, just_created = false) {
+    const msg = {"chat": {"id": alert.chat_id}};
+    const searchText = alert.search;
+
+    if (just_created) {
+        await handleSearch(searchText, msg, bot, just_created);
+    }
+
+    cron.schedule(alert.cron, async () => {
+        try {
+            const {res, groups} = await handleSearch(searchText, msg, bot, false);
+            if (!res) return;
+
+            const saved_alert = await findAlert(alert);
+            if (saved_alert.alert.previous_result == null) {
+                await updateAlert(alert, res);
+                return;
             }
+
+            if (saved_alert.alert.previous_result === res) return;
+
+            await updateAlert(alert, res);
+
+            await bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró nuevos vuelos`);
+            await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));
+        } catch (e) {
+            console.log(`error running alert: ${e.message}`);
         }
-        switch (true) {
-            case regexSingleCities.test(searchText):
-                const groups1 = regexSingleCities.exec(searchText);
-                searchSingleDestination(groups1, msg, bot);
-                break;
-            case regexMultipleDestinationMonthly.test(searchText):
-                const groups2 = regexMultipleDestinationMonthly.exec(searchText);
-                searchMultipleDestination(groups2, msg, bot, false, false);
-                break;
-            case regexMultipleDestinationFixedDay.test(searchText):
-                const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
-                searchMultipleDestination(groups3, msg, bot, true, false);
-                break;
-            case regexMultipleOriginMonthly.test(searchText):
-                const groups4 = regexMultipleOriginMonthly.exec(searchText);
-                searchMultipleDestination(groups4, msg, bot, false, true);
-                break;
-            case regexMultipleOriginFixedDay.test(searchText):
-                const groups5 = regexMultipleOriginFixedDay.exec(searchText);
-                searchMultipleDestination(groups5, msg, bot, true, true);
-                break;
-            default:
-                console.log(`error: ${searchText} does not match any case`);
+
+    });
+}
+
+// Refactored loadCron function
+function loadCron(bot, chronCmd, searchText, chatId) {
+    cron.schedule(chronCmd, async () => {
+        try {
+            const msg = {"chat": {"id": chatId}};
+            await handleSearch(searchText, msg, bot);
+        } catch (e) {
+            console.log(`error running cron: ${e.message}`);
         }
-    })
+    });
 }
 
 const getTelegramToken = () => {
@@ -196,6 +188,7 @@ const listen = async () => {
     let bot = new TelegramBot(getTelegramToken(), {polling: true});
     await initializeDbFunctions();
     await loadCrons(null, bot);
+    await loadAlerts(bot);
 
     // Set your commands here
     await bot.setMyCommands([
@@ -204,9 +197,10 @@ const listen = async () => {
         {command: '/links', description: 'Enlaces útiles'},
         {command: '/aerolineas', description: 'Lista de códigos de aerolíneas'},
         {command: '/filtros', description: 'Ver filtros establecidos'},
-        {command: '/filtroseliminar', description: 'Eliminar filtros y crons'},
+        {command: '/filtroseliminar', description: 'Eliminar filtros, crons y alertas'},
         {command: '/vercrons', description: 'Listar crons '},
         {command: '/agregarcron', description: 'Agregar cron'},
+        {command: '/agregaralerta', description: 'Agregar alerta'},
         // Add more commands as needed
     ]);
 
@@ -329,7 +323,6 @@ const listen = async () => {
     bot.onText(/\/filtroseliminar/, async (msg) => {
         const chatId = msg.chat.id;
         const {response, error} = await deletePreferences(msg);
-        const preferences = await getPreferences(msg);
         await reloadCrons(bot)
         if (error) {
             bot.sendMessage(chatId, error);
@@ -350,14 +343,13 @@ const listen = async () => {
 
     bot.onText(regexAlert, async (msg, match) => {
         const chatId = msg.chat.id;
-        const searchText = match[3]
+        const searchText = match[1]
 
-        const {alert} = await setAlert(chatId, searchText);
+        const {alert} = await saveAlert(chatId, searchText);
 
-        const everyOneHour = `0 * 1 * * *`
-        loadAlert(bot, everyOneHour, alert)
-
-        bot.sendMessage(chatId, "Se agregó la alerta correctamente");
+        bot.sendMessage(chatId, "Procesando la alerta");
+        await loadAlert(bot, alert, true)
+        bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
     })
 
     bot.onText(regexCron, async (msg, match) => {
@@ -380,7 +372,7 @@ const listen = async () => {
 
         await setCron(chatId, chronCmd, searchText)
         loadCron(bot, chronCmd, searchText, chatId)
-        bot.sendMessage(chatId, "Se agregó el cron correctamente");
+        bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
     })
 
     bot.onText(/\/vercrons/, async (msg) => {

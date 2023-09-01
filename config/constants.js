@@ -46,7 +46,7 @@ const airlinesCodes = `El listado de aerolíneas disponibles en Smiles es el sig
 
 const preferencesSave = "Se han guardado sus filtros.";
 
-const preferencesDelete = "Se han eliminado sus filtros.";
+const preferencesDelete = "Se han eliminado sus filtros, crons y alertas.";
 
 const preferencesNone = "No tiene filtros guardados.";
 

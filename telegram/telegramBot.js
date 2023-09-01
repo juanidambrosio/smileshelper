@@ -130,8 +130,9 @@ const listen = async () => {
         {command: '/links', description: 'Enlaces útiles'},
         {command: '/aerolineas', description: 'Lista de códigos de aerolíneas'},
         {command: '/filtros', description: 'Ver filtros establecidos'},
-        {command: '/filtroseliminar', description: 'Eliminar filtros'},
-        {command: '/vercrons', description: 'Ver tareas programadas'},
+        {command: '/filtroseliminar', description: 'Eliminar filtros y crons'},
+        {command: '/vercrons', description: 'Listar crons '},
+        {command: '/agregarcron', description: 'Agregar cron'},
         // Add more commands as needed
     ]);
 

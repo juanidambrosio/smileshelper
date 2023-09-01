@@ -27,45 +27,57 @@ const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) 
     }
 };
 
-const searchSingleDestination = async (match, msg, bot) => {
+const searchSingleDestination = async (match, msg, bot, send_message = true) => {
+    console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
+
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
+    if (send_message) {
+        bot.sendMessage(chatId, searching);
+    }
 
     try {
-        const [, origin, destination] = match;
         const {response} = await searchCityQuery(msg, match);
+        const inlineKeyboardMonths = getInlineKeyboardMonths(match);
 
-        console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
+        if (send_message) {
+            await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+        }
 
-        const inlineKeyboardMonths = getInlineKeyboardMonths(origin, destination);
-        await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+        return response
     } catch (error) {
         console.error(error.message);
-        bot.sendMessage(chatId, buildError(error.message));
+        if (send_message) {
+            bot.sendMessage(chatId, buildError(error.message));
+        }
+
     }
 };
-const searchMultipleDestination = async (match, msg, bot, fixedDay, isMultipleOrigin) => {
+const searchMultipleDestination = async (match, msg, bot, fixedDay, isMultipleOrigin, send_message = true) => {
+    console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
+    if (send_message) {
+        bot.sendMessage(chatId, searching);
+    }
 
     try {
-        const [, origin, destination] = match;
         const {response} = await searchRegionalQuery(msg, match, fixedDay, isMultipleOrigin);
-
-        console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
-
-        const inlineKeyboardMonths = getInlineKeyboardMonths(origin, destination);
-        await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+        if (send_message) {
+            await sendMessageInChunks(bot, chatId, response, getInlineKeyboardMonths(match));
+        }
+        return response
     } catch (error) {
         console.error(error.message);
-        bot.sendMessage(chatId, buildError(error.message));
+        if (send_message) {
+            bot.sendMessage(chatId, buildError(error.message));
+        }
     }
 };
-const getInlineKeyboardMonths = (origin, destination) => {
+const getInlineKeyboardMonths = (match) => {
+    const [, origin, destination] = match;
     return monthSections.map((section, sectionIndex) => section.map((month, monthIndex) => ({
         text: month.name,
         callback_data: `${origin} ${destination} ${padMonth(section.length * sectionIndex + (monthIndex + 1))}`.trim(),
     })));
 };
 
-module.exports = {searchSingleDestination, searchMultipleDestination};
+module.exports = {searchSingleDestination, searchMultipleDestination, sendMessageInChunks, getInlineKeyboardMonths};

@@ -25,7 +25,8 @@
     "node-emoji": "^1.11.0",
     "node-schedule": "^2.1.0",
     "node-telegram-bot-api": "^0.58.0",
-    "twitter-api-v2": "^1.12.5"
+    "twitter-api-v2": "^1.12.5",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.20.2",

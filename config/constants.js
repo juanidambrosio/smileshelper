@@ -46,7 +46,7 @@ const airlinesCodes = `El listado de aerolíneas disponibles en Smiles es el sig
 
 const preferencesSave = "Se han guardado sus filtros.";
 
-const preferencesDelete = "Se han eliminado sus filtros.";
+const preferencesDelete = "Se han eliminado sus filtros, crons y alertas.";
 
 const preferencesNone = "No tiene filtros guardados.";
 
@@ -64,7 +64,8 @@ const preferencesMap = new Map([
 ]);
 
 const regionSave = "Se ha guardado la nueva region.";
-const cronSave = "Se ha guardado la nueva tares.";
+const cronSave = "Se ha guardado el nuevo cron.";
+const alertSave = "Se ha guardado la nueva alerta.";
 
 const maxAirports = 10;
 
@@ -113,6 +114,7 @@ module.exports = {
   SMILES_TAX_URL,
   preferencesSave,
   cronSave,
+  alertSave,
   preferencesDelete,
   preferencesError,
   preferencesNone,

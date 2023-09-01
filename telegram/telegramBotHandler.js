@@ -27,7 +27,7 @@ const sendMessageInChunks = async (bot, chatId, response, inlineKeyboardMonths) 
     }
 };
 
-const searchSingleDestination = async (match, msg, bot) => {
+const searchSingleDestination = async (match, msg, bot, send_message = true) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, searching);
 
@@ -38,13 +38,18 @@ const searchSingleDestination = async (match, msg, bot) => {
         console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
 
         const inlineKeyboardMonths = getInlineKeyboardMonths(origin, destination);
-        await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+
+        if (send_message) {
+            await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+        }
+
+        return response
     } catch (error) {
         console.error(error.message);
         bot.sendMessage(chatId, buildError(error.message));
     }
 };
-const searchMultipleDestination = async (match, msg, bot, fixedDay, isMultipleOrigin) => {
+const searchMultipleDestination = async (match, msg, bot, fixedDay, isMultipleOrigin, send_message = true) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, searching);
 
@@ -55,7 +60,12 @@ const searchMultipleDestination = async (match, msg, bot, fixedDay, isMultipleOr
         console.log(`${new Date().toLocaleTimeString()} ${msg.chat.username} ${match[0]}`);
 
         const inlineKeyboardMonths = getInlineKeyboardMonths(origin, destination);
-        await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+
+        if (send_message) {
+            await sendMessageInChunks(bot, chatId, response, inlineKeyboardMonths);
+        }
+
+        return response
     } catch (error) {
         console.error(error.message);
         bot.sendMessage(chatId, buildError(error.message));

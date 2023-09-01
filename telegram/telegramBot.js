@@ -20,7 +20,8 @@ const {
     regexRoundTrip,
     regexFilters,
     regexCustomRegion,
-    regexCron
+    regexCron,
+    regexAlert
 } = require("../utils/regex");
 
 const {searchRoundTrip} = require("./search");
@@ -36,6 +37,9 @@ const {
     deletePreferences,
     setRegion,
     setCron,
+    setAlert,
+    updateAlert,
+    findAlert,
     getCrons,
     getAllCrons
 } = require("./preferences");
@@ -76,6 +80,77 @@ async function loadCrons(msg, bot) {
     return crons
 }
 
+function loadAlert(bot, chronCmd, alert) {
+    cron.schedule(chronCmd, () => {
+        const msg = {
+            "chat": {
+                "id": alert.chat_id
+            }
+        }
+        const searchText = alert.search
+        let res;
+        switch (true) {
+            case regexSingleCities.test(searchText):
+                const groups1 = regexSingleCities.exec(searchText);
+                res = searchSingleDestination(groups1, msg, bot, false);
+                break;
+            case regexMultipleDestinationMonthly.test(searchText):
+                const groups2 = regexMultipleDestinationMonthly.exec(searchText);
+                res = searchMultipleDestination(groups2, msg, bot, false, false, false);
+                break;
+            case regexMultipleDestinationFixedDay.test(searchText):
+                const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
+                res = searchMultipleDestination(groups3, msg, bot, true, false, false);
+                break;
+            case regexMultipleOriginMonthly.test(searchText):
+                const groups4 = regexMultipleOriginMonthly.exec(searchText);
+                res = searchMultipleDestination(groups4, msg, bot, false, true, false);
+                break;
+            case regexMultipleOriginFixedDay.test(searchText):
+                const groups5 = regexMultipleOriginFixedDay.exec(searchText);
+                res = searchMultipleDestination(groups5, msg, bot, true, true, false);
+                break;
+            default:
+                console.log(`error: ${searchText} does not match any case`);
+        }
+        if (!res) {
+            return
+        }
+        const previous_response = await findAlert(alert)
+        if (previous_response === res || previous_response == null) {
+            const res = await updateAlert(alert, res)
+            return
+        }
+
+
+        switch (true) {
+            case regexSingleCities.test(searchText):
+                const groups1 = regexSingleCities.exec(searchText);
+                res = searchSingleDestination(groups1, msg, bot);
+                break;
+            case regexMultipleDestinationMonthly.test(searchText):
+                const groups2 = regexMultipleDestinationMonthly.exec(searchText);
+                res = searchMultipleDestination(groups2, msg, bot, false, false);
+                break;
+            case regexMultipleDestinationFixedDay.test(searchText):
+                const groups3 = regexMultipleDestinationFixedDay.exec(searchText);
+                res = searchMultipleDestination(groups3, msg, bot, true, false);
+                break;
+            case regexMultipleOriginMonthly.test(searchText):
+                const groups4 = regexMultipleOriginMonthly.exec(searchText);
+                res = searchMultipleDestination(groups4, msg, bot, false, true);
+                break;
+            case regexMultipleOriginFixedDay.test(searchText):
+                const groups5 = regexMultipleOriginFixedDay.exec(searchText);
+                res = searchMultipleDestination(groups5, msg, bot, true, true);
+                break;
+            default:
+                console.log(`error: ${searchText} does not match any case`);
+        }
+
+    })
+}
+
 function loadCron(bot, chronCmd, searchText, chatId) {
     cron.schedule(chronCmd, () => {
         const msg = {
@@ -108,7 +183,6 @@ function loadCron(bot, chronCmd, searchText, chatId) {
                 console.log(`error: ${searchText} does not match any case`);
         }
     })
-
 }
 
 const getTelegramToken = () => {
@@ -274,6 +348,18 @@ const listen = async () => {
         }
     });
 
+    bot.onText(regexAlert, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const searchText = match[3]
+
+        const {alert} = await setAlert(chatId, searchText);
+
+        const everyOneHour = `0 * 1 * * *`
+        loadAlert(bot, everyOneHour, alert)
+
+        bot.sendMessage(chatId, "Se agregó la alerta correctamente");
+    })
+
     bot.onText(regexCron, async (msg, match) => {
         const chatId = msg.chat.id;
         const hour = match[1]
@@ -303,9 +389,9 @@ const listen = async () => {
         if (crons.length === 0) {
             bot.sendMessage(chatId, "No hay crons");
         } else {
-            bot.sendMessage(chatId, "Lista de crons:" );
-            for (const cron of crons) {            
-              bot.sendMessage(chatId, `${cron.chroncmd} - ${cron.cmd}` );
+            bot.sendMessage(chatId, "Lista de crons:");
+            for (const cron of crons) {
+                bot.sendMessage(chatId, `${cron.chroncmd} - ${cron.cmd}`);
             }
         }
     })

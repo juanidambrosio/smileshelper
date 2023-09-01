@@ -64,7 +64,8 @@ const preferencesMap = new Map([
 ]);
 
 const regionSave = "Se ha guardado la nueva region.";
-const cronSave = "Se ha guardado la nueva tares.";
+const cronSave = "Se ha guardado el nuevo cron.";
+const alertSave = "Se ha guardado la nueva alerta.";
 
 const maxAirports = 10;
 
@@ -113,6 +114,7 @@ module.exports = {
   SMILES_TAX_URL,
   preferencesSave,
   cronSave,
+  alertSave,
   preferencesDelete,
   preferencesError,
   preferencesNone,

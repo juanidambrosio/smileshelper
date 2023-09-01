@@ -266,9 +266,21 @@ const listen = async () => {
         const hour = match[1]
         const minute = match[2]
         const searchText = match[3]
+
+        if (hour !== "*" && (parseInt(hour) > 23 || parseInt(hour) < 0)) {
+            bot.sendMessage(chatId, "La hora debe estar entre 0 y 23");
+            return
+        }
+
+        if (minute !== "*" && (parseInt(minute) > 59 || parseInt(minute) < 0)) {
+            bot.sendMessage(chatId, "El minuto debe estar entre 0 y 59");
+            return
+        }
+
         const chronCmd = `0 ${minute} ${hour} * * *`
+
         await setCron(chatId, chronCmd, searchText)
-        loadCron(chronCmd, searchText, chatId)
+        loadCron(bot, chronCmd, searchText, chatId)
         bot.sendMessage(chatId, "Se agregó el cron correctamente");
     })
 

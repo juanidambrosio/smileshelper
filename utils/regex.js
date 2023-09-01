@@ -17,7 +17,7 @@ const regexFilters =
 
 const regexCustomRegion = /^\/nuevaregion (\w{4,})\s((?:\w{3}\s?)+)$/i;
 
-const regexCron = /\/agregarcron\s+(\d+)\s+(\d+)\s+([A-Z\s\d-]+)/;
+const regexCron = /\/agregarcron\s+([\d\*]+)\s+([\d\*]+)\s+([A-Z\s\d-]+)/;
 
 module.exports = {
   regexSingleCities,

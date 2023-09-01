@@ -210,15 +210,19 @@ const getCrons = async (msg) => {
     try {
         const preferences = await getPreferencesDb(
             {
-                id: msg.from.username || msg.from.id.toString(),
+                id: msg.chat.id,
             },
             getOne
         );
 
         if (preferences === null || !preferences.crons) {
-            return {};
+            return [];
         } else {
-            return preferences.crons;
+          const cronsArray = Object.entries(preferences.crons).map(([chroncmd, cmd]) => ({
+            chroncmd,
+            cmd,
+          }));
+          return cronsArray;
         }
     } catch (error) {
         console.log(error);

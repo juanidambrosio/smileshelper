@@ -284,13 +284,16 @@ const listen = async () => {
         bot.sendMessage(chatId, "Se agregó el cron correctamente");
     })
 
-    bot.onText(/\/cargarcrons/, async (msg) => {
+    bot.onText(/\/vercrons/, async (msg) => {
         const chatId = msg.chat.id;
-        const crons = await loadCrons(msg)
-        if (Object.keys(crons).length === 0) {
+        const crons = await getCrons(msg)
+        if (crons.length === 0) {
             bot.sendMessage(chatId, "No hay crons");
         } else {
-            bot.sendMessage(chatId, "Se cargaron los crons");
+            bot.sendMessage(chatId, "Lista de crons:" );
+            for (const cron of crons) {            
+              bot.sendMessage(chatId, `${cron.chroncmd} - ${cron.cmd}` );
+            }
         }
     })
 };

@@ -23,8 +23,6 @@ const {
     regexCron
 } = require("../utils/regex");
 
-const {checkDailyAlerts} = require("./alerts");
-
 const {searchRoundTrip} = require("./search");
 
 const cron = require("node-cron");
@@ -123,10 +121,6 @@ const getTelegramToken = () => {
 const listen = async () => {
     let bot = new TelegramBot(getTelegramToken(), {polling: true});
     await initializeDbFunctions();
-    //await checkDailyAlerts(bot);
-
-    await initializeDbFunctions();
-    await checkDailyAlerts(bot);
     await loadCrons(null, bot);
 
     bot.onText(/\/start/, async (msg) =>

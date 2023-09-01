@@ -27,7 +27,7 @@ const checkDailyAlerts = async (bot) => {
       const success = await checkPromoFlight(text);
       progressBar.increment();
       if (!success) {
-        console.log(`Couldnt obtain result for alert query ${text.journey}`);
+        console.log(`Couldn't obtain result for alert query ${text.journey}`);
         failedRequests++;
       }
     }

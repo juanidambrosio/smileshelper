@@ -38,35 +38,35 @@ const handleError = (error, attempts, maxAttempts) => {
     return {data: {requestedFlightSegmentList: [{flightList: []}]}};
 };
 
+const API_FAILURE_RETRY_CODES = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
+const FLIGHT_LIST_ERRORS = [
+    "TypeError: Cannot read properties of undefined (reading 'flightList')",
+    "TypeError: Cannot read property 'flightList' of undefined",
+];
+const SERVICE_UNAVAILABLE_STATUS = 503;
+
+const shouldRetry = (error) => {
+    const isFlightListRelatedError = FLIGHT_LIST_ERRORS.includes(error.response?.data?.error);
+    const isServiceUnavailable = error.response?.status === SERVICE_UNAVAILABLE_STATUS;
+    return isFlightListRelatedError || isServiceUnavailable || API_FAILURE_RETRY_CODES.includes(error.code);
+};
 
 const searchFlights = async (params) => {
-    const maxAttempts = 10; // Set your maximum number of attempts here
+    const maxAttempts = 3;
     let attempts = 0;
 
     const response = await backOff(
         async () => {
-            try {
-                attempts++;
-                const {data} = await smilesClient.get("/search", {params});
-                return {data};
-            } catch (error) {
-                if (attempts >= maxAttempts) {
-                    console.error("Persistent error after all retries:", error.toString());
-                }
-                throw error;
-            }
+            attempts++;
+            const {data} = await smilesClient.get("/search", {params});
+            return {data};
         },
         {
             jitter: "full",
             numOfAttempts: maxAttempts,
             retry: (error, attemptNumber) => {
-                const apiFailureRetryCodes = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
-                const isFlightListRelatedError = [
-                    "TypeError: Cannot read properties of undefined (reading 'flightList')",
-                    "TypeError: Cannot read property 'flightList' of undefined",
-                ].includes(error.response?.data?.error);
-                const isServiceUnavailable = error.response?.status === 503;
-                return isFlightListRelatedError || isServiceUnavailable || apiFailureRetryCodes.includes(error.code);
+                console.log(`Attempt ${attemptNumber}: ${error}`);
+                return shouldRetry(error);
             },
         }
     );
@@ -77,7 +77,6 @@ const searchFlights = async (params) => {
 
     return response;
 };
-
 
 const createFlightObject = async (flightResult, preferences, cabinType) => {
     const {flight, price, money, fareUid} = getBestFlight(

@@ -127,7 +127,6 @@ const listen = async () => {
     await bot.setMyCommands([
         {command: '/start', description: 'Iniciar el bot'},
         {command: '/regiones', description: 'Listar regiones disponibles'},
-        {command: '/cafecito', description: 'Apoyar al bot'},
         {command: '/links', description: 'Enlaces útiles'},
         {command: '/aerolineas', description: 'Lista de códigos de aerolíneas'},
         {command: '/filtros', description: 'Ver filtros establecidos'},

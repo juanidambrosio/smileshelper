@@ -398,7 +398,7 @@ const listen = async () => {
         } else {
             await bot.sendMessage(chatId, "Lista de crons:");
             for (const cron of crons) {
-                await bot.sendMessage(chatId, `${cron.chroncmd} - ${cron.cmd}`);
+                await bot.sendMessage(chatId, `${cron.search} - ${cron.cron}`);
             }
         }
     })

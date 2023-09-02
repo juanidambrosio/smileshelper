@@ -350,11 +350,7 @@ const getCrons = async (msg) => {
         if (preferences === null || !preferences.crons) {
             return [];
         } else {
-            const cronsArray = Object.entries(preferences.crons).map(([chroncmd, cmd]) => ({
-                chroncmd,
-                cmd,
-            }));
-            return cronsArray;
+            return preferences.crons;
         }
     } catch (error) {
         console.log(error);

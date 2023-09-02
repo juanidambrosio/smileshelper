@@ -389,9 +389,25 @@ const listen = async () => {
             return
         }
 
-        const chronCmd = `0 ${minute} ${hour} * * *`
+        // Both hour and minute are specific
+        if (hour !== "*" && minute !== "*") {
+            cronCmd = `0 ${minute} ${hour} * * *`;
+        }
+        // Every given amount of hours
+        else if (minute === "*") {
+            cronCmd = `0 0 */${hour} * * *`;
+        }
+        // Every given amount of minutes
+        else if (hour === "*") {
+            cronCmd = `0 */${minute} * * * *`;
+        }
+        // Both hour and minute are "*"
+        else if (hour === "*" && minute === "*") {
+            cronCmd = `0 * * * * *`;  // Every minute of every hour
+        }
 
-        const {_, cron} = await saveCron(chatId, chronCmd, searchText, msg)
+
+        const {_, cron} = await saveCron(chatId, cronCmd, searchText, msg)
         await bot.sendMessage(chatId, "Procesando cron");
         await loadCron(bot, cron, true)
         await bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");

@@ -145,10 +145,13 @@ const updateAlert = async (alert, result) => {
 const saveAlert = async (msg, search) => {
     const chatId = msg.chat.id;
 
+    // To avoid running all alerts at the same time and hitting a rate limit, we'll set a random minute for each alert
+    const randomMinute = Math.floor(Math.random() * 60);
+
     // Initialize a new alert object
     const newAlert = {
         "id": uuidv4(),
-        "cron": `0 0 */3 * * *`, // Every 3 hours
+        "cron": `0 ${randomMinute} */3 * * *`, // Every 3 hours at a random minute
         "search": search,
         "chat_id": chatId,
         "previous_result": null,

@@ -2,10 +2,7 @@ const { partitionArrays, belongsToCity } = require("./utils/parser");
 
 const sortFlights = (flights) =>
   flights.sort(
-    (flight1, flight2) =>
-      flight1.price +
-      flight1.tax.milesNumber -
-      (flight2.price + flight2.tax.milesNumber)
+    (flight1, flight2) => (flight1.price + flight1.tax.milesNumber) - (flight2.price + flight2.tax.milesNumber)
   );
 
 const sortFlightsRoundTrip = (flights, minDays, maxDays, origin) => {

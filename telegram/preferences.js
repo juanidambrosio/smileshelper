@@ -23,7 +23,7 @@ const setPreferences = async (msg) => {
     try {
         const previousPreferences =
             (await getPreferencesDb(
-                {id: msg.from.username || msg.from.id.toString()},
+                {id: msg.chat.id},
                 getOne
             )) || {};
 
@@ -39,7 +39,7 @@ const setPreferences = async (msg) => {
 
         await setPreferencesDb(
             {
-                id: msg.from.username || msg.from.id.toString(),
+                id: msg.chat.id,
                 result,
             },
             upsert
@@ -162,7 +162,7 @@ const saveAlert = async (msg, search) => {
 
     try {
         // Fetch existing preferences for the chat ID
-        const previousPreferences = (await getPreferencesDb({chatId}, getOne)) || {};
+        const previousPreferences = (await getPreferencesDb({id: chatId}, getOne)) || {};
 
         // Initialize result object
         let result = {
@@ -171,6 +171,12 @@ const saveAlert = async (msg, search) => {
 
         // If there are existing alerts, append the new one to the array
         if (Array.isArray(previousPreferences.alerts)) {
+            // If alert already exist return same one
+            const foundAlert = previousPreferences.alerts.find(existingAlert => existingAlert.search === search);
+            if (foundAlert) {
+                console.log('Alert already exists');
+                return {response: alertSave, alert: foundAlert};
+            }
             result.alerts = [...previousPreferences.alerts, newAlert];
         }
 
@@ -181,7 +187,7 @@ const saveAlert = async (msg, search) => {
         };
 
         // Insert or update the preferences in the database
-        await setPreferencesDb({chatId, result: updatedPreferences}, upsert);
+        await setPreferencesDb({id: chatId, result: updatedPreferences}, upsert);
 
         return {response: alertSave, alert: newAlert};
     } catch (error) {
@@ -210,8 +216,13 @@ const saveCron = async (id, croncmd, cmd, msg) => {
             crons: [newCron]
         };
 
-        // If there are existing crons, append the new one to the array
         if (Array.isArray(previousPreferences.crons)) {
+            // If alert already exist return same one
+            const foundCron = previousPreferences.crons.find(c => c.cron === croncmd && c.search === cmd);
+            if (foundCron) {
+                console.log('Cron already exists');
+                return {response: cronSave, cron: foundCron};
+            }
             result.crons = [...previousPreferences.crons, newCron];
         }
 
@@ -250,7 +261,7 @@ const getPreferences = async (msg) => {
     try {
         const preferences = await getPreferencesDb(
             {
-                id: msg.from.username || msg.from.id.toString(),
+                id: msg.chat.id
             },
             getOne
         );
@@ -281,7 +292,7 @@ const getRegions = async (msg) => {
     try {
         const preferences = await getPreferencesDb(
             {
-                id: msg.from.username || msg.from.id.toString(),
+                id: msg.chat.id
             },
             getOne
         );
@@ -336,6 +347,30 @@ const getAllCrons = async () => {
     }
 };
 
+
+const getAlerts = async (msg) => {
+    const {getOne} = getDbFunctions();
+
+    try {
+        const preferences = await getPreferencesDb(
+            {
+                id: msg.chat.id,
+            },
+            getOne
+        );
+
+        if (preferences === null || !preferences.alerts) {
+            return [];
+        } else {
+            return preferences.alerts;
+        }
+    } catch (error) {
+        console.log(error);
+        return {error: preferencesError};
+    }
+};
+
+
 const getCrons = async (msg) => {
     const {getOne} = getDbFunctions();
 
@@ -370,5 +405,6 @@ module.exports = {
     findAlert,
     getCrons,
     getAllCrons,
+    getAlerts,
     getAllAlerts
 };

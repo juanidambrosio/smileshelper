@@ -40,6 +40,7 @@ const {
     updateAlert,
     findAlert,
     getCrons,
+    getAlerts,
     getAllCrons,
     getAllAlerts,
     saveAlert,
@@ -79,9 +80,9 @@ async function loadAlerts(bot) {
     alerts.forEach(alert => {
         try {
             loadAlert(bot, alert);
-            console.log(`Loaded alert ${alert.cron} ${alert.search}`);
+            console.log(`Loaded alert ${alert.username} ${alert.cron} ${alert.search}`);
         } catch (e) {
-            console.log(`Could not load alert ${alert.cron} ${alert.search}`);
+            console.log(`Could not load alert ${alert.username} ${alert.cron} ${alert.search}`);
             console.error(e);  // Log the error for debugging
         }
     });
@@ -102,9 +103,9 @@ async function loadCrons(msg, bot) {
     crons.forEach(c => {
         try {
             loadCron(bot, c);
-            console.log(`Loaded cron ${c.search} ${c.username}`);
+            console.log(`Loaded cron ${c.username} ${c.cron} ${c.search} `);
         } catch (e) {
-            console.log(`Could not run cron ${c.search} ${c.username}`);
+            console.log(`Could not run cron ${c.search} ${c.cron} ${c.username}`);
             console.error(e);  // Log the error for debugging
         }
     });
@@ -145,7 +146,7 @@ async function handleSearch(searchText, msg, bot, send_message = true) {
 }
 
 async function loadAlert(bot, alert, just_created = false) {
-    const msg = {"chat": {"id": alert.chat_id, "username": `cron: ${alert.username}`}};
+    const msg = {"chat": {"id": alert.chat_id, "username": `alert: ${alert.username}`}};
     const searchText = alert.search;
 
     if (just_created) {
@@ -181,7 +182,11 @@ async function loadCron(bot, c, just_created = false) {
     const msg = {"chat": {"id": c.chat_id, "username": `cron: ${c.username}`}};
 
     if (just_created) {
-        await handleSearch(c.search, msg, bot);
+        try {
+            await handleSearch(c.search, msg, bot);
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     cron.schedule(c.cron, async () => {
@@ -217,6 +222,7 @@ const listen = async () => {
         {command: '/vercrons', description: 'Listar crons '},
         {command: '/agregarcron', description: 'Agregar cron'},
         {command: '/agregaralerta', description: 'Agregar alerta'},
+        {command: '/veralertas', description: 'Listar alertas'},
         // Add more commands as needed
     ]);
 
@@ -325,7 +331,7 @@ const listen = async () => {
             .slice(0, maxAirports)
             .map((airport) => airport.toUpperCase());
         const {response, error} = await setRegion(
-            msg.chat.username || msg.chat.id.toString(),
+            msg.chat.id,
             regionName,
             regionAirports
         );
@@ -386,7 +392,8 @@ const listen = async () => {
         const chronCmd = `0 ${minute} ${hour} * * *`
 
         const {_, cron} = await saveCron(chatId, chronCmd, searchText, msg)
-        await loadCron(bot, cron)
+        await bot.sendMessage(chatId, "Procesando cron");
+        await loadCron(bot, cron, true)
         await bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
     })
 
@@ -399,6 +406,19 @@ const listen = async () => {
             await bot.sendMessage(chatId, "Lista de crons:");
             for (const cron of crons) {
                 await bot.sendMessage(chatId, `${cron.search} - ${cron.cron}`);
+            }
+        }
+    })
+
+    bot.onText(/\/veralertas/, async (msg) => {
+        const chatId = msg.chat.id;
+        const alerts = await getAlerts(msg)
+        if (alerts.length === 0) {
+            await bot.sendMessage(chatId, "No hay alertas");
+        } else {
+            await bot.sendMessage(chatId, "Lista de alertas");
+            for (const alert of alerts) {
+                await bot.sendMessage(chatId, `${alert.search} - ${alert.cron}`);
             }
         }
     })

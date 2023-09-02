@@ -20,7 +20,7 @@ const {
 
 const { notFound, genericError, tripTypes } = require("../config/constants");
 
-const { createFlightSearch, getPreferencesDb } = require("./dbMapper");
+const { getPreferencesDb } = require("./dbMapper");
 
 const { buildError } = require("../utils/error");
 
@@ -81,20 +81,6 @@ const searchCityQuery = async (msg, match) => {
     payload.origin + " " + payload.destination + "\n"
   );
 
-  if (!msg.isAlert) {
-    await createFlightSearch(
-      {
-        id: msg.chat.id,
-        origin: payload.origin,
-        destination: payload.destination,
-        departureDate: payload.departureDate,
-        price: bestFlights[0].price,
-        searchType: "airport",
-        smilesAndMoney: payload.preferences?.smilesAndMoney || false,
-      },
-      createOne
-    );
-  }
   return { response, bestFlight: bestFlights[0] };
 };
 
@@ -179,20 +165,6 @@ const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
           "\n"
       );
     }, flightTitle);
-    await createFlightSearch(
-      {
-        id: msg.chat.id,
-        origin: Array.isArray(payload.origin) ? payload.region : payload.origin,
-        destination: Array.isArray(payload.destination)
-          ? payload.region
-          : payload.destination,
-        departureDate: payload.departureDate,
-        price: bestFlights[0].price,
-        searchType: "region",
-        smilesAndMoney: payload.preferences?.smilesAndMoney || false,
-      },
-      createOne
-    );
     return { response };
   } catch (error) {
     return { error: genericError };
@@ -273,21 +245,6 @@ const searchRoundTrip = async (msg) => {
             "\n"
         ),
       payload.origin + " " + payload.destination + "\n"
-    );
-    await createFlightSearch(
-      {
-        id: msg.chat.id,
-        origin: payload.origin,
-        destination: payload.destination,
-        departureDate: payload.departureDate,
-        returnDate: payload.returnDate,
-        price:
-          bestFlights[0].departureFlight.price +
-          bestFlights[0].returnFlight.price,
-        searchType: "airport",
-        smilesAndMoney: payload.preferences?.smilesAndMoney || false,
-      },
-      createOne
     );
     console.log((new Date()).toLocaleTimeString(), msg.chat.username, msg.text);
     return { response };

@@ -123,6 +123,7 @@ const updateAlert = async (alert, result) => {
             if (alertIndex !== -1) {
                 // Update the previous_result field
                 previousPreferences.alerts[alertIndex].previous_result = result;
+                previousPreferences.alerts[alertIndex].last_updated = new Date();
 
                 // Save the updated preferences back to the database
                 await setPreferencesDb({id: chatId, result: previousPreferences}, upsert);

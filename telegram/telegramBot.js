@@ -159,14 +159,13 @@ async function loadAlert(bot, alert, just_created = false) {
             if (!res) return;
 
             const saved_alert = await findAlert(alert);
+            await updateAlert(alert, res);
+
             if (saved_alert.alert.previous_result == null) {
-                await updateAlert(alert, res);
                 return;
             }
 
             if (saved_alert.alert.previous_result === res) return;
-
-            await updateAlert(alert, res);
 
             bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró nuevos vuelos`);
             await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));

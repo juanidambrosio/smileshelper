@@ -168,7 +168,7 @@ async function loadAlert(bot, alert, just_created = false) {
 
             await updateAlert(alert, res);
 
-            await bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró nuevos vuelos`);
+            bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró nuevos vuelos`);
             await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));
         } catch (e) {
             console.log(`error running alert: ${e.message}`);
@@ -212,7 +212,7 @@ const listen = async () => {
     await loadAlerts(bot);
 
     // Set your commands here
-    await bot.setMyCommands([
+    bot.setMyCommands([
         {command: '/start', description: 'Iniciar el bot'},
         {command: '/regiones', description: 'Listar regiones disponibles'},
         {command: '/links', description: 'Enlaces útiles'},
@@ -368,9 +368,9 @@ const listen = async () => {
         const searchText = match[1]
         const {alert} = await saveAlert(msg, searchText);
 
-        await bot.sendMessage(chatId, "Procesando la alerta");
+        bot.sendMessage(chatId, "Procesando la alerta");
         await loadAlert(bot, alert, true)
-        await bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
+        bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
     })
 
     bot.onText(regexCron, async (msg, match) => {
@@ -380,12 +380,12 @@ const listen = async () => {
         const searchText = match[3]
 
         if (hour !== "*" && (parseInt(hour) > 23 || parseInt(hour) < 0)) {
-            await bot.sendMessage(chatId, "La hora debe estar entre 0 y 23");
+            bot.sendMessage(chatId, "La hora debe estar entre 0 y 23");
             return
         }
 
         if (minute !== "*" && (parseInt(minute) > 59 || parseInt(minute) < 0)) {
-            await bot.sendMessage(chatId, "El minuto debe estar entre 0 y 59");
+            bot.sendMessage(chatId, "El minuto debe estar entre 0 y 59");
             return
         }
 
@@ -408,21 +408,22 @@ const listen = async () => {
 
 
         const {_, cron} = await saveCron(chatId, cronCmd, searchText, msg)
-        await bot.sendMessage(chatId, "Procesando cron");
+        bot.sendMessage(chatId, "Procesando cron");
         await loadCron(bot, cron, true)
-        await bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
+        bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
     })
 
     bot.onText(/\/vercrons/, async (msg) => {
         const chatId = msg.chat.id;
         const crons = await getCrons(msg)
         if (crons.length === 0) {
-            await bot.sendMessage(chatId, "No hay crons");
-        } else {
-            await bot.sendMessage(chatId, "Lista de crons:");
-            for (const cron of crons) {
-                await bot.sendMessage(chatId, `${cron.search} - ${cron.cron}`);
-            }
+            bot.sendMessage(chatId, "No hay crons");
+            return
+        }
+
+        bot.sendMessage(chatId, "Lista de crons:");
+        for (const cron of crons) {
+            bot.sendMessage(chatId, `${cron.search} - ${cron.cron}`);
         }
     })
 
@@ -430,13 +431,15 @@ const listen = async () => {
         const chatId = msg.chat.id;
         const alerts = await getAlerts(msg)
         if (alerts.length === 0) {
-            await bot.sendMessage(chatId, "No hay alertas");
-        } else {
-            await bot.sendMessage(chatId, "Lista de alertas");
-            for (const alert of alerts) {
-                await bot.sendMessage(chatId, `${alert.search} - ${alert.cron}`);
-            }
+            bot.sendMessage(chatId, "No hay alertas");
+            return
         }
+
+        bot.sendMessage(chatId, "Lista de alertas");
+        for (const alert of alerts) {
+            bot.sendMessage(chatId, `${alert.search} - ${alert.cron}`);
+        }
+
     })
 };
 

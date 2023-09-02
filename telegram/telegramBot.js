@@ -386,7 +386,7 @@ const listen = async () => {
         const chronCmd = `0 ${minute} ${hour} * * *`
 
         const {_, cron} = await saveCron(chatId, chronCmd, searchText, msg)
-        loadCron(bot, cron)
+        await loadCron(bot, cron)
         await bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
     })
 

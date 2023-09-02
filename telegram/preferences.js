@@ -162,7 +162,7 @@ const saveAlert = async (msg, search) => {
 
     try {
         // Fetch existing preferences for the chat ID
-        const previousPreferences = (await getPreferencesDb({id}, getOne)) || {};
+        const previousPreferences = (await getPreferencesDb({chatId}, getOne)) || {};
 
         // Initialize result object
         let result = {
@@ -181,8 +181,7 @@ const saveAlert = async (msg, search) => {
         };
 
         // Insert or update the preferences in the database
-        const id = newAlert.chat_id
-        await setPreferencesDb({id, result: updatedPreferences}, upsert);
+        await setPreferencesDb({chatId, result: updatedPreferences}, upsert);
 
         return {response: alertSave, alert: newAlert};
     } catch (error) {

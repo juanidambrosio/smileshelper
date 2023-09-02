@@ -315,13 +315,21 @@ const listen = async () => {
 
     bot.onText(regexFilters, async (msg) => {
         const chatId = msg.chat.id;
-        const {response, error} = await setPreferences(msg);
-        if (error) {
-            bot.sendMessage(chatId, error);
+        let {response: response1, error: error1} = await setPreferences(msg);
+        if (error1) {
+            bot.sendMessage(chatId, error1);
         } else {
-            bot.sendMessage(chatId, response, {parse_mode: "Markdown"});
+            bot.sendMessage(chatId, response1, {parse_mode: "Markdown"});
+        }
+
+        let {response: response2, error: error2} = await getPreferences(msg);
+        if (error2) {
+            bot.sendMessage(chatId, error2);
+        } else {
+            bot.sendMessage(chatId, response2, {parse_mode: "Markdown"});
         }
     });
+
 
     bot.onText(regexCustomRegion, async (msg, match) => {
         const chatId = msg.chat.id;

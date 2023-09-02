@@ -267,6 +267,7 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetAirlines = text.indexOf(" a:");
   const offsetStops = text.indexOf(" e:");
   const offsetResults = text.indexOf(" r:");
+  const offsetMilePrice = text.indexOf(" pm:");
   const offsetHours = text.indexOf(" h:");
   const offsetVF = text.indexOf(" vf");
   const offsetBrasilNonGol = text.indexOf(" singol");
@@ -301,6 +302,10 @@ const preferencesParser = (text, booleanPreferences) => {
 
   if (offsetResults > 0) {
     result.maxresults = text.substring(offsetResults + 3, offsetResults + 5);
+  }
+
+  if (offsetMilePrice > 0) {
+    result.milePrice = parseInt(text.substring(offsetMilePrice + 4, offsetResults + 50000));
   }
 
   if (offsetHours > 0) {

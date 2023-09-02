@@ -57,6 +57,7 @@ const preferencesMap = new Map([
     ["airlines", "a: "],
     ["stops", "e: "],
     ["maxresults", "r: "],
+    ["milePrice", "pm: "],
     ["maxhours", "h: "],
     ["fare", "vf: "],
     ["brasilNonGol", "singol: "],

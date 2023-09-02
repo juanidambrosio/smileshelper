@@ -36,7 +36,7 @@ const {
     setPreferences,
     deletePreferences,
     setRegion,
-    setCron,
+    saveCron,
     updateAlert,
     findAlert,
     getCrons,
@@ -52,6 +52,7 @@ const {
     sendMessageInChunks,
     getInlineKeyboardMonths,
 } = require("./telegramBotHandler");
+const {save} = require("node-cron/src/storage");
 
 async function reloadCrons(bot) {
     console.log("reloading crons and alerts")
@@ -66,41 +67,51 @@ async function deleteAllCrons() {
 }
 
 async function loadAlerts(bot) {
-    let alerts = await getAllAlerts()
-    if (alerts.length !== 0) {
-        for (const c of alerts) {
-            try {
-                loadAlert(bot, c)
-                console.log(`loaded alert ${c.cron} ${c.search}`)
-            } catch (e) {
-                console.log(`could not load alert ${c.cron} ${c.search}`)
-            }
+    // Fetch all alerts
+    const alerts = await getAllAlerts();
 
-        }
+    // Check if there are any alerts to load
+    if (alerts.length === 0) {
+        return alerts;
     }
-    return alerts
+
+    // Loop through each alert and attempt to load it
+    alerts.forEach(alert => {
+        try {
+            loadAlert(bot, alert);
+            console.log(`Loaded alert ${alert.cron} ${alert.search}`);
+        } catch (e) {
+            console.log(`Could not load alert ${alert.cron} ${alert.search}`);
+            console.error(e);  // Log the error for debugging
+        }
+    });
+
+    return alerts;
 }
 
 async function loadCrons(msg, bot) {
-    let crons;
-    if (msg !== null) {
-        crons = await getCrons(msg)
-    } else {
-        crons = await getAllCrons()
-    }
-    if (crons.length !== 0) {
-        for (const c of crons) {
-            try {
-                loadCron(bot, c.chroncmd, c.cmd, c.id)
-                console.log(`loaded cron ${c.chroncmd} ${c.cmd} ${c.id}`)
-            } catch (e) {
-                console.log(`could not run cron ${c.chroncmd} ${c.cmd} ${c.id}`)
-            }
+    // Load crons based on the presence of 'msg'
+    const crons = msg ? await getCrons(msg) : await getAllCrons();
 
-        }
+    // Check if there are any crons to load
+    if (crons.length === 0) {
+        return crons;
     }
-    return crons
+
+    // Loop through each cron and attempt to load it
+    crons.forEach(c => {
+        try {
+            loadCron(bot, c);
+            console.log(`Loaded cron ${c.search} ${c.username}`);
+        } catch (e) {
+            console.log(`Could not run cron ${c.search} ${c.username}`);
+            console.error(e);  // Log the error for debugging
+        }
+    });
+
+    return crons;
 }
+
 
 async function handleSearch(searchText, msg, bot, send_message) {
     let res;
@@ -166,11 +177,11 @@ async function loadAlert(bot, alert, just_created = false) {
 }
 
 // Refactored loadCron function
-function loadCron(bot, chronCmd, searchText, chatId) {
-    cron.schedule(chronCmd, async () => {
+function loadCron(bot, c) {
+    cron.schedule(c.cron, async () => {
         try {
-            const msg = {"chat": {"id": chatId}};
-            await handleSearch(searchText, msg, bot);
+            const msg = {"chat": {"id": c.chat_id, "username": `cron: ${c.username}`}};
+            await handleSearch(c.search, msg, bot);
         } catch (e) {
             console.log(`error running cron: ${e.message}`);
         }
@@ -369,8 +380,8 @@ const listen = async () => {
 
         const chronCmd = `0 ${minute} ${hour} * * *`
 
-        await setCron(chatId, chronCmd, searchText)
-        loadCron(bot, chronCmd, searchText, chatId)
+        const {_, cron} = await saveCron(chatId, chronCmd, searchText, msg)
+        loadCron(bot, cron)
         await bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");
     })
 

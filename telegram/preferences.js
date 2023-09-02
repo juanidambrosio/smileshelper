@@ -187,34 +187,40 @@ const saveAlert = async (msg, search) => {
     }
 };
 
-const setCron = async (id, croncmd, cmd) => {
-    let result = {
-        crons: {
-            [croncmd]: cmd,
-            "chat_id": id
-        }
-    };
+const saveCron = async (id, croncmd, cmd, msg) => {
+    let newCron = {
+        "id": uuidv4(),
+        "cron": croncmd,
+        "search": cmd,
+        "chat_id": id,
+        "username": msg.from.username || msg.from.id.toString(),
+    }
+
     const {getOne, upsert} = getDbFunctions();
 
     try {
-        const previousPreferences =
-            (await getPreferencesDb(
-                {id},
-                getOne
-            )) || {};
+        // Fetch existing preferences for the chat ID
+        const previousPreferences = (await getPreferencesDb({id}, getOne)) || {};
 
-        if (previousPreferences.crons) {
-            result.crons = {...previousPreferences.crons, [croncmd]: cmd};
+        // Initialize result object
+        let result = {
+            crons: [newCron]
+        };
+
+        // If there are existing crons, append the new one to the array
+        if (Array.isArray(previousPreferences.crons)) {
+            result.crons = [...previousPreferences.crons, newCron];
         }
 
-        await setPreferencesDb(
-            {
-                id,
-                result,
-            },
-            upsert
-        );
-        return {response: cronSave};
+        // Merge the new alerts array with the existing preferences
+        const updatedPreferences = {
+            ...previousPreferences,
+            crons: result.crons
+        };
+
+        await setPreferencesDb({id, result: updatedPreferences}, upsert);
+
+        return {response: cronSave, cron: newCron};
     } catch (error) {
         console.log(error);
         return {error: preferencesError};
@@ -312,25 +318,18 @@ const getAllCrons = async () => {
     const {getAll} = getDbFunctions();
 
     try {
-        const preferences = await getAllPreferencesDb(
-            getAll
-        );
+        const preferences = await getAllPreferencesDb(getAll);
+
         if (preferences === null) {
-            return {};
+            return [];
         } else {
             return preferences
-                .filter(obj => obj.crons) // Keep objects with 'crons' property
-                .flatMap(obj =>
-                    Object.entries(obj.crons).map(([chroncmd, cmd]) => ({
-                        id: obj.author_id,
-                        chroncmd,
-                        cmd
-                    }))
-                ); // Convert to desired format
+                .filter(obj => Array.isArray(obj.crons) && obj.crons.length > 0) // Keep objects with 'crons' property that is an array and not empty
+                .flatMap(obj => obj.crons); // Return the crons as they are
         }
     } catch (error) {
         console.log(error);
-        return {error: preferencesError};
+        return {error: 'Failed to fetch all crons'};
     }
 };
 
@@ -366,7 +365,7 @@ module.exports = {
     getPreferences,
     getRegions,
     deletePreferences,
-    setCron,
+    saveCron,
     saveAlert,
     updateAlert,
     findAlert,

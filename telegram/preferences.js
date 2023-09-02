@@ -157,6 +157,7 @@ const saveAlert = async (msg, search) => {
         "chat_id": chatId,
         "previous_result": null,
         "username": msg.from.username || msg.from.id.toString(),
+        "last_updated": new Date()
     };
 
     const {getOne, upsert} = getDbFunctions();

@@ -150,7 +150,8 @@ async function loadAlert(bot, alert, just_created = false) {
     const searchText = alert.search;
 
     if (just_created) {
-        await handleSearch(searchText, msg, bot);
+        const {res} = await handleSearch(searchText, msg, bot);
+        await updateAlert(alert, res);
     }
 
     cron.schedule(alert.cron, async () => {

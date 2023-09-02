@@ -113,7 +113,7 @@ async function loadCrons(msg, bot) {
 }
 
 
-async function handleSearch(searchText, msg, bot, send_message) {
+async function handleSearch(searchText, msg, bot, send_message = true) {
     let res;
     let groups;
     switch (true) {
@@ -149,7 +149,7 @@ async function loadAlert(bot, alert, just_created = false) {
     const searchText = alert.search;
 
     if (just_created) {
-        await handleSearch(searchText, msg, bot, just_created);
+        await handleSearch(searchText, msg, bot);
     }
 
     cron.schedule(alert.cron, async () => {
@@ -177,10 +177,15 @@ async function loadAlert(bot, alert, just_created = false) {
 }
 
 // Refactored loadCron function
-function loadCron(bot, c) {
+async function loadCron(bot, c, just_created = false) {
+    const msg = {"chat": {"id": c.chat_id, "username": `cron: ${c.username}`}};
+
+    if (just_created) {
+        await handleSearch(c.search, msg, bot);
+    }
+
     cron.schedule(c.cron, async () => {
         try {
-            const msg = {"chat": {"id": c.chat_id, "username": `cron: ${c.username}`}};
             await handleSearch(c.search, msg, bot);
         } catch (e) {
             console.log(`error running cron: ${e.message}`);

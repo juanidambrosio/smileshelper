@@ -30,7 +30,7 @@ const searchCityQuery = async (msg, match) => {
   const payload = match
     ? generatePayloadMonthlySingleDestination(match)
     : generatePayloadMonthlySingleDestinationAlerts(msg.text);
-  const { createOne, getOne } = getDbFunctions();
+  const { getOne } = getDbFunctions();
   payload.preferences =
     (await getPreferencesDb(
       {

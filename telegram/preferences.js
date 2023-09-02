@@ -181,6 +181,7 @@ const saveAlert = async (msg, search) => {
         };
 
         // Insert or update the preferences in the database
+        const id = newAlert.chat_id
         await setPreferencesDb({id, result: updatedPreferences}, upsert);
 
         return {response: alertSave, alert: newAlert};

@@ -116,7 +116,7 @@ const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
         }
 
         if (bestFlights.length === 0) {
-            return {error: notFound};
+            return {response: notFound};
         }
 
         const flightTitle = isMultipleOrigin

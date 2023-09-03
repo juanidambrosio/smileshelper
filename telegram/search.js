@@ -175,7 +175,7 @@ const searchRegionalQuery = async (msg, match, fixedDay, isMultipleOrigin) => {
 
 const searchRoundTrip = async (msg) => {
     const payload = generatePayloadRoundTrip(msg.text);
-    const {createOne, getOne} = getDbFunctions();
+    const {getOne} = getDbFunctions();
     payload.preferences =
         (await getPreferencesDb(
             {
@@ -188,6 +188,7 @@ const searchRoundTrip = async (msg) => {
         const flightList = await getFlightsRoundTrip(payload);
         const bestFlights = flightList.results;
         if (flightList.error) {
+            console.log(`error: ${flightList.error}`)
             return {error: buildError(flightList.error)};
         }
         if (bestFlights.length === 0) {
@@ -251,6 +252,7 @@ const searchRoundTrip = async (msg) => {
         console.log((new Date()).toLocaleTimeString(), msg.chat.username, msg.text);
         return {response};
     } catch (error) {
+        console.log(`error: ${error.message}`)
         return {error: genericError};
     }
 };

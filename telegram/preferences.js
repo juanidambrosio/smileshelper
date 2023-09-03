@@ -186,7 +186,7 @@ const saveAlert = async (msg, search) => {
             // If alert already exist return same one
             const foundAlert = previousPreferences.alerts.find(existingAlert => existingAlert.search === search);
             if (foundAlert) {
-                console.log(`Alert ${alert.search} already exists, not saved`);
+                console.log(`Alert ${newAlert.search} already exists, not saved`);
                 return {response: alertSave, alert: foundAlert};
             }
             result.alerts = [...previousPreferences.alerts, newAlert];

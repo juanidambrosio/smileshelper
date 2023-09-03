@@ -132,6 +132,7 @@ const updateAlert = async (alert, result, alert_sent = false) => {
                     previousPreferences.alerts[alertIndex].alerts_send += 1;
                 }
                 previousPreferences.alerts[alertIndex].last_updated = (new Date()).toLocaleTimeString()
+                previousPreferences.username = alert.username;
 
                 // Save the updated preferences back to the database
                 await setPreferencesDb({id: chatId, result: previousPreferences}, upsert);

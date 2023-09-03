@@ -336,7 +336,7 @@ const listen = async () => {
             .slice(0, maxAirports)
             .map((airport) => airport.toUpperCase());
         const {response, error} = await setRegion(
-            msg.chat.id,
+            msg,
             regionName,
             regionAirports
         );
@@ -412,7 +412,7 @@ const listen = async () => {
         }
 
 
-        const {_, cron} = await saveCron(chatId, cronCmd, searchText, msg)
+        const {_, cron} = await saveCron(msg, cronCmd, searchText)
         bot.sendMessage(chatId, "Procesando cron");
         await loadCron(bot, cron, true)
         bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");

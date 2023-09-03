@@ -17,8 +17,20 @@ const {
 
 const {getDbFunctions} = require("../db/dbFunctions");
 
+const savePreferences = async (msg, result) => {
+    const {upsert} = getDbFunctions();
+    result.username = msg.from.username || msg.from.id.toString();
+    await setPreferencesDb(
+        {
+            id: msg.chat.id,
+            result,
+        },
+        upsert
+    );
+}
+
 const setPreferences = async (msg) => {
-    const {getOne, upsert} = getDbFunctions();
+    const {getOne} = getDbFunctions();
 
     try {
         const previousPreferences =
@@ -39,13 +51,7 @@ const setPreferences = async (msg) => {
             result.airlines = [...previousPreferences.airlines, ...result.airlines];
         }
 
-        await setPreferencesDb(
-            {
-                id: msg.chat.id,
-                result,
-            },
-            upsert
-        );
+        await savePreferences(msg, result);
         return {response: preferencesSave};
     } catch (error) {
         console.log(error);
@@ -53,14 +59,14 @@ const setPreferences = async (msg) => {
     }
 };
 
-const setRegion = async (id, name, airports) => {
+const setRegion = async (msg, name, airports) => {
     let result = {regions: {[name]: airports}};
-    const {getOne, upsert} = getDbFunctions();
+    const {getOne} = getDbFunctions();
 
     try {
         const previousPreferences =
             (await getPreferencesDb(
-                {id},
+                {id: msg.chat.id},
                 getOne
             )) || {};
 
@@ -68,13 +74,7 @@ const setRegion = async (id, name, airports) => {
             result.regions = {...previousPreferences.regions, [name]: airports};
         }
 
-        await setPreferencesDb(
-            {
-                id,
-                result,
-            },
-            upsert
-        );
+        await savePreferences(msg, result);
         return {response: regionSave};
     } catch (error) {
         console.log(error);
@@ -169,7 +169,7 @@ const saveAlert = async (msg, search) => {
         "alerts_send": 0,
     };
 
-    const {getOne, upsert} = getDbFunctions();
+    const {getOne} = getDbFunctions();
 
     try {
         // Fetch existing preferences for the chat ID
@@ -198,7 +198,7 @@ const saveAlert = async (msg, search) => {
         };
 
         // Insert or update the preferences in the database
-        await setPreferencesDb({id: chatId, result: updatedPreferences}, upsert);
+        await savePreferences(msg, result);
 
         return {response: alertSave, alert: newAlert};
     } catch (error) {
@@ -207,12 +207,12 @@ const saveAlert = async (msg, search) => {
     }
 };
 
-const saveCron = async (id, croncmd, cmd, msg) => {
+const saveCron = async (msg, croncmd, cmd) => {
     let newCron = {
         "id": uuidv4(),
         "cron": croncmd,
         "search": cmd,
-        "chat_id": id,
+        "chat_id": msg.chat.id,
         "username": msg.from.username || msg.from.id.toString(),
     }
 
@@ -220,7 +220,7 @@ const saveCron = async (id, croncmd, cmd, msg) => {
 
     try {
         // Fetch existing preferences for the chat ID
-        const previousPreferences = (await getPreferencesDb({id}, getOne)) || {};
+        const previousPreferences = (await getPreferencesDb({id: msg.chat.id}, getOne)) || {};
 
         // Initialize result object
         let result = {
@@ -243,7 +243,7 @@ const saveCron = async (id, croncmd, cmd, msg) => {
             crons: result.crons
         };
 
-        await setPreferencesDb({id, result: updatedPreferences}, upsert);
+        await savePreferences(msg, updatedPreferences);
 
         return {response: cronSave, cron: newCron};
     } catch (error) {

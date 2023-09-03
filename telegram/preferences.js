@@ -33,6 +33,8 @@ const setPreferences = async (msg) => {
             previousSmilesAndMoney: previousPreferences.smilesAndMoney,
         });
 
+        result.username = msg.from.username || msg.from.id.toString();
+
         if (previousPreferences.airlines && result.airlines) {
             result.airlines = [...previousPreferences.airlines, ...result.airlines];
         }

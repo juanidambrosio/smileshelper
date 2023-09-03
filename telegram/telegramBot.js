@@ -166,7 +166,7 @@ async function loadAlert(bot, alert, just_created = false) {
             // if saved alert did not have a previous result or diff was not found , return
             if (saved_alert.alert.previous_result == null || !send_alert) return;
 
-            bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró cambios`);
+            await bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró cambios`);
             await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));
         } catch (e) {
             console.log(`error running alert: ${e.message}`);

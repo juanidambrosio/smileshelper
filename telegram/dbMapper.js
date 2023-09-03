@@ -33,7 +33,6 @@ const setPreferencesDb = async (data, upsert) => {
     const {id, result} = data;
     await upsert({author_id: id}, {$set: result});
 };
-
 const getPreferencesDb = async (data, getOne) => {
     const {id} = data;
     return await getOne({author_id: id});

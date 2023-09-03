@@ -107,7 +107,7 @@ const findAlert = async (targetAlert) => {
 };
 
 
-const updateAlert = async (alert, result) => {
+const updateAlert = async (alert, result, alert_sent = false) => {
     // Initialize database functions
     const {getOne, upsert} = getDbFunctions();
 
@@ -123,6 +123,12 @@ const updateAlert = async (alert, result) => {
             if (alertIndex !== -1) {
                 // Update the previous_result field
                 previousPreferences.alerts[alertIndex].previous_result = result;
+                if (!previousPreferences.alerts[alertIndex].alerts_send) {
+                    previousPreferences.alerts[alertIndex].alerts_send = 0;
+                }
+                if (alert_sent) {
+                    previousPreferences.alerts[alertIndex].alerts_send += 1;
+                }
                 previousPreferences.alerts[alertIndex].last_updated = (new Date()).toLocaleTimeString()
 
                 // Save the updated preferences back to the database
@@ -157,7 +163,8 @@ const saveAlert = async (msg, search) => {
         "chat_id": chatId,
         "previous_result": null,
         "username": msg.from.username || msg.from.id.toString(),
-        "last_updated": (new Date()).toLocaleTimeString()
+        "last_updated": (new Date()).toLocaleTimeString(),
+        "alerts_send": 0,
     };
 
     const {getOne, upsert} = getDbFunctions();

@@ -160,20 +160,17 @@ async function loadAlert(bot, alert, just_created = false) {
             if (!res) return;
 
             const saved_alert = await findAlert(alert);
-            await updateAlert(alert, res);
+            const send_alert = saved_alert.alert.previous_result !== res // diff found, send alert
+            await updateAlert(alert, res, send_alert); // always update alert with the latest result
 
-            if (saved_alert.alert.previous_result == null) {
-                return;
-            }
+            // if saved alert did not have a previous result or diff was not found , return
+            if (saved_alert.alert.previous_result == null || !send_alert) return;
 
-            if (saved_alert.alert.previous_result === res) return;
-
-            bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró nuevos vuelos`);
+            bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró cambios`);
             await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));
         } catch (e) {
             console.log(`error running alert: ${e.message}`);
         }
-
     });
 }
 

@@ -185,7 +185,7 @@ const saveAlert = async (msg, search) => {
             // If alert already exist return same one
             const foundAlert = previousPreferences.alerts.find(existingAlert => existingAlert.search === search);
             if (foundAlert) {
-                console.log('Alert already exists');
+                console.log(`Alert ${alert.search} already exists, not saved`);
                 return {response: alertSave, alert: foundAlert};
             }
             result.alerts = [...previousPreferences.alerts, newAlert];
@@ -231,7 +231,7 @@ const saveCron = async (id, croncmd, cmd, msg) => {
             // If alert already exist return same one
             const foundCron = previousPreferences.crons.find(c => c.cron === croncmd && c.search === cmd);
             if (foundCron) {
-                console.log('Cron already exists');
+                console.log(`Cron ${newCron.search} ${newCron.cron} already exists, not saved`)
                 return {response: cronSave, cron: foundCron};
             }
             result.crons = [...previousPreferences.crons, newCron];

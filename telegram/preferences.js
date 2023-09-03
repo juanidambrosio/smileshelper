@@ -198,7 +198,7 @@ const saveAlert = async (msg, search) => {
         };
 
         // Insert or update the preferences in the database
-        await savePreferences(msg, result);
+        await savePreferences(msg, updatedPreferences);
 
         return {response: alertSave, alert: newAlert};
     } catch (error) {

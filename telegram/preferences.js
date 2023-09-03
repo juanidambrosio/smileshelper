@@ -130,6 +130,7 @@ const updateAlert = async (alert, result, alert_sent = false) => {
                 }
                 if (alert_sent) {
                     previousPreferences.alerts[alertIndex].alerts_send += 1;
+                    previousPreferences.alerts[alertIndex].alert_last_send_at += (new Date()).toLocaleTimeString();
                 }
                 previousPreferences.alerts[alertIndex].last_updated = (new Date()).toLocaleTimeString()
                 previousPreferences.username = alert.username;
@@ -167,6 +168,7 @@ const saveAlert = async (msg, search) => {
         "previous_result": null,
         "last_updated": (new Date()).toLocaleTimeString(),
         "alerts_send": 0,
+        "alert_last_send_at": null,
     };
 
     const {getOne} = getDbFunctions();

@@ -42,6 +42,7 @@ const searchCityQuery = async (msg, match) => {
     const flightList = await getFlights(payload);
     const bestFlights = flightList.results;
     if (flightList.error) {
+        console.log(`error: ${flightList.error}`)
         throw new Error(flightList.error);
     }
     if (bestFlights.length === 0) {

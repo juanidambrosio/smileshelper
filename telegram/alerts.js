@@ -82,7 +82,10 @@ const checkPromoFlight = async (text, retries = 0) => {
       console.log(`Retry ${retries} for ${text.journey}`);
       await sleep(delaySecondsRetriesAlerts);
       return await checkPromoFlight(text, retries);
-    } else return false;
+    } else{
+      console.log("no more retries")
+      return false;
+    }
   }
 };
 

@@ -165,7 +165,6 @@ const saveAlert = async (msg, search) => {
         "search": search,
         "chat_id": chatId,
         "previous_result": null,
-        "username": msg.from.username || msg.from.id.toString(),
         "last_updated": (new Date()).toLocaleTimeString(),
         "alerts_send": 0,
     };
@@ -213,8 +212,7 @@ const saveCron = async (msg, croncmd, cmd) => {
         "id": uuidv4(),
         "cron": croncmd,
         "search": cmd,
-        "chat_id": msg.chat.id,
-        "username": msg.from.username || msg.from.id.toString(),
+        "chat_id": msg.chat.id
     }
 
     const {getOne, upsert} = getDbFunctions();

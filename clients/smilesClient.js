@@ -229,7 +229,11 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
             moneyNumber,
         };
     } catch (error) {
-        console.log("Error getting tax", error);
+        console.error(`error getting tax of ${uid}:`, JSON.stringify({
+                message: error.message,
+                code: error.code
+            }
+        ));
         return {miles: undefined};
     }
 };

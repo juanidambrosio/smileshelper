@@ -65,8 +65,15 @@ const searchFlights = async (params) => {
             jitter: "full",
             numOfAttempts: maxAttempts,
             retry: (error, attemptNumber) => {
-                console.log(`Attempt ${attemptNumber}, error: ${error}, params: ${JSON.stringify(params)}`);
-                return shouldRetry(error);
+                const retry = shouldRetry(error);
+                console.log(`error getting flight details for ${params.originAirportCode} ${params.destinationAirportCode} ${params.departureDate}`,
+                    JSON.stringify({
+                        will_retry: retry,
+                        attemptNumber: attemptNumber - 1,
+                        message: error.message,
+                        code: error.code
+                    }));
+                return retry
             },
         }
     );

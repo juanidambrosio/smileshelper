@@ -25,20 +25,28 @@ const createAxiosClient = (baseURL) => axios.create({
 const smilesClient = createAxiosClient(SMILES_URL);
 const smilesTaxClient = createAxiosClient(SMILES_TAX_URL);
 
-const handleError = (error, attempts, maxAttempts) => {
-    if (attempts >= maxAttempts) {
-        const errorDetails = {
-            message: error.message,
-            code: error.code,
-            config: error.config,
-            // Add any other properties you're interested in
-        };
-        console.error("Persistent error after all retries:", JSON.stringify(errorDetails));
-    }
+const handleError = (error, id) => {
+    const errorDetails = {
+        message: error.message,
+        code: error.code,
+        config: error.config,
+    };
+    console.error(`could not get flight ${id}:`, JSON.stringify(errorDetails));
     return {data: {requestedFlightSegmentList: [{flightList: []}]}};
 };
 
-const API_FAILURE_RETRY_CODES = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET"];
+
+const handleErrorForTax = (error, id) => {
+    const errorDetails = {
+        message: error.message,
+        code: error.code,
+        config: error.config,
+    };
+    console.error(`could not get tax of ${id}:`, JSON.stringify(errorDetails));
+    return {miles: undefined};
+};
+
+const API_FAILURE_RETRY_CODES = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET", "ERR_BAD_RESPONSE"];
 const FLIGHT_LIST_ERRORS = [
     "TypeError: Cannot read properties of undefined (reading 'flightList')",
     "TypeError: Cannot read property 'flightList' of undefined",
@@ -54,10 +62,14 @@ const shouldRetry = (error) => {
 const searchFlights = async (params) => {
     const maxAttempts = 3;
     let attempts = 0;
+    const search = `${params.originAirportCode} ${params.destinationAirportCode} ${params.departureDate}`
 
     const response = await backOff(
         async () => {
             attempts++;
+            if (attempts > 1) {
+                console.log(`retrying ${search}`);
+            }
             const {data} = await smilesClient.get("/search", {params});
             return {data};
         },
@@ -66,7 +78,7 @@ const searchFlights = async (params) => {
             numOfAttempts: maxAttempts,
             retry: (error, attemptNumber) => {
                 const retry = shouldRetry(error);
-                console.log(`error getting flight details for ${params.originAirportCode} ${params.destinationAirportCode} ${params.departureDate}`,
+                console.log(`error getting flight details for ${search}`,
                     JSON.stringify({
                         will_retry: retry,
                         attemptNumber: attemptNumber - 1,
@@ -79,7 +91,7 @@ const searchFlights = async (params) => {
     );
 
     if (response.error && attempts >= maxAttempts) {
-        return handleError(response.error, attempts, maxAttempts);
+        return handleError(response.error, search);
     }
 
     return response;
@@ -215,6 +227,9 @@ const buildParams = (
 });
 
 const getTax = async (uid, fareuid, isSmilesMoney) => {
+    const maxAttempts = 3;
+    let attempts = 0;
+
     const params = {
         adults: "1",
         children: "0",
@@ -225,24 +240,44 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
         highlightText: isSmilesMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB",
     };
 
-    try {
-        const {data} = await smilesTaxClient.get("/boardingtax", {params});
-        const milesNumber = data?.totals?.totalBoardingTax?.miles;
-        const moneyNumber = data?.totals?.totalBoardingTax?.money;
-        return {
-            miles: `${Math.floor(milesNumber / 1000)}K`,
-            milesNumber,
-            money: `$${Math.floor(moneyNumber / 1000)}K`,
-            moneyNumber,
-        };
-    } catch (error) {
-        console.error(`error getting tax of ${uid}:`, JSON.stringify({
-                message: error.message,
-                code: error.code
+    const response = await backOff(
+        async () => {
+            attempts++;
+            if (attempts > 1) {
+                console.log(`retrying tax ${uid}`);
             }
-        ));
-        return {miles: undefined};
+            const {data} = await smilesTaxClient.get("/boardingtax", {params});
+            const milesNumber = data?.totals?.totalBoardingTax?.miles;
+            const moneyNumber = data?.totals?.totalBoardingTax?.money;
+            return {
+                miles: `${Math.floor(milesNumber / 1000)}K`,
+                milesNumber,
+                money: `$${Math.floor(moneyNumber / 1000)}K`,
+                moneyNumber,
+            };
+        },
+        {
+            jitter: "full",
+            numOfAttempts: maxAttempts,
+            retry: (error, attemptNumber) => {
+                const retry = shouldRetry(error);
+                console.log(`error getting tax of ${uid}`,
+                    JSON.stringify({
+                        will_retry: retry,
+                        attemptNumber: attemptNumber - 1,
+                        message: error.message,
+                        code: error.code
+                    }));
+                return retry;
+            },
+        }
+    );
+
+    if (response.error && attempts >= maxAttempts) {
+        return handleErrorForTax(response.error, uid);
     }
+
+    return response;
 };
 
 const validFlight = (flight) =>

@@ -94,6 +94,10 @@ const searchFlights = async (params) => {
         return handleError(response.error, search);
     }
 
+    if (attempts > 1) {
+        console.log(`retry success ${search}`);
+    }
+
     return response;
 };
 
@@ -275,6 +279,10 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
 
     if (response.error && attempts >= maxAttempts) {
         return handleErrorForTax(response.error, uid);
+    }
+
+    if (attempts > 1) {
+        console.log(`retry tax success ${uid}`);
     }
 
     return response;

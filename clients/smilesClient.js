@@ -46,7 +46,7 @@ const handleErrorForTax = (error, id) => {
     return {miles: undefined};
 };
 
-const API_FAILURE_RETRY_CODES = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET", "ERR_BAD_RESPONSE"];
+const API_FAILURE_RETRY_CODES = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET", "ERR_BAD_RESPONSE", "ERR_BAD_REQUEST"];
 const FLIGHT_LIST_ERRORS = [
     "TypeError: Cannot read properties of undefined (reading 'flightList')",
     "TypeError: Cannot read property 'flightList' of undefined",

@@ -52,7 +52,6 @@ const FLIGHT_LIST_ERRORS = [
     "TypeError: Cannot read property 'flightList' of undefined",
 ];
 const SERVICE_UNAVAILABLE_STATUS = 503;
-const BAD_REQUEST = 452;
 
 const shouldRetry = (error) => {
     const isFlightListRelatedError = FLIGHT_LIST_ERRORS.includes(error.response?.data?.error);
@@ -60,11 +59,10 @@ const shouldRetry = (error) => {
     return isFlightListRelatedError || isServiceUnavailable || API_FAILURE_RETRY_CODES.includes(error.code);
 };
 
-const shouldRetryTax= (error) => {
+const shouldRetryTax = (error) => {
     const isFlightListRelatedError = FLIGHT_LIST_ERRORS.includes(error.response?.data?.error);
     const isServiceUnavailable = error.response?.status === SERVICE_UNAVAILABLE_STATUS;
-    const isBadRequest = error.response?.status === BAD_REQUEST;
-    return isBadRequest || isFlightListRelatedError || isServiceUnavailable || API_FAILURE_RETRY_CODES.includes(error.code);
+    return isFlightListRelatedError || isServiceUnavailable || API_FAILURE_RETRY_CODES.includes(error.code);
 };
 
 const searchFlights = async (params) => {

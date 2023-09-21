@@ -291,6 +291,10 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
         console.log(`retry tax success ${uid}`);
     }
 
+    if (response.error) {
+        return {miles: undefined};
+    }
+
     return response;
 };
 

@@ -237,9 +237,6 @@ const buildParams = (
 });
 
 const getTax = async (uid, fareuid, isSmilesMoney) => {
-    const maxAttempts = 3;
-    let attempts = 0;
-
     const params = {
         adults: "1",
         children: "0",
@@ -250,53 +247,25 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
         highlightText: isSmilesMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB",
     };
 
-    const response = await backOff(
-        async () => {
-            attempts++;
-            if (attempts > 1) {
-                console.log(`retrying tax ${uid}`);
-            }
-            const {data} = await smilesTaxClient.get("/boardingtax", {params});
-            const milesNumber = data?.totals?.totalBoardingTax?.miles;
-            const moneyNumber = data?.totals?.totalBoardingTax?.money;
-            return {
-                miles: `${Math.floor(milesNumber / 1000)}K`,
-                milesNumber,
-                money: `$${Math.floor(moneyNumber / 1000)}K`,
-                moneyNumber,
-            };
-        },
-        {
-            jitter: "full",
-            numOfAttempts: maxAttempts,
-            retry: (error, attemptNumber) => {
-                const retry = shouldRetryTax(error);
-                console.log(`error getting tax of ${uid}`,
-                    JSON.stringify({
-                        will_retry: retry,
-                        attemptNumber: attemptNumber - 1,
-                        message: error.message,
-                        code: error.code
-                    }));
-                return retry;
-            },
-        }
-    );
-
-    if (response.error && attempts >= maxAttempts) {
-        return handleErrorForTax(response.error, uid);
+    try {
+        const {data} = await smilesTaxClient.get("/boardingtax", {params});
+        const milesNumber = data?.totals?.totalBoardingTax?.miles;
+        const moneyNumber = data?.totals?.totalBoardingTax?.money;
+        return {
+            miles: `${Math.floor(milesNumber / 1000)}K`,
+            milesNumber,
+            money: `$${Math.floor(moneyNumber / 1000)}K`,
+            moneyNumber,
+        };
+    } catch (error) {
+        console.error(`could not get tax of ${uid}:`, JSON.stringify({
+            message: error.message,
+            code: error.code
+        }));
+        return {miles: undefined};
     }
-
-    if (attempts > 1) {
-        console.log(`retry tax success ${uid}`);
-    }
-
-    if (response.error) {
-        return undefined
-    }
-
-    return response;
 };
+
 
 const validFlight = (flight) =>
     flight.price &&

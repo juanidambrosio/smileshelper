@@ -43,7 +43,7 @@ const handleErrorForTax = (error, id) => {
         config: error.config,
     };
     console.error(`could not get tax of ${id}:`, JSON.stringify(errorDetails));
-    return {miles: undefined};
+    return undefined
 };
 
 const API_FAILURE_RETRY_CODES = ["ETIMEDOUT", "EAI_AGAIN", "ECONNRESET", "ERR_BAD_RESPONSE"];
@@ -292,7 +292,7 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
     }
 
     if (response.error) {
-        return {miles: undefined};
+        return undefined
     }
 
     return response;

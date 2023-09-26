@@ -169,6 +169,7 @@ const saveAlert = async (msg, search) => {
         "last_updated": (new Date()).toLocaleTimeString(),
         "alerts_send": 0,
         "alert_last_send_at": null,
+        "username": msg.from.username || msg.from.id.toString(),
     };
 
     const {getOne} = getDbFunctions();

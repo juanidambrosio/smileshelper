@@ -123,15 +123,21 @@ const updateAlert = async (alert, result, alert_sent = false) => {
             const alertIndex = previousPreferences.alerts.findIndex(existingAlert => existingAlert.id === alert.id);
 
             if (alertIndex !== -1) {
-                // Update the previous_result field
                 previousPreferences.alerts[alertIndex].previous_result = result;
-                if (!previousPreferences.alerts[alertIndex].alerts_send) {
-                    previousPreferences.alerts[alertIndex].alerts_send = 0;
+
+                // update alert random minute
+                const randomMinute = Math.floor(Math.random() * 60);
+                let runEveryHours = previousPreferences.alerts[alertIndex].run_every_hours;
+                if (runEveryHours === undefined) {
+                    runEveryHours = 1
                 }
+                previousPreferences.alerts[alertIndex].previous_result = `0 ${randomMinute} */${runEveryHours} * * *`
+
                 if (alert_sent) {
                     previousPreferences.alerts[alertIndex].alerts_send += 1;
                     previousPreferences.alerts[alertIndex].alert_last_send_at += (new Date()).toLocaleTimeString();
                 }
+
                 previousPreferences.alerts[alertIndex].last_updated = (new Date()).toLocaleTimeString()
                 previousPreferences.username = alert.username;
 
@@ -153,8 +159,9 @@ const updateAlert = async (alert, result, alert_sent = false) => {
 };
 
 
-const saveAlert = async (msg, search) => {
+const createAlert = async (msg, search) => {
     const chatId = msg.chat.id;
+    const runEveryHours = 1
 
     // To avoid running all alerts at the same time and hitting a rate limit, we'll set a random minute for each alert
     const randomMinute = Math.floor(Math.random() * 60);
@@ -162,7 +169,8 @@ const saveAlert = async (msg, search) => {
     // Initialize a new alert object
     const newAlert = {
         "id": uuidv4(),
-        "cron": `0 ${randomMinute} */3 * * *`, // Every 3 hours at a random minute
+        "cron": `0 ${randomMinute} */${runEveryHours} * * *`, // Every 1 hour at a random minute
+        "run_every_hours": runEveryHours,
         "search": search,
         "chat_id": chatId,
         "previous_result": null,
@@ -210,7 +218,7 @@ const saveAlert = async (msg, search) => {
     }
 };
 
-const saveCron = async (msg, croncmd, cmd) => {
+const createCron = async (msg, croncmd, cmd) => {
     let newCron = {
         "id": uuidv4(),
         "cron": croncmd,
@@ -218,7 +226,7 @@ const saveCron = async (msg, croncmd, cmd) => {
         "chat_id": msg.chat.id
     }
 
-    const {getOne, upsert} = getDbFunctions();
+    const {getOne} = getDbFunctions();
 
     try {
         // Fetch existing preferences for the chat ID
@@ -412,8 +420,8 @@ module.exports = {
     getPreferences,
     getRegions,
     deletePreferences,
-    saveCron,
-    saveAlert,
+    saveCron: createCron,
+    saveAlert: createAlert,
     updateAlert,
     findAlert,
     getCrons,

@@ -175,52 +175,34 @@ async function loadAlert(bot, alert, just_created = false) {
 }
 
 function shouldSendAlert(previous_result, new_result) {
-    if (previous_result === undefined || new_result === undefined) {
-        console.log("error comparing alerts", previous_result, new_result)
-        return false
+    try {
+        const previousMinPrice = getMinPrice(previous_result);
+        const newMinPrice = getMinPrice(new_result);
+        return newMinPrice < previousMinPrice;
+    } catch (e) {
+        console.error("Error comparing alerts", e, previous_result, new_result);
+        return false;
     }
-
-    const previousMinPrice = parsePrice(previous_result)
-    const newMinPrice = parsePrice(new_result)
-
-    if (previousMinPrice === undefined || newMinPrice === undefined) {
-        console.log("error comparing alerts prices", previous_result, new_result)
-        return false
-    }
-
-    return newMinPrice < previousMinPrice
 }
 
+function getMinPrice(text) {
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    let minPrice = lines.reduce((min, line) => {
+        const price = parsePrice(line);
+        return (price !== undefined) ? Math.min(min, price) : min;
+    }, Infinity);
+    return (minPrice !== Infinity) ? minPrice : undefined;
+}
 function parsePrice(text) {
-    // Extract the first string between asterisks
     const asteriskRegex = /\*([^\*]+)\*/;
     const match = asteriskRegex.exec(text);
+    if (!match) return undefined;
 
-    if (match) {
-        const innerText = match[1];
+    const innerText = match[1];
+    const firstNumber = parseInt(innerText.match(/(\d+)/)?.[1] || 0, 10);
+    const numberWithK = parseInt(innerText.match(/(\d+)K/)?.[1] || 0, 10) * 1000;
 
-        // Extract the first number
-        const firstNumberRegex = /(\d+)/;
-        const firstNumberMatch = firstNumberRegex.exec(innerText);
-
-        // Extract the first number followed by 'K'
-        const numberWithKRegex = /(\d+)K/;
-        const numberWithKMatch = numberWithKRegex.exec(innerText);
-
-        let sum = 0;
-
-        if (firstNumberMatch) {
-            sum += parseInt(firstNumberMatch[1], 10);
-        }
-
-        if (numberWithKMatch) {
-            sum += parseInt(numberWithKMatch[1], 10) * 1000; // Multiply by 1000 because of 'K'
-        }
-
-        return sum;
-    } else {
-        return undefined;
-    }
+    return firstNumber + numberWithK;
 }
 
 // Refactored loadCron function

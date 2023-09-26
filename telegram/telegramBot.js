@@ -160,18 +160,67 @@ async function loadAlert(bot, alert, just_created = false) {
             if (!res) return;
 
             const saved_alert = await findAlert(alert);
-            const send_alert = saved_alert.alert.previous_result !== res // diff found, send alert
+            const send_alert = shouldSendAlert(saved_alert.alert.previous_result, res)
             await updateAlert(alert, res, send_alert); // always update alert with the latest result
 
             // if saved alert did not have a previous result or diff was not found , return
             if (saved_alert.alert.previous_result == null || !send_alert) return;
 
-            await bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró cambios`);
+            await bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró que bajo el precio!`);
             await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));
         } catch (e) {
             console.log(`error running alert: ${e.message}`);
         }
     });
+}
+
+function shouldSendAlert(previous_result, new_result) {
+    if (previous_result === undefined || new_result === undefined) {
+        console.log("error comparing alerts", previous_result, new_result)
+        return false
+    }
+
+    const previousMinPrice = parsePrice(previous_result)
+    const newMinPrice = parsePrice(new_result)
+
+    if (previousMinPrice === undefined || newMinPrice === undefined) {
+        console.log("error comparing alerts prices", previous_result, new_result)
+        return false
+    }
+
+    return newMinPrice < previousMinPrice
+}
+
+function parsePrice(text) {
+    // Extract the first string between asterisks
+    const asteriskRegex = /\*([^\*]+)\*/;
+    const match = asteriskRegex.exec(text);
+
+    if (match) {
+        const innerText = match[1];
+
+        // Extract the first number
+        const firstNumberRegex = /(\d+)/;
+        const firstNumberMatch = firstNumberRegex.exec(innerText);
+
+        // Extract the first number followed by 'K'
+        const numberWithKRegex = /(\d+)K/;
+        const numberWithKMatch = numberWithKRegex.exec(innerText);
+
+        let sum = 0;
+
+        if (firstNumberMatch) {
+            sum += parseInt(firstNumberMatch[1], 10);
+        }
+
+        if (numberWithKMatch) {
+            sum += parseInt(numberWithKMatch[1], 10) * 1000; // Multiply by 1000 because of 'K'
+        }
+
+        return sum;
+    } else {
+        return undefined;
+    }
 }
 
 // Refactored loadCron function

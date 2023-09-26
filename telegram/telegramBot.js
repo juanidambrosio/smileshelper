@@ -166,7 +166,7 @@ async function loadAlert(bot, alert, just_created = false) {
             // if saved alert did not have a previous result or diff was not found , return
             if (saved_alert.alert.previous_result == null || !send_alert) return;
 
-            await bot.sendMessage(alert.chat_id, `La alerta ${alert.search} encontró que bajo el precio!`);
+            await bot.sendMessage(alert.chat_id, `alert: ${alert.search} podría haber bajado de precio`);
             await sendMessageInChunks(bot, alert.chat_id, res, getInlineKeyboardMonths(groups));
         } catch (e) {
             console.log(`error running alert: ${e.message}`);
@@ -193,6 +193,7 @@ function getMinPrice(text) {
     }, Infinity);
     return (minPrice !== Infinity) ? minPrice : undefined;
 }
+
 function parsePrice(text) {
     const asteriskRegex = /\*([^\*]+)\*/;
     const match = asteriskRegex.exec(text);

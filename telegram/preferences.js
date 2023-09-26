@@ -125,14 +125,6 @@ const updateAlert = async (alert, result, alert_sent = false) => {
             if (alertIndex !== -1) {
                 previousPreferences.alerts[alertIndex].previous_result = result;
 
-                // update alert random minute
-                const randomMinute = Math.floor(Math.random() * 60);
-                let runEveryHours = previousPreferences.alerts[alertIndex].run_every_hours;
-                if (runEveryHours === undefined) {
-                    runEveryHours = 1
-                }
-                previousPreferences.alerts[alertIndex].previous_result = `0 ${randomMinute} */${runEveryHours} * * *`
-
                 if (alert_sent) {
                     previousPreferences.alerts[alertIndex].alerts_send += 1;
                     previousPreferences.alerts[alertIndex].alert_last_send_at += (new Date()).toLocaleTimeString();

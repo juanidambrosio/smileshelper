@@ -41,7 +41,7 @@ const {
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, {
-    polling: { interval: 10000, params: { offset: -1, limit: 1 } },
+    polling: { interval: 10000, params: { offset: -1 } },
     onlyFirstMatch: true,
   });
   await initializeDbFunctions();
@@ -82,25 +82,25 @@ const listen = async () => {
     await searchSingleDestination(match, msg, bot);
   });
 
-  bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, false, false);
-  });
+  // bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, false, false);
+  // });
 
-  bot.onText(regexMultipleDestinationFixedDay, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, true, false);
-  });
+  // bot.onText(regexMultipleDestinationFixedDay, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, true, false);
+  // });
 
-  bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, false, true);
-  });
+  // bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, false, true);
+  // });
 
-  bot.onText(regexMultipleOriginFixedDay, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, true, true);
-  });
+  // bot.onText(regexMultipleOriginFixedDay, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, true, true);
+  // });
 
-  bot.onText(regexRoundTrip, async (msg, match) => {
-    await searchRoundTrip(match, msg, bot);
-  });
+  // bot.onText(regexRoundTrip, async (msg, match) => {
+  //   await searchRoundTrip(match, msg, bot);
+  // });
 
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");

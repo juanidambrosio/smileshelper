@@ -16,7 +16,7 @@ const headers = {
   "Content-Type": "application/json",
   Region: "ARGENTINA",
   "User-Agent": "",
-  "x-api-key": "",
+  "x-api-key": "aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw",
 };
 
 const userAgents = [

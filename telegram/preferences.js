@@ -128,10 +128,12 @@ const updateAlert = async (alert, result, alert_sent = false) => {
                 if (alert_sent) {
                     previousPreferences.alerts[alertIndex].alerts_send += 1;
                     previousPreferences.alerts[alertIndex].alert_last_send_at = (new Date()).toLocaleString();
+                    previousPreferences.alerts[alertIndex].alert_last_send_result = result;
                 }
 
                 previousPreferences.alerts[alertIndex].last_updated = (new Date()).toLocaleString()
                 previousPreferences.username = alert.username;
+
 
                 // Save the updated preferences back to the database
                 await setPreferencesDb({id: chatId, result: previousPreferences}, upsert);
@@ -169,6 +171,7 @@ const createAlert = async (msg, search) => {
         "last_updated": (new Date()).toLocaleTimeString(),
         "alerts_send": 0,
         "alert_last_send_at": null,
+        "alert_last_send_result": null,
         "username": msg.from.username || msg.from.id.toString(),
     };
 

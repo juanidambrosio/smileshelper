@@ -245,17 +245,17 @@ const listen = async () => {
 
     // Set your commands here
     bot.setMyCommands([
-        {command: '/start', description: 'Iniciar el bot'},
-        {command: '/regiones', description: 'Listar regiones disponibles'},
-        {command: '/links', description: 'Enlaces útiles'},
-        {command: '/aerolineas', description: 'Lista de códigos de aerolíneas'},
-        {command: '/filtros', description: 'Ver filtros establecidos'},
-        {command: '/filtroseliminar', description: 'Elimina todos los filtros, crons y alertas'},
-        {command: '/vercrons', description: 'Listar crons'},
-        {command: '/agregarcron', description: 'Agregar cron'},
-        {command: '/agregaralerta', description: 'Agregar alerta: /agregaralerta BUE MIA 2024-05'},
-        {command: '/eliminaralerta', description: 'Eliminar alerta: /eliminaralerta BUE MIA 2024-05'},
-        {command: '/veralertas', description: 'Listar alertas: /veralertas'},
+        {command: '/start', description: 'inicia el bot: /start'},
+        {command: '/regiones', description: 'lista regiones: /regiones'},
+        {command: '/links', description: 'lista links utiles: /links'},
+        {command: '/aerolineas', description: 'lista codigos de aerolineas: /aerolineas'},
+        {command: '/filtros', description: 'lista filtros: /filtros'},
+        {command: '/filtroseliminar', description: 'elimina todos los filtros, crons y alertas: /filtroseliminar'},
+        {command: '/vercrons', description: 'lista crons: /vercrons'},
+        {command: '/agregarcron', description: 'agrega cron: /agregarcron 12 30 BUE MIA 2024-05'},
+        {command: '/agregaralerta', description: 'agrega alerta: /agregaralerta BUE MIA 2024-05'},
+        {command: '/eliminaralerta', description: 'elimina alerta: /eliminaralerta BUE MIA 2024-05'},
+        {command: '/veralertas', description: 'lista alertas: /veralertas'},
         // Add more commands as needed
     ]);
 

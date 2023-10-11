@@ -411,7 +411,7 @@ const listen = async () => {
 
         bot.sendMessage(chatId, "Procesando la alerta");
         await loadAlert(bot, alert, true)
-        bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
+        bot.sendMessage(chatId, `Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /eliminaralerta ${alert.search}`);
     })
 
     bot.onText(regexDeleteAlert, async (msg, match) => {

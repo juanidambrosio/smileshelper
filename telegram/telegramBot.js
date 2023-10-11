@@ -21,7 +21,8 @@ const {
     regexFilters,
     regexCustomRegion,
     regexCron,
-    regexAlert
+    regexAlert,
+    regexDeleteAlert,
 } = require("../utils/regex");
 
 const {searchRoundTrip} = require("./search");
@@ -36,14 +37,15 @@ const {
     setPreferences,
     deletePreferences,
     setRegion,
-    saveCron,
+    createCron,
     updateAlert,
     findAlert,
     getCrons,
     getAlerts,
     getAllCrons,
     getAllAlerts,
-    saveAlert,
+    createAlert,
+    deleteAlert,
 } = require("./preferences");
 
 const {initializeDbFunctions} = require("../db/dbFunctions");
@@ -248,11 +250,12 @@ const listen = async () => {
         {command: '/links', description: 'Enlaces útiles'},
         {command: '/aerolineas', description: 'Lista de códigos de aerolíneas'},
         {command: '/filtros', description: 'Ver filtros establecidos'},
-        {command: '/filtroseliminar', description: 'Eliminar filtros, crons y alertas'},
-        {command: '/vercrons', description: 'Listar crons '},
+        {command: '/filtroseliminar', description: 'Elimina todos los filtros, crons y alertas'},
+        {command: '/vercrons', description: 'Listar crons'},
         {command: '/agregarcron', description: 'Agregar cron'},
-        {command: '/agregaralerta', description: 'Agregar alerta'},
-        {command: '/veralertas', description: 'Listar alertas'},
+        {command: '/agregaralerta', description: 'Agregar alerta: /agregaralerta BUE MIA 2024-05'},
+        {command: '/eliminaralerta', description: 'Eliminar alerta: /eliminaralerta BUE MIA 2024-05'},
+        {command: '/veralertas', description: 'Listar alertas: /veralertas'},
         // Add more commands as needed
     ]);
 
@@ -404,11 +407,28 @@ const listen = async () => {
     bot.onText(regexAlert, async (msg, match) => {
         const chatId = msg.chat.id;
         const searchText = match[1]
-        const {alert} = await saveAlert(msg, searchText);
+        const {alert} = await createAlert(msg, searchText);
 
         bot.sendMessage(chatId, "Procesando la alerta");
         await loadAlert(bot, alert, true)
         bot.sendMessage(chatId, "Se agregó la alerta correctamente. Si se encuentran cambios con respecto a esa búsqueda se te avisará por este medio. Para eliminarla, usa /filtroseliminar");
+    })
+
+    bot.onText(regexDeleteAlert, async (msg, match) => {
+        const chatId = msg.chat.id;
+        const searchText = match[1]
+        const {alert, error} = await deleteAlert(msg, searchText);
+        if (alert !== undefined) {
+            bot.sendMessage(chatId, `Se eliminó la alerta ${alert.search}`);
+            reloadCrons(bot)
+        }
+        if (error !== undefined) {
+            if (error === "not_found" || error === "no_alerts") {
+                bot.sendMessage(chatId, `No se encontró la alerta ${searchText}`);
+            } else {
+                bot.sendMessage(chatId, `Error borrando la alerta ${searchText}`);
+            }
+        }
     })
 
     bot.onText(regexCron, async (msg, match) => {
@@ -445,7 +465,7 @@ const listen = async () => {
         }
 
 
-        const {_, cron} = await saveCron(msg, cronCmd, searchText)
+        const {_, cron} = await createCron(msg, cronCmd, searchText)
         bot.sendMessage(chatId, "Procesando cron");
         await loadCron(bot, cron, true)
         bot.sendMessage(chatId, "Se agregó el cron correctamente. Para eliminarlo, usa /filtroseliminar");

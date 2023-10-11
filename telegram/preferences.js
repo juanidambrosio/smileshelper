@@ -152,6 +152,39 @@ const updateAlert = async (alert, result, alert_sent = false) => {
     }
 };
 
+const deleteAlert = async (msg, search) => {
+    const {getOne, upsert} = getDbFunctions();
+
+    try {
+        // Fetch existing preferences for the chat ID
+        const chatId = msg.chat.id;
+        const previousPreferences = (await getPreferencesDb({id: chatId}, getOne)) || {};
+
+        // Check if there are existing alerts
+        if (Array.isArray(previousPreferences.alerts)) {
+            // Find the index of the alert to delete based on its ID
+            const alertIndexToDelete = previousPreferences.alerts.findIndex(alert => alert.search === search);
+            const alert = previousPreferences.alerts[alertIndexToDelete];
+
+            if (alertIndexToDelete !== -1) {
+                // Remove the alert from the array
+                previousPreferences.alerts.splice(alertIndexToDelete, 1);
+
+                // Save the updated preferences back to the database
+                await setPreferencesDb({id: chatId, result: previousPreferences}, upsert);
+
+                return {alert: alert};
+            } else {
+                return {alert: undefined, error: "not_found"};
+            }
+        } else {
+            return {alert: undefined, error: "no_alerts"};
+        }
+    } catch (error) {
+        console.log(error);
+        return {alert: undefined, error: 'error'};
+    }
+};
 
 const createAlert = async (msg, search) => {
     const chatId = msg.chat.id;
@@ -415,8 +448,9 @@ module.exports = {
     getPreferences,
     getRegions,
     deletePreferences,
-    saveCron: createCron,
-    saveAlert: createAlert,
+    createCron,
+    createAlert,
+    deleteAlert,
     updateAlert,
     findAlert,
     getCrons,

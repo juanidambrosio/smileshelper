@@ -21,6 +21,8 @@ const regexCron = /\/agregarcron\s+([\d\*]+)\s+([\d\*]+)\s+([A-Z\s\d-]+)/;
 
 const regexAlert =  /\/agregaralerta\s+([A-Z\s\d-]+)/;
 
+const regexDeleteAlert =  /\/eliminaralerta\s+([A-Z\s\d-]+)/;
+
 module.exports = {
   regexSingleCities,
   regexMultipleDestinationMonthly,
@@ -32,4 +34,5 @@ module.exports = {
   regexCustomRegion,
   regexCron,
   regexAlert,
+  regexDeleteAlert
 };

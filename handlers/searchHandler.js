@@ -16,6 +16,7 @@ const {
   getFlights,
   getFlightsMultipleCities,
   getFlightsRoundTrip,
+  getFlightsLambda,
 } = require("../clients/smilesClient");
 
 const { notFound, genericError, tripTypes } = require("../config/constants");
@@ -43,15 +44,16 @@ const searchCityQuery = async (msg, match) => {
       )) || {}
     : {};
 
-  const flightList = await getFlights(payload);
-  const bestFlights = flightList.results;
+  //const flightList = await getFlights(payload);
+  const flightList = await getFlightsLambda(payload);
+  //const bestFlights = flightList.results;
   if (flightList.error) {
     throw new Error(flightList.error);
   }
-  if (bestFlights.length === 0) {
+  if (flightList.length === 0) {
     return { response: notFound };
   }
-  const response = bestFlights.reduce(
+  const response = flightList.reduce(
     (previous, current) =>
       msg.promoMiles && current.price > msg.promoMiles
         ? previous
@@ -94,7 +96,7 @@ const searchCityQuery = async (msg, match) => {
         origin: payload.origin,
         destination: payload.destination,
         departureDate: payload.departureDate,
-        price: bestFlights[0].price,
+        price: flightList[0].price,
         searchType: "airport",
         smilesAndMoney: payload.preferences?.smilesAndMoney || false,
       },
@@ -103,7 +105,7 @@ const searchCityQuery = async (msg, match) => {
   }
   return {
     response,
-    bestFlight: bestFlights[0],
+    bestFlight: flightList[0],
     preferences: payload.preferences,
   };
 };

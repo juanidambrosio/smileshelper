@@ -130,11 +130,13 @@ const createFlightObject = async (flightResult, preferences, cabinType) => {
 };
 
 const getFlights = async (parameters) => {
-    const {origin, destination, departureDate, cabinType, adults, preferences} = parameters;
+    const {origin, destination, departureDate, cabinType, adults, preferences, startDate, endDate} = parameters;
     const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
     const getFlightPromises = [];
+    const startDateFinal = startDate > 0 ? startDate : calculateFirstDay(departureDate);
+    const endDateFinal = endDate > 0 ? endDate : lastDayOfMonthDeparture;
 
-    for (let day = calculateFirstDay(departureDate); day <= lastDayOfMonthDeparture; day++) {
+    for (let day = startDateFinal; day <= endDateFinal; day++) {
         const params = buildParams(origin, destination, departureDate.replace("/", "-"), adults, false, day, preferences?.brasilNonGol ? "true" : "false");
         getFlightPromises.push(searchFlights(params));
     }

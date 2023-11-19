@@ -128,8 +128,8 @@ const findMonthAndYearFromText = (text) => {
 };
 
 const generatePayloadMonthlySingleDestination = (match) => {
-  const [origin, destination, departureMonth, parameter1, parameter2] =
-    match.slice(1, 6);
+  const [origin, destination, departureMonth, parameter1, parameter2, startDate, endDate] =
+    match.slice(1, 8);
   //TODO: Update below function to receive month when changing all payload generations
   const departureDate = findMonthAndYearFromText(match[0]);
   const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
@@ -139,6 +139,8 @@ const generatePayloadMonthlySingleDestination = (match) => {
     departureDate,
     adults: adults || "",
     cabinType: cabinType || "",
+    startDate: startDate || -1,
+    endDate: endDate || -1,
   };
 };
 

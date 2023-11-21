@@ -1,5 +1,7 @@
 const regexSingleCities =
   /(^\w{3})[\s-](\w{3})\s(?:\d{4}[-\/])?([01]\d)(?:\s(\d|\w{3}))?(?:\s(\d|\w{3}))?$/;
+const regexSingleCitiesNew =   
+  /(^\w{3})[\s-](\w{3})\s(?:\d{4}[-\/])?([01]\d)(?:\s(\d{1,2}|\w{3}))?(?:\s(\d{1,2}|\w{3}))?(?:\s(\d{1,2})-(\d{1,2}))?$/;
 const regexMultipleDestinationMonthly =
   /(^\w{3})[\s|-](\w{4,})\s(?:\d{4}[-\/])?([01]\d)(?:\s(\d|\w{3}))?(?:\s(\d|\w{3}))?$/;
 const regexMultipleDestinationFixedDay =
@@ -24,6 +26,7 @@ const regexAlert =  /\/agregaralerta\s+([A-Z\s\d-]+)/;
 const regexDeleteAlert =  /\/eliminaralerta\s+([A-Z\s\d-]+)/;
 
 module.exports = {
+  regexSingleCitiesNew,
   regexSingleCities,
   regexMultipleDestinationMonthly,
   regexMultipleDestinationFixedDay,

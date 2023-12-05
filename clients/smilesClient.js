@@ -151,13 +151,18 @@ const getFlights = async (parameters) => {
 };
 
 const getFlightsMultipleCities = async (parameters, fixedDay, isMultipleOrigin) => {
-    const {origin, destination, departureDate, cabinType, adults, preferences} = parameters;
+    const {origin, destination, departureDate, cabinType, adults, preferences, startDate, endDate} = parameters;
     const multipleCity = isMultipleOrigin ? origin : destination;
     const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
     const getFlightPromises = [];
+    const startDateFinal = startDate > 0 ? startDate : calculateFirstDay(departureDate);
+    let endDateFinal = endDate > 0 ? endDate : lastDayOfMonthDeparture;
+    if (fixedDay) {
+        endDateFinal = 1
+    }
 
     for (const city of multipleCity) {
-        for (let day = fixedDay ? 0 : calculateFirstDay(departureDate); day < (fixedDay ? 1 : lastDayOfMonthDeparture); day++) {
+        for (let day = startDateFinal; day <= endDateFinal; day++) {
             const params = buildParams(isMultipleOrigin ? city : origin, isMultipleOrigin ? destination : city, departureDate.replace("/", "-"), adults, fixedDay, fixedDay ? undefined : day, preferences?.brasilNonGol ? "true" : "false");
             getFlightPromises.push(searchFlights(params));
         }

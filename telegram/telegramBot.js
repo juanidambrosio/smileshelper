@@ -12,7 +12,6 @@ const regions = require("../data/regions");
 const {applySimpleMarkdown} = require("../utils/parser");
 
 const {
-    regexSingleCitiesNew,
     regexSingleCities,
     regexMultipleDestinationMonthly,
     regexMultipleDestinationFixedDay,
@@ -121,8 +120,8 @@ async function handleSearch(searchText, msg, bot, send_message = true) {
     let res;
     let groups;
     switch (true) {
-        case regexSingleCitiesNew.test(searchText):
-            groups = regexSingleCitiesNew.exec(searchText);
+        case regexSingleCities.test(searchText):
+            groups = regexSingleCities.exec(searchText);
             res = await searchSingleDestination(groups, msg, bot, send_message);
             break;
         case regexMultipleDestinationMonthly.test(searchText):
@@ -288,7 +287,7 @@ const listen = async () => {
         bot.sendMessage(msg.chat.id, airlinesCodes, {parse_mode: "MarkdownV2"})
     );
 
-    bot.onText(regexSingleCitiesNew, async (msg, match) => {
+    bot.onText(regexSingleCities, async (msg, match) => {
         await searchSingleDestination(match, msg, bot);
     });
 

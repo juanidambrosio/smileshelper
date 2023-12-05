@@ -159,7 +159,7 @@ const generatePayloadMonthlySingleDestinationAlerts = (text) => {
 
 const generatePayloadMultipleDestinations = (match, customRegions = []) => {
   const [origin, destination, departureMonth, parameter1, parameter2, startDate, endDate] =
-    match.slice(1, 6);
+    match.slice(1, 8);
   const departureDate = findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = destination.toUpperCase();
@@ -178,7 +178,7 @@ const generatePayloadMultipleDestinations = (match, customRegions = []) => {
 
 const generatePayloadMultipleOrigins = (match, customRegions = {}) => {
   const [origin, destination, departureMonth, parameter1, parameter2, startDate, endDate] =
-    match.slice(1, 6);
+    match.slice(1, 8);
   const departureDate = findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = origin.toUpperCase();

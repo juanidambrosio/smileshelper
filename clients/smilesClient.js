@@ -155,9 +155,10 @@ const getFlightsMultipleCities = async (parameters, fixedDay, isMultipleOrigin) 
     const multipleCity = isMultipleOrigin ? origin : destination;
     const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
     const getFlightPromises = [];
-    const startDateFinal = startDate > 0 ? startDate : calculateFirstDay(departureDate);
+    let startDateFinal = startDate > 0 ? startDate : calculateFirstDay(departureDate);
     let endDateFinal = endDate > 0 ? endDate : lastDayOfMonthDeparture;
     if (fixedDay) {
+        startDateFinal = 0
         endDateFinal = 1
     }
 

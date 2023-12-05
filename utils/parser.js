@@ -128,8 +128,8 @@ const findMonthAndYearFromText = (text) => {
 };
 
 const generatePayloadMonthlySingleDestination = (match) => {
-  const [origin, destination, departureMonth, parameter1, parameter2] =
-    match.slice(1, 6);
+  const [origin, destination, departureMonth, parameter1, parameter2, startDate, endDate] =
+    match.slice(1, 8);
   //TODO: Update below function to receive month when changing all payload generations
   const departureDate = findMonthAndYearFromText(match[0]);
   const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
@@ -139,6 +139,8 @@ const generatePayloadMonthlySingleDestination = (match) => {
     departureDate,
     adults: adults || "",
     cabinType: cabinType || "",
+    startDate: startDate || -1,
+    endDate: endDate || -1,
   };
 };
 
@@ -156,8 +158,8 @@ const generatePayloadMonthlySingleDestinationAlerts = (text) => {
 };
 
 const generatePayloadMultipleDestinations = (match, customRegions = []) => {
-  const [origin, destination, departureMonth, parameter1, parameter2] =
-    match.slice(1, 6);
+  const [origin, destination, departureMonth, parameter1, parameter2, startDate, endDate] =
+    match.slice(1, 8);
   const departureDate = findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = destination.toUpperCase();
@@ -168,13 +170,15 @@ const generatePayloadMultipleDestinations = (match, customRegions = []) => {
     departureDate,
     adults: adults || "",
     cabinType: cabinType || "",
+    startDate: startDate || -1,
+    endDate: endDate || -1,
     region,
   };
 };
 
 const generatePayloadMultipleOrigins = (match, customRegions = {}) => {
-  const [origin, destination, departureMonth, parameter1, parameter2] =
-    match.slice(1, 6);
+  const [origin, destination, departureMonth, parameter1, parameter2, startDate, endDate] =
+    match.slice(1, 8);
   const departureDate = findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = origin.toUpperCase();
@@ -185,6 +189,8 @@ const generatePayloadMultipleOrigins = (match, customRegions = {}) => {
     departureDate,
     adults: adults || "",
     cabinType: cabinType || "",
+    startDate: startDate || -1,
+    endDate: endDate || -1,
     region,
   };
 };
@@ -267,6 +273,7 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetAirlines = text.indexOf(" a:");
   const offsetStops = text.indexOf(" e:");
   const offsetResults = text.indexOf(" r:");
+  const offsetMilePrice = text.indexOf(" pm:");
   const offsetHours = text.indexOf(" h:");
   const offsetVF = text.indexOf(" vf");
   const offsetBrasilNonGol = text.indexOf(" singol");
@@ -301,6 +308,10 @@ const preferencesParser = (text, booleanPreferences) => {
 
   if (offsetResults > 0) {
     result.maxresults = text.substring(offsetResults + 3, offsetResults + 5);
+  }
+
+  if (offsetMilePrice > 0) {
+    result.milePrice = parseInt(text.substring(offsetMilePrice + 4, offsetResults + 50000));
   }
 
   if (offsetHours > 0) {

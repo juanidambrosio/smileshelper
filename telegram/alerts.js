@@ -27,7 +27,7 @@ const checkDailyAlerts = async (bot) => {
       const success = await checkPromoFlight(text);
       progressBar.increment();
       if (!success) {
-        console.log(`Couldnt obtain result for alert query ${text.journey}`);
+        console.log(`Couldn't obtain result for alert query ${text.journey}`);
         failedRequests++;
       }
     }
@@ -82,7 +82,10 @@ const checkPromoFlight = async (text, retries = 0) => {
       console.log(`Retry ${retries} for ${text.journey}`);
       await sleep(delaySecondsRetriesAlerts);
       return await checkPromoFlight(text, retries);
-    } else return false;
+    } else{
+      console.log("no more retries")
+      return false;
+    }
   }
 };
 

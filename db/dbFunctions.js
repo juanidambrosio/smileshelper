@@ -9,9 +9,9 @@ const initializeDbFunctions = async () => {
   const flightSearch = await getDbCollection("flight_search");
   const preferences = await getDbCollection("preferences");
   const { createOne } = dbOperations(flightSearch);
-  const { upsert, getOne, deleteOne } = dbOperations(preferences);
+  const { upsert, getOne, deleteOne, getAll } = dbOperations(preferences);
 
-  dbFunctions = { createOne, upsert, getOne, deleteOne };
+  dbFunctions = { createOne, upsert, getOne, deleteOne, getAll };
 };
 
 module.exports = { initializeDbFunctions, getDbFunctions };

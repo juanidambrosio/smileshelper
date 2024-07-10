@@ -8,6 +8,7 @@
     "test": "jest --config jest.config.js",
     "listen": "node twitter/tweetListener.js",
     "telegram": "node telegram/telegramBot.js",
+    "telegramLocal": "TELEGRAM_LOCAL=true node telegram/telegramBot.js",
     "prepare": "husky install"
   },
   "author": "",
@@ -20,13 +21,16 @@
     "marked": "^4.2.5",
     "marked-terminal": "^5.1.1",
     "mongodb": "^4.9.0",
+    "node-cron": "^3.0.2",
     "node-emoji": "^1.11.0",
     "node-schedule": "^2.1.0",
     "node-telegram-bot-api": "^0.58.0",
-    "twitter-api-v2": "^1.12.5"
+    "twitter-api-v2": "^1.12.5",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.20.2",
+    "@flydotio/dockerfile": "^0.4.1",
     "babel-jest": "^29.4.0",
     "babel-polyfill": "^6.26.0",
     "husky": "^8.0.3",

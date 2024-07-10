@@ -15,6 +15,10 @@ const getOne = (collection) => async (id) => {
   } else throw new Error("getOne: Id provided has an incorrect format");
 };
 
+const getAll = (collection) => async () => {
+  return collection.find({}).toArray();
+};
+
 const createOne = (collection) => async (event) => collection.insertOne(event);
 
 const updateOne = (collection) => async (id, updatedEvent) => {
@@ -39,6 +43,7 @@ module.exports = (dbCollection) => {
   return {
     getMany: getMany(dbCollection),
     getOne: getOne(dbCollection),
+    getAll: getAll(dbCollection),
     createOne: createOne(dbCollection),
     updateOne: updateOne(dbCollection),
     deleteOne: deleteOne(dbCollection),

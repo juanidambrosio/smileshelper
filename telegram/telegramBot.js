@@ -30,7 +30,6 @@ const {
   setRegion,
 } = require("../handlers/preferencesHandler");
 
-const { initializeDbFunctions } = require("../db/dbFunctions");
 const {
   searchSingleDestination,
   searchMultipleDestination,
@@ -39,13 +38,29 @@ const {
   calculateMoney,
 } = require("../handlers/telegramBotHandler");
 
+const messageQueue = require("../utils/messageQueue");
+
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, {
-    polling: { interval: 10000, params: { limit: 1 } },
+    polling: true,
     onlyFirstMatch: true,
   });
-  await initializeDbFunctions();
+  
   //await checkDailyAlerts();
+
+  const queueMessage = async (msg, handler) => {
+    const userId = msg.from.username || msg.from.id.toString();
+    const result = await messageQueue.addMessage(userId, msg, handler);
+  
+    await bot.sendMessage(
+      msg.chat.id,
+      result.message
+    );
+  
+    if (!result.error) {
+      messageQueue.processQueue();
+    }
+  };
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })
@@ -79,7 +94,9 @@ const listen = async () => {
   );
 
   bot.onText(regexSingleCities, async (msg, match) => {
-    await searchSingleDestination(match, msg, bot);
+    await queueMessage(msg, async (message) => {
+      await searchSingleDestination(match, message, bot);
+    });
   });
 
   // bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
@@ -87,7 +104,9 @@ const listen = async () => {
   // });
 
   bot.onText(regexMultipleDestinationFixedDay, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, true, false);
+    await queueMessage(msg, async (message) => {
+      await searchMultipleDestination(match, message, bot, true, false);
+    });
   });
 
   // bot.onText(regexMultipleOriginMonthly, async (msg, match) => {

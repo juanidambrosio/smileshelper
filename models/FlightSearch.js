@@ -1,6 +1,6 @@
 class FlightSearch {
   constructor(
-    author_id,
+    user_id,
     source,
     date,
     origin,
@@ -13,7 +13,7 @@ class FlightSearch {
     searchType,
     smilesAndMoney
   ) {
-    this.author_id = author_id;
+    this.user_id = user_id;
     this.source = source;
     this.date = date;
     this.origin = origin;

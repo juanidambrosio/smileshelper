@@ -41,7 +41,7 @@ const searchSingleDestination = async (match, msg, bot) => {
       },
     });
   } catch (error) {
-    console.log(error.message);
+    console.log(error.message + " - " + error.response?.status);
     bot.sendMessage(msg.chat.id, buildError(error.message));
   }
 };

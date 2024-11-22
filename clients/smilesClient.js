@@ -66,8 +66,8 @@ const searchFlights = async (params) => {
     return await smilesClient.get("/airlines/search", { params });
   }
   catch (error) {
-    console.log(error.message);
-    return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
+    console.log(error.message + " - " + error.response?.status);
+    throw new Error("Fallo al obtener los vuelos.");
   }
 };
 
@@ -75,66 +75,56 @@ const getFlights = async (parameters) => {
   const { origin, destination, departureDate, cabinType, adults, preferences } =
     parameters;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
-  try {
-    const getFlightPromises = [];
-    for (
-      let day = calculateFirstDay(departureDate);
-      day <= lastDayOfMonthDeparture;
-      day++
-    ) {
-      const params = buildParams(
-        origin,
-        destination,
-        departureDate.replace("/", "-"),
-        adults,
-        false,
-        day,
-        preferences?.brasilNonGol ? "true" : "false"
-      );
-      getFlightPromises.push(searchFlights(params));
-    }
-    const flightResults = (await Promise.all(getFlightPromises)).flat();
-    const mappedFlightResults = (
-      await Promise.all(
-        flightResults.map(async (flightResult) => {
-          const { flight, price, money, fareUid } = getBestFlight(
-            flightResult.data?.requestedFlightSegmentList[0],
-            { ...preferences, cabinType },
-            preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
-          );
-          return {
-            origin: flight.departure?.airport?.code,
-            destination: flight.arrival?.airport?.code,
-            price,
-            money,
-            departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
-            stops: flight.stops?.toString(),
-            duration: flight.duration?.hours?.toString(),
-            airline: flight.airline?.name,
-            seats: flight.availableSeats?.toString(),
-            tax: fareUid
-              ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
-              : undefined,
-          };
-        })
-      )
-    ).filter((flight) => validFlight(flight));
-
-    return {
-      results: sortFlights(mappedFlightResults).slice(
-        0,
-        getBestFlightsCount(preferences?.maxresults)
-      ),
-    };
-  } catch (error) {
-    return {
-      statusError: error.response?.status,
-      error:
-        error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message,
-    };
+  const getFlightPromises = [];
+  for (
+    let day = calculateFirstDay(departureDate);
+    day <= lastDayOfMonthDeparture;
+    day++
+  ) {
+    const params = buildParams(
+      origin,
+      destination,
+      departureDate.replace("/", "-"),
+      adults,
+      false,
+      day,
+      preferences?.brasilNonGol ? "true" : "false"
+    );
+    getFlightPromises.push(searchFlights(params));
   }
+  const flightResults = (await Promise.all(getFlightPromises)).flat();
+  const mappedFlightResults = (
+    await Promise.all(
+      flightResults.map(async (flightResult) => {
+        const { flight, price, money, fareUid } = getBestFlight(
+          flightResult.data?.requestedFlightSegmentList[0],
+          { ...preferences, cabinType },
+          preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
+        );
+        return {
+          origin: flight.departure?.airport?.code,
+          destination: flight.arrival?.airport?.code,
+          price,
+          money,
+          departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+          stops: flight.stops?.toString(),
+          duration: flight.duration?.hours?.toString(),
+          airline: flight.airline?.name,
+          seats: flight.availableSeats?.toString(),
+          tax: fareUid
+            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+            : undefined,
+        };
+      })
+    )
+  ).filter((flight) => validFlight(flight));
+
+  return {
+    results: sortFlights(mappedFlightResults).slice(
+      0,
+      getBestFlightsCount(preferences?.maxresults)
+    ),
+  };
 };
 
 const getFlightsMultipleCities = async (
@@ -148,73 +138,57 @@ const getFlightsMultipleCities = async (
   const multipleCity = isMultipleOrigin ? origin : destination;
   const lastDayOfMonthDeparture = lastDays.get(departureDate.substring(5));
   const getFlightPromises = [];
-  try {
-    for (const city of multipleCity) {
-      for (
-        let day = fixedDay ? 0 : calculateFirstDay(departureDate);
-        day < (fixedDay ? 1 : lastDayOfMonthDeparture);
-        day++
-      ) {
-        const params = buildParams(
-          isMultipleOrigin ? city : origin,
-          isMultipleOrigin ? destination : city,
-          departureDate.replace("/", "-"),
-          adults,
-          fixedDay,
-          fixedDay ? undefined : day,
-          preferences?.brasilNonGol ? "true" : "false"
-        );
-        getFlightPromises.push(searchFlights(params));
-      }
+  for (const city of multipleCity) {
+    for (
+      let day = fixedDay ? 0 : calculateFirstDay(departureDate);
+      day < (fixedDay ? 1 : lastDayOfMonthDeparture);
+      day++
+    ) {
+      const params = buildParams(
+        isMultipleOrigin ? city : origin,
+        isMultipleOrigin ? destination : city,
+        departureDate.replace("/", "-"),
+        adults,
+        fixedDay,
+        fixedDay ? undefined : day,
+        preferences?.brasilNonGol ? "true" : "false"
+      );
+      getFlightPromises.push(searchFlights(params));
     }
-    const flightResults = (await Promise.all(getFlightPromises)).flat();
-    const mappedFlightResults = (
-      await Promise.all(
-        flightResults.map(async (flightResult) => {
-          const { flight, price, money, fareUid } = getBestFlight(
-            flightResult.data?.requestedFlightSegmentList[0],
-            { ...preferences, cabinType },
-            preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
-          );
-          return {
-            origin: flight.departure?.airport?.code,
-            destination: flight.arrival?.airport?.code,
-            price,
-            money,
-            departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
-            stops: flight.stops?.toString(),
-            duration: flight.duration?.hours?.toString(),
-            airline: flight.airline?.name,
-            seats: flight.availableSeats?.toString(),
-            tax: fareUid
-              ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
-              : undefined,
-          };
-        })
-      )
-    ).filter((flight) => validFlight(flight));
-    return {
-      results: sortFlights(mappedFlightResults.flat()).slice(
-        0,
-        getBestFlightsCount(preferences?.maxresults)
-      ),
-    };
-  } catch (error) {
-    console.log(
-      "Error while getting flights: ",
-      error.response?.data?.error ||
-      error.response?.data?.errorMessage ||
-      error.response?.data?.message
-    );
-    return {
-      statusError: error.response?.status,
-      error:
-        error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message,
-    };
   }
-};
+  const flightResults = (await Promise.all(getFlightPromises)).flat();
+  const mappedFlightResults = (
+    await Promise.all(
+      flightResults.map(async (flightResult) => {
+        const { flight, price, money, fareUid } = getBestFlight(
+          flightResult.data?.requestedFlightSegmentList[0],
+          { ...preferences, cabinType },
+          preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
+        );
+        return {
+          origin: flight.departure?.airport?.code,
+          destination: flight.arrival?.airport?.code,
+          price,
+          money,
+          departureDay: parseInt(flight.departure?.date?.substring(8, 10)),
+          stops: flight.stops?.toString(),
+          duration: flight.duration?.hours?.toString(),
+          airline: flight.airline?.name,
+          seats: flight.availableSeats?.toString(),
+          tax: fareUid
+            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+            : undefined,
+        };
+      })
+    )
+  ).filter((flight) => validFlight(flight));
+  return {
+    results: sortFlights(mappedFlightResults.flat()).slice(
+      0,
+      getBestFlightsCount(preferences?.maxresults)
+    ),
+  };
+}
 
 const getFlightsRoundTrip = async (parameters) => {
   const {
@@ -236,98 +210,81 @@ const getFlightsRoundTrip = async (parameters) => {
   firstReturnDate.setDate(firstReturnDate.getDate() + minDays);
 
   const getFlightPromises = [];
-
-  try {
-    for (
-      let date = new Date(departureDate);
-      date <= lastDepartureDate;
-      date.setDate(date.getDate() + 1)
-    ) {
-      const paramsGoing = buildParams(
-        origin,
-        destination,
-        date.toLocaleDateString("fr-CA"),
-        adults,
-        true,
-        undefined,
-        preferences?.brasilNonGol ? "true" : "false"
-      );
-
-      getFlightPromises.push(searchFlights(paramsGoing));
-    }
-    for (
-      let dateReturn = firstReturnDate;
-      dateReturn <= new Date(returnDate);
-      dateReturn.setDate(dateReturn.getDate() + 1)
-    ) {
-      const paramsComing = buildParams(
-        destination,
-        origin,
-        dateReturn.toLocaleDateString("fr-CA"),
-        adults,
-        true,
-        undefined,
-        preferences?.brasilNonGol ? "true" : "false"
-      );
-      getFlightPromises.push(searchFlights(paramsComing));
-    }
-
-    const flightResults = (await Promise.all(getFlightPromises)).flat();
-    const mappedFlightResults = (
-      await Promise.all(
-        flightResults.map(async (flightResult) => {
-          const flightSegment =
-            flightResult.data?.requestedFlightSegmentList[0];
-          const departureAirport =
-            flightSegment?.airports?.departureAirportList[0]?.code;
-          const { flight, price, money, fareUid } = getBestFlight(
-            flightSegment,
-            {
-              ...preferences,
-              cabinType,
-            },
-            preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
-          );
-          return {
-            origin: departureAirport,
-            destination: flight.arrival?.airport?.code,
-            price,
-            money,
-            departureDay: new Date(flight.departure?.date),
-            stops: flight.stops?.toString(),
-            duration: flight.duration?.hours?.toString(),
-            airline: flight.airline?.name,
-            seats: flight.availableSeats?.toString(),
-            tax: fareUid
-              ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
-              : undefined,
-          };
-        })
-      )
-    ).filter((flight) => validFlight(flight));
-    return {
-      results: sortFlightsRoundTrip(
-        mappedFlightResults,
-        minDays,
-        maxDays,
-        origin
-      ).slice(0, getBestFlightsCount(preferences?.maxresults)),
-    };
-  } catch (error) {
-    console.log(
-      "Error while getting flights: ",
-      error.response?.data?.error ||
-      error.response?.data?.errorMessage ||
-      error.response?.data?.message
+  for (
+    let date = new Date(departureDate);
+    date <= lastDepartureDate;
+    date.setDate(date.getDate() + 1)
+  ) {
+    const paramsGoing = buildParams(
+      origin,
+      destination,
+      date.toLocaleDateString("fr-CA"),
+      adults,
+      true,
+      undefined,
+      preferences?.brasilNonGol ? "true" : "false"
     );
-    return {
-      statusError: error.response?.status,
-      error:
-        error.response?.data?.error ||
-        error.response?.data?.errorMessage ||
-        error.response?.data?.message,
-    };
+
+    getFlightPromises.push(searchFlights(paramsGoing));
   }
+  for (
+    let dateReturn = firstReturnDate;
+    dateReturn <= new Date(returnDate);
+    dateReturn.setDate(dateReturn.getDate() + 1)
+  ) {
+    const paramsComing = buildParams(
+      destination,
+      origin,
+      dateReturn.toLocaleDateString("fr-CA"),
+      adults,
+      true,
+      undefined,
+      preferences?.brasilNonGol ? "true" : "false"
+    );
+    getFlightPromises.push(searchFlights(paramsComing));
+  }
+
+  const flightResults = (await Promise.all(getFlightPromises)).flat();
+  const mappedFlightResults = (
+    await Promise.all(
+      flightResults.map(async (flightResult) => {
+        const flightSegment =
+          flightResult.data?.requestedFlightSegmentList[0];
+        const departureAirport =
+          flightSegment?.airports?.departureAirportList[0]?.code;
+        const { flight, price, money, fareUid } = getBestFlight(
+          flightSegment,
+          {
+            ...preferences,
+            cabinType,
+          },
+          preferences?.smilesAndMoney ? "SMILES_MONEY_CLUB" : "SMILES_CLUB"
+        );
+        return {
+          origin: departureAirport,
+          destination: flight.arrival?.airport?.code,
+          price,
+          money,
+          departureDay: new Date(flight.departure?.date),
+          stops: flight.stops?.toString(),
+          duration: flight.duration?.hours?.toString(),
+          airline: flight.airline?.name,
+          seats: flight.availableSeats?.toString(),
+          tax: fareUid
+            ? await getTax(flight.uid, fareUid, preferences?.smilesAndMoney)
+            : undefined,
+        };
+      })
+    )
+  ).filter((flight) => validFlight(flight));
+  return {
+    results: sortFlightsRoundTrip(
+      mappedFlightResults,
+      minDays,
+      maxDays,
+      origin
+    ).slice(0, getBestFlightsCount(preferences?.maxresults)),
+  };
 };
 
 const buildParams = (

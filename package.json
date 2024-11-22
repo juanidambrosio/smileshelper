@@ -1,7 +1,7 @@
 {
   "name": "smiles-helper",
-  "version": "1.2.5",
-  "description": "",
+  "version": "2.0.0",
+  "description": "Smiles Helper Bot",
   "main": "index.js",
   "bin": "./cli/index.js",
   "scripts": {

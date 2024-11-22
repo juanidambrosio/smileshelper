@@ -1,6 +1,5 @@
-const { getPreferencesDb, setPreferencesDb } = require("../telegram/dbMapper");
-
 const { preferencesParser } = require("../utils/parser");
+const userRepository = require('../db/repositories/userRepository');
 
 const {
   preferencesDelete,
@@ -11,17 +10,10 @@ const {
   regionSave,
 } = require("../config/constants");
 
-const { getDbFunctions } = require("../db/dbFunctions");
-
 const setPreferences = async (msg) => {
-  const { getOne, upsert } = getDbFunctions();
-
   try {
-    const previousPreferences =
-      (await getPreferencesDb(
-        { id: msg.from.username || msg.from.id.toString() },
-        getOne
-      )) || {};
+    const userId = msg.from.username || msg.from.id.toString();
+    const previousPreferences = await userRepository.getPreferences(userId) || {};
 
     const result = preferencesParser(msg.text, {
       previousfare: previousPreferences.fare,
@@ -33,13 +25,7 @@ const setPreferences = async (msg) => {
       result.airlines = [...previousPreferences.airlines, ...result.airlines];
     }
 
-    await setPreferencesDb(
-      {
-        id: msg.from.username || msg.from.id.toString(),
-        result,
-      },
-      upsert
-    );
+    await userRepository.upsertPreferences(userId, result);
     return { response: preferencesSave };
   } catch (error) {
     console.log(error);
@@ -48,23 +34,15 @@ const setPreferences = async (msg) => {
 };
 
 const setRegion = async (id, name, airports) => {
-  let result = { regions: { [name]: airports } };
-  const { getOne, upsert } = getDbFunctions();
-
   try {
-    const previousPreferences = (await getPreferencesDb({ id }, getOne)) || {};
+    const previousPreferences = await userRepository.getPreferences(id) || {};
+    let result = { regions: { [name]: airports } };
 
     if (previousPreferences.regions) {
       result.regions = { ...previousPreferences.regions, [name]: airports };
     }
 
-    await setPreferencesDb(
-      {
-        id,
-        result,
-      },
-      upsert
-    );
+    await userRepository.upsertPreferences(id, result);
     return { response: regionSave };
   } catch (error) {
     console.log(error);
@@ -72,13 +50,9 @@ const setRegion = async (id, name, airports) => {
   }
 };
 
-const deletePreferences = async (author_id) => {
-  const { deleteOne } = getDbFunctions();
-
+const deletePreferences = async (userId) => {
   try {
-    await deleteOne({
-      author_id,
-    });
+    await userRepository.deletePreferences(userId);
     return { response: preferencesDelete };
   } catch (error) {
     console.log(error);
@@ -87,16 +61,8 @@ const deletePreferences = async (author_id) => {
 };
 
 const getPreferences = async (id) => {
-  console.log(id);
-  const { getOne } = getDbFunctions();
-
   try {
-    const preferences = await getPreferencesDb(
-      {
-        id,
-      },
-      getOne
-    );
+    const preferences = await userRepository.getPreferences(id);
 
     let response = "";
     if (preferences !== null) {
@@ -119,15 +85,8 @@ const getPreferences = async (id) => {
 };
 
 const getRegions = async (id) => {
-  const { getOne } = getDbFunctions();
-
   try {
-    const preferences = await getPreferencesDb(
-      {
-        id,
-      },
-      getOne
-    );
+    const preferences = await userRepository.getPreferences(id);
 
     if (preferences === null || !preferences.regions) {
       return {};

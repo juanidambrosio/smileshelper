@@ -1,6 +1,4 @@
 const { default: axios } = require("axios");
-const https = require("https");
-const { backOff } = require("exponential-backoff");
 const {
   SMILES_URL,
   SMILES_TAX_URL,
@@ -15,39 +13,39 @@ const headers = {
   Accept: "application/json, */*",
   "Content-Type": "application/json",
   Region: "ARGENTINA",
-  "User-Agent": "",
-  "x-api-key":""
+  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15",
+  "x-api-key": "aJqPU7xNHl9qN3NVZnPaJ208aPo2Bh2p2ZV844tw",
+  "Sec-Fetch-Mode": "cors",
+  "Sect-Fetch-Site": "cross-site",
+  "Sec-Fetch-Dest": "empty",
+  Origin: "https://www.smiles.com.ar",
+  Referer: "https://www.smiles.com.ar/",
+  Channel: "Web",
 }
 
 const userAgents = [
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
-"Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36",
-"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
-"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",
-"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1",
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.54"
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
+  "Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
+  "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",
+  "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.54"
 ];
 
 const smilesClient = axios.create({
   baseURL: SMILES_URL,
   headers,
-  maxRedirects: 0, //hace un redirect infinito x eso el timeout
   timeout: 1000 * 60,
-  httpsAgent: new https.Agent({ keepAlive: true }),
   insecureHTTPParser: true
 });
 
 const smilesClientOptions = axios.create({
   baseURL: SMILES_URL,
+  headers,
   maxRedirects: 0, //hace un redirect infinito x eso el timeout
   timeout: 1000 * 60,
-  httpsAgent: new https.Agent({ keepAlive: true }),
   insecureHTTPParser: true,
-  headers: {
-    "Origin":"https://www.smiles.com.ar",
-    "User-Agent":""
-  },
   validateStatus: (status) =>
     status >= 200 && status <= 302
 });
@@ -60,48 +58,14 @@ const smilesTaxClient = axios.create({
 
 const searchFlights = async (params) => {
   try {
-    const response = await backOff(
-      async () => {
-        const headerUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
-        const optionsResponse = await smilesClientOptions.options("/search", { params, headers: {"User-Agent":headerUserAgent} });
-        const cookies = optionsResponse.headers['set-cookie']?.map(c => {
-          return c.split(" ")[0];
-        }).join(" ");
-        return await smilesClient.get("/search", { params, headers: {Cookie: cookies, "User-Agent":headerUserAgent} });
-      },
-      {
-        jitter: "full",
-        numOfAttempts: 3,
-        startingDelay: 1000,
-        delayFirstAttempt: true,
-        retry: (error, attemptNumber) => {
-          console.log(error.message);
-          const apiFailureRetryCodes = [
-            "ETIMEDOUT",
-            "EAI_AGAIN",
-            "ECONNRESET",
-            "ERR_FR_TOO_MANY_REDIRECTS",
-          ];
-          const isFlightListRelatedError = [
-            "TypeError: Cannot read properties of undefined (reading 'flightList')",
-            "TypeError: Cannot read property 'flightList' of undefined",
-          ].includes(error.response?.data?.error);
-          const isServiceUnavailable = error.response?.status === 503;
-          // only attempt to backoff-retry requests matching any of the errors above, otherwise we will respond with the error straight to the client
-          const shouldRetryRequest =
-            isFlightListRelatedError ||
-            isServiceUnavailable ||
-            apiFailureRetryCodes.includes(error.code);
-          if (shouldRetryRequest) {
-            console.log(`retry ${params.departureDate} #${attemptNumber}`)
-            return true;
-          }
-          return false;
-        }
-      }
-    );
-    return response;
-  } catch (error) {
+    // const headerUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+    // const optionsResponse = await smilesClientOptions.options("/search", { params, headers: { "User-Agent": headerUserAgent } });
+    // const cookies = optionsResponse.headers['set-cookie']?.map(c => {
+    //   return c.split(" ")[0];
+    // }).join(" ");
+    return await smilesClient.get("/airlines/search", { params });
+  }
+  catch (error) {
     console.log(error.message);
     return { data: { requestedFlightSegmentList: [{ flightList: [] }] } };
   }
@@ -403,8 +367,8 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
   };
 
   try {
-    const headerUserAgent = {"User-Agent": userAgents[Math.floor(Math.random() * userAgents.length)]};
-    const { data } = await smilesTaxClient.get("/boardingtax", { params, headers: headerUserAgent });
+    //const headerUserAgent = { "User-Agent": userAgents[Math.floor(Math.random() * userAgents.length)] };
+    const { data } = await smilesTaxClient.get("/airlines/flight/boardingtax", { params });
     const milesNumber = data?.totals?.totalBoardingTax?.miles;
     const moneyNumber = data?.totals?.totalBoardingTax?.money;
     return {
@@ -414,7 +378,7 @@ const getTax = async (uid, fareuid, isSmilesMoney) => {
       moneyNumber,
     };
   } catch (error) {
-    return { miles: undefined };
+    throw new Error(`Fallo al obtener las tasas.`);
   }
 };
 

@@ -41,11 +41,11 @@ const {
 
 const listen = async () => {
   const bot = new TelegramBot(telegramApiToken, {
-    polling: { interval: 10000, params: { offset: -1, limit: 1 } },
+    polling: { interval: 10000, params: { limit: 1 } },
     onlyFirstMatch: true,
   });
   await initializeDbFunctions();
-  await checkDailyAlerts();
+  //await checkDailyAlerts();
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })
@@ -82,25 +82,25 @@ const listen = async () => {
     await searchSingleDestination(match, msg, bot);
   });
 
-  bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, false, false);
-  });
+  // bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, false, false);
+  // });
 
   bot.onText(regexMultipleDestinationFixedDay, async (msg, match) => {
     await searchMultipleDestination(match, msg, bot, true, false);
   });
 
-  bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, false, true);
-  });
+  // bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, false, true);
+  // });
 
   bot.onText(regexMultipleOriginFixedDay, async (msg, match) => {
     await searchMultipleDestination(match, msg, bot, true, true);
   });
 
-  bot.onText(regexRoundTrip, async (msg, match) => {
-    await searchRoundTrip(match, msg, bot);
-  });
+  // bot.onText(regexRoundTrip, async (msg, match) => {
+  //   await searchRoundTrip(match, msg, bot);
+  // });
 
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");
@@ -120,32 +120,33 @@ const listen = async () => {
       );
       return;
     }
+    return;
     // If first match is a region
-    if (match[0].length > 3) {
-      await searchMultipleDestination(
-        entireCommand.concat(match),
-        query.message,
-        bot,
-        false,
-        true
-      );
-      // If second match is a region
-    } else if (match[1].length > 3) {
-      await searchMultipleDestination(
-        entireCommand.concat(match),
-        query.message,
-        bot,
-        false,
-        false
-      );
-      // Default - search a single destination query
-    } else {
-      await searchSingleDestination(
-        entireCommand.concat(match),
-        query.message,
-        bot
-      );
-    }
+    // if (match[0].length > 3) {
+    //   await searchMultipleDestination(
+    //     entireCommand.concat(match),
+    //     query.message,
+    //     bot,
+    //     false,
+    //     true
+    //   );
+    //   // If second match is a region
+    // } else if (match[1].length > 3) {
+    //   await searchMultipleDestination(
+    //     entireCommand.concat(match),
+    //     query.message,
+    //     bot,
+    //     false,
+    //     false
+    //   );
+    //   // Default - search a single destination query
+    // } else {
+    //   await searchSingleDestination(
+    //     entireCommand.concat(match),
+    //     query.message,
+    //     bot
+    //   );
+    // }
   });
 
   bot.onText(regexFilters, async (msg) => {

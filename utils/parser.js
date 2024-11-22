@@ -20,13 +20,13 @@ const calculateIndex = (parameters, indexStart) => {
       case 5:
         return !isNaN(parameters[0])
           ? {
-              adults: indexStart,
-              cabinType: indexStart + 2,
-            }
+            adults: indexStart,
+            cabinType: indexStart + 2,
+          }
           : {
-              adults: indexStart + 4,
-              cabinType: indexStart,
-            };
+            adults: indexStart + 4,
+            cabinType: indexStart,
+          };
       case 3:
         return { cabinType: indexStart };
       case 1:
@@ -57,30 +57,27 @@ const generateFlightOutput = (flight) =>
     flight.airline,
     flight.stops + " escalas",
     emoji.get("clock1") +
-      flight.duration +
-      "hs," +
-      emoji.get("seat") +
-      flight.seats,
+    flight.duration +
+    "hs," +
+    emoji.get("seat") +
+    flight.seats,
   ];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
     ? "ECONOMIC"
     : cabinType === "EJE"
-    ? "BUSINESS"
-    : cabinType === "PEC"
-    ? "PREMIUM_ECONOMIC"
-    : "all";
+      ? "BUSINESS"
+      : cabinType === "PEC"
+        ? "PREMIUM_ECONOMIC"
+        : "all";
 
 const generateEmissionLink = (flight) =>
-  `${SMILES_EMISSION_URL}originAirportCode=${
-    flight.origin
+  `${SMILES_EMISSION_URL}originAirportCode=${flight.origin
   }&destinationAirportCode=${flight.destination}&departureDate=${new Date(
     flight.departureDate
-  ).getTime()}&adults=${
-    flight.adults || "1"
-  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${
-    flight.tripType
+  ).getTime()}&adults=${flight.adults || "1"
+  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${flight.tripType
   }`;
 
 const generateEmissionLinkRoundTrip = (flight) =>
@@ -326,20 +323,23 @@ const getInlineKeyboardSearch = (
   bestFlight,
   preferences
 ) => {
-  const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
-    monthSection.map((month, indexMonth) => ({
-      text: month.name,
-      callback_data: `${origin} ${destination} ${padMonth(
-        monthSection.length * indexSection + (indexMonth + 1)
-      )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
-    }))
-  );
-  inlineKeyboard.push([
-    {
-      text: "Calcular $",
-      callback_data: `calculadora ${bestFlight?.price} ${bestFlight?.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice} ${bestFlight?.money}`,
-    },
-  ]);
+  // const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
+  //   monthSection.map((month, indexMonth) => ({
+  //     text: month.name,
+  //     callback_data: `${origin} ${destination} ${padMonth(
+  //       monthSection.length * indexSection + (indexMonth + 1)
+  //     )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
+  //   }))
+  // );
+  const inlineKeyboard = [];
+  if (bestFlight) {
+    inlineKeyboard.push([
+      {
+        text: "Calcular $",
+        callback_data: `calculadora ${bestFlight?.price} ${bestFlight?.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice} ${bestFlight?.money}`,
+      },
+    ]);
+  }
   return inlineKeyboard;
 };
 
@@ -347,16 +347,13 @@ const getInlineKeyboardSearchOnlyCalculator = (bestFlight, preferences) => [
   [
     {
       text: "Calcular $",
-      callback_data: `calculadora ${
-        parseInt(bestFlight.departureFlight.price) +
+      callback_data: `calculadora ${parseInt(bestFlight.departureFlight.price) +
         parseInt(bestFlight.returnFlight.price)
-      } ${
-        parseInt(bestFlight.departureFlight.tax.moneyNumber) +
+        } ${parseInt(bestFlight.departureFlight.tax.moneyNumber) +
         parseInt(bestFlight.returnFlight.tax.moneyNumber)
-      } ${preferences?.milePrice} ${preferences?.dolarPrice} ${
-        parseFloat(bestFlight.departureFlight.money) +
+        } ${preferences?.milePrice} ${preferences?.dolarPrice} ${parseFloat(bestFlight.departureFlight.money) +
         parseFloat(bestFlight.returnFlight.money)
-      }`,
+        }`,
     },
   ],
 ];

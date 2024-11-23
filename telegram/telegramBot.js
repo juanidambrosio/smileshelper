@@ -35,17 +35,21 @@ const {
   searchMultipleDestination,
   searchRoundTrip,
   savePreferences,
-  calculateMoney,
+  calculateMoney
 } = require("../handlers/telegramBotHandler");
 
 const messageQueue = require("../utils/messageQueue");
 
+const { removePreviousMessages } = require("../clients/telegramClient");
+
 const listen = async () => {
+  await removePreviousMessages();
+
   const bot = new TelegramBot(telegramApiToken, {
     polling: true,
     onlyFirstMatch: true,
   });
-  
+
   //await checkDailyAlerts();
 
   const queueMessage = async (msg, handler) => {

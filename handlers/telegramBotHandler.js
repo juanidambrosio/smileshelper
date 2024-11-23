@@ -147,5 +147,5 @@ module.exports = {
   searchMultipleDestination,
   searchRoundTrip,
   calculateMoney,
-  savePreferences,
+  savePreferences
 };

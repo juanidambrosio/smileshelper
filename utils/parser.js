@@ -1,7 +1,8 @@
 const emoji = require("node-emoji");
-const { SMILES_EMISSION_URL } = require("../config/constants");
+const { SMILES_EMISSION_URL, monthSections } = require("../config/constants");
 const regions = require("../data/regions");
 const airlines = require("../data/airlines");
+const { padMonth } = require("../utils/string");
 
 /*
 Parse the message string to object indicating the index of the cabin and/or adults preference
@@ -19,13 +20,13 @@ const calculateIndex = (parameters, indexStart) => {
       case 5:
         return !isNaN(parameters[0])
           ? {
-              adults: indexStart,
-              cabinType: indexStart + 2,
-            }
+            adults: indexStart,
+            cabinType: indexStart + 2,
+          }
           : {
-              adults: indexStart + 4,
-              cabinType: indexStart,
-            };
+            adults: indexStart + 4,
+            cabinType: indexStart,
+          };
       case 3:
         return { cabinType: indexStart };
       case 1:
@@ -56,30 +57,27 @@ const generateFlightOutput = (flight) =>
     flight.airline,
     flight.stops + " escalas",
     emoji.get("clock1") +
-      flight.duration +
-      "hs," +
-      emoji.get("seat") +
-      flight.seats,
+    flight.duration +
+    "hs," +
+    emoji.get("seat") +
+    flight.seats,
   ];
 
 const mapCabinType = (cabinType) =>
   cabinType === "ECO"
     ? "ECONOMIC"
     : cabinType === "EJE"
-    ? "BUSINESS"
-    : cabinType === "PEC"
-    ? "PREMIUM_ECONOMIC"
-    : "all";
+      ? "BUSINESS"
+      : cabinType === "PEC"
+        ? "PREMIUM_ECONOMIC"
+        : "all";
 
 const generateEmissionLink = (flight) =>
-  `${SMILES_EMISSION_URL}originAirportCode=${
-    flight.origin
+  `${SMILES_EMISSION_URL}originAirportCode=${flight.origin
   }&destinationAirportCode=${flight.destination}&departureDate=${new Date(
     flight.departureDate
-  ).getTime()}&adults=${
-    flight.adults || "1"
-  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${
-    flight.tripType
+  ).getTime()}&adults=${flight.adults || "1"
+  }&infants=0&children=0&cabinType=${mapCabinType(flight.cabinType)}&tripType=${flight.tripType
   }`;
 
 const generateEmissionLinkRoundTrip = (flight) =>
@@ -117,6 +115,10 @@ const belongsToCity = (airport, city) => {
 
 const findMonthAndYearFromText = (text) => {
   let [origin, destination, dateString] = text.split(" ");
+  // Safe check if the user inputs origin and destination as <ORIGIN>-<DESTINATION>
+  if (!dateString) {
+    dateString = destination;
+  }
   if (dateString.includes("-")) return dateString;
   const month = Number(dateString);
   let year = new Date().getFullYear();
@@ -155,10 +157,17 @@ const generatePayloadMonthlySingleDestinationAlerts = (text) => {
   };
 };
 
-const generatePayloadMultipleDestinations = (match, customRegions = []) => {
+const generatePayloadMultipleDestinations = (
+  match,
+  customRegions = {},
+  fixedDay
+) => {
   const [origin, destination, departureMonth, parameter1, parameter2] =
     match.slice(1, 6);
-  const departureDate = findMonthAndYearFromText(match[0]);
+  // If fixedDay, it would be departureDate and not departureMonth (we give entire date ex 2023-07-01)
+  const departureDate = fixedDay
+    ? departureMonth
+    : findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = destination.toUpperCase();
   const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
@@ -172,10 +181,17 @@ const generatePayloadMultipleDestinations = (match, customRegions = []) => {
   };
 };
 
-const generatePayloadMultipleOrigins = (match, customRegions = {}) => {
+const generatePayloadMultipleOrigins = (
+  match,
+  customRegions = {},
+  fixedDay
+) => {
   const [origin, destination, departureMonth, parameter1, parameter2] =
     match.slice(1, 6);
-  const departureDate = findMonthAndYearFromText(match[0]);
+  // If fixedDay, it would be departureDate and not departureMonth (we give entire date ex 2023-07-01)
+  const departureDate = fixedDay
+    ? departureMonth
+    : findMonthAndYearFromText(match[0]);
   const regionsCopy = getCustomRegions(customRegions);
   const region = origin.toUpperCase();
   const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
@@ -200,63 +216,27 @@ const getCustomRegions = (customRegions) => {
   return regionsCopy;
 };
 
-const generatePayloadRoundTrip = (text) => {
-  // Get offset of coming date to know whether they exist options or not
-  const offsetComing = text.indexOf("202", 19);
-  const { adults: adultsGoing, cabinType: cabinTypeGoing } = calculateIndex(
-    text.substring(19, offsetComing - 1),
-    19
-  );
-
-  const minDaysStart = text.indexOf("m", offsetComing + 10) + 1;
-  const minDaysEnd = text.indexOf(" ", minDaysStart);
-
-  const maxDaysStart = text.indexOf("M", offsetComing + 10) + 1;
-  const spaceExistsAfterMaxDays = text.indexOf(" ", maxDaysStart) !== -1;
-  const maxDaysEnd =
-    maxDaysStart !== 0
-      ? spaceExistsAfterMaxDays
-        ? text.indexOf(" ", maxDaysStart)
-        : text.length + 2
-      : undefined;
-
-  const minDays = parseInt(
-    text.substring(
-      minDaysStart,
-      minDaysEnd !== -1 ? minDaysEnd + 1 : text.length + 1
-    ),
-    10
-  );
-  const maxDays = maxDaysEnd
-    ? parseInt(text.substring(maxDaysStart, maxDaysEnd + 1), 10)
-    : undefined;
-
-  const minDaysOffset = minDays.toString().length + 2;
-  const maxDaysOffset = maxDays ? maxDays.toString().length + 2 : 0;
-
-  const { adults: adultsComing, cabinType: cabinTypeComing } = calculateIndex(
-    text.substring(offsetComing + 11 + minDaysOffset + maxDaysOffset),
-    offsetComing + 11 + minDaysOffset + maxDaysOffset
-  );
-  return {
-    origin: text.substring(0, 3).toUpperCase(),
-    destination: text.substring(4, 7).toUpperCase(),
-    departureDate: text.substring(8, 18),
-    returnDate: text.substring(offsetComing, offsetComing + 10),
-    adultsGoing: adultsGoing
-      ? text.substring(adultsGoing, adultsGoing + 1)
-      : "",
-    cabinTypeGoing: cabinTypeGoing
-      ? text.substring(cabinTypeGoing, cabinTypeGoing + 3).toUpperCase()
-      : "",
-    adultsComing: adultsComing
-      ? text.substring(adultsComing, adultsComing + 1)
-      : "",
-    cabinTypeComing: cabinTypeComing
-      ? text.substring(cabinTypeComing, cabinTypeComing + 3).toUpperCase()
-      : "",
+const generatePayloadRoundTrip = (match) => {
+  const [
+    origin,
+    destination,
+    departureDate,
+    returnDate,
     minDays,
     maxDays,
+    parameter1,
+    parameter2,
+  ] = match.slice(1, 9);
+  const { adults, cabinType } = getAdultsAndCabinType([parameter1, parameter2]);
+  return {
+    origin: origin.toUpperCase(),
+    destination: destination.toUpperCase(),
+    departureDate,
+    returnDate,
+    adults: adults || "",
+    cabinType: cabinType || "",
+    minDays: parseInt(minDays.substring(1), 10),
+    maxDays: maxDays ? parseInt(maxDays.substring(1), 10) : undefined,
   };
 };
 
@@ -272,6 +252,8 @@ const preferencesParser = (text, booleanPreferences) => {
   const offsetBrasilNonGol = text.indexOf(" singol");
   const offsetSmilesAndMoney = text.indexOf(" smilesandmoney");
   const offsetCustomRegion = text.indexOf(" region");
+  const offsetMilePrice = text.indexOf(" pm:");
+  const offsetDolarPrice = text.indexOf(" pd:");
 
   const result = {};
 
@@ -307,6 +289,17 @@ const preferencesParser = (text, booleanPreferences) => {
     result.maxhours = text.substring(offsetHours + 3, offsetHours + 5);
   }
 
+  if (offsetMilePrice > 0) {
+    result.milePrice = text.substring(offsetMilePrice + 4, offsetMilePrice + 8);
+  }
+
+  if (offsetDolarPrice > 0) {
+    result.dolarPrice = text.substring(
+      offsetDolarPrice + 4,
+      offsetDolarPrice + 7
+    );
+  }
+
   if (offsetVF > 0) {
     result.fare = !previousfare;
   }
@@ -321,6 +314,49 @@ const preferencesParser = (text, booleanPreferences) => {
 
   return result;
 };
+
+const getInlineKeyboardSearch = (
+  origin,
+  destination,
+  parameter1,
+  parameter2,
+  bestFlight,
+  preferences
+) => {
+  // const inlineKeyboard = monthSections.map((monthSection, indexSection) =>
+  //   monthSection.map((month, indexMonth) => ({
+  //     text: month.name,
+  //     callback_data: `${origin} ${destination} ${padMonth(
+  //       monthSection.length * indexSection + (indexMonth + 1)
+  //     )} ${parameter1 || ""} ${parameter2 || ""}`.trimEnd(),
+  //   }))
+  // );
+  const inlineKeyboard = [];
+  if (bestFlight) {
+    inlineKeyboard.push([
+      {
+        text: "Calcular $",
+        callback_data: `calculadora ${bestFlight?.price} ${bestFlight?.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice} ${bestFlight?.money}`,
+      },
+    ]);
+  }
+  return inlineKeyboard;
+};
+
+const getInlineKeyboardSearchOnlyCalculator = (bestFlight, preferences) => [
+  [
+    {
+      text: "Calcular $",
+      callback_data: `calculadora ${parseInt(bestFlight.departureFlight.price) +
+        parseInt(bestFlight.returnFlight.price)
+        } ${parseInt(bestFlight.departureFlight.tax.moneyNumber) +
+        parseInt(bestFlight.returnFlight.tax.moneyNumber)
+        } ${preferences?.milePrice} ${preferences?.dolarPrice} ${parseFloat(bestFlight.departureFlight.money) +
+        parseFloat(bestFlight.returnFlight.money)
+        }`,
+    },
+  ],
+];
 
 module.exports = {
   calculateIndex,
@@ -337,4 +373,6 @@ module.exports = {
   generatePayloadMultipleOrigins,
   generatePayloadRoundTrip,
   preferencesParser,
+  getInlineKeyboardSearch,
+  getInlineKeyboardSearchOnlyCalculator,
 };

@@ -206,57 +206,70 @@ describe("parser", () => {
   });
   describe("generatePayloadRoundTrip", () => {
     it("should generate round trip basic payload with min", () => {
-      const result = generatePayloadRoundTrip(
-        `EZE BCN 2023-03-01 2023-03-30 m7`
-      );
+      const result = generatePayloadRoundTrip([
+        `EZE BCN 2023-03-01 2023-03-30 m7`,
+        "EZE",
+        "BCN",
+        "2023-03-01",
+        "2023-03-30",
+        "m7",
+      ]);
 
       expect(result).toEqual({
         origin: "EZE",
         destination: "BCN",
         departureDate: "2023-03-01",
         returnDate: "2023-03-30",
-        adultsGoing: "",
-        cabinTypeGoing: "",
-        adultsComing: "",
-        cabinTypeComing: "",
+        adults: "",
+        cabinType: "",
         maxDays: undefined,
         minDays: 7,
       });
     });
 
     it("should generate round trip basic payload with min days and max days", () => {
-      const result = generatePayloadRoundTrip(
-        `EZE BCN 2023-03-01 2023-03-30 m7 M14`
-      );
+      const result = generatePayloadRoundTrip([
+        `EZE BCN 2023-03-01 2023-03-30 m7 M14`,
+        "EZE",
+        "BCN",
+        "2023-03-01",
+        "2023-03-30",
+        "m7",
+        "M14",
+      ]);
 
       expect(result).toEqual({
         origin: "EZE",
         destination: "BCN",
         departureDate: "2023-03-01",
         returnDate: "2023-03-30",
-        adultsGoing: "",
-        cabinTypeGoing: "",
-        adultsComing: "",
-        cabinTypeComing: "",
+        adults: "",
+        cabinType: "",
         maxDays: 14,
         minDays: 7,
       });
     });
 
     it("should generate round trip basic payload cabin types and amount of people", () => {
-      const result = generatePayloadRoundTrip(
-        `EZE BCN 2023-03-01 EJE 2 2023-03-30 m7 ECO 3`
-      );
+      const result = generatePayloadRoundTrip([
+        `EZE BCN 2023-03-01 2023-03-30 m7 ECO 3`,
+        "EZE",
+        "BCN",
+        "2023-03-01",
+        "2023-03-30",
+        "m7",
+        undefined,
+        "ECO",
+        "3",
+      ]);
 
       expect(result).toEqual({
         origin: "EZE",
         destination: "BCN",
         departureDate: "2023-03-01",
         returnDate: "2023-03-30",
-        adultsGoing: "2",
-        cabinTypeGoing: "EJE",
-        adultsComing: "3",
-        cabinTypeComing: "ECO",
+        adults: "3",
+        cabinType: "ECO",
         maxDays: undefined,
         minDays: 7,
       });

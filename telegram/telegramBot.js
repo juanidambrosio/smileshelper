@@ -5,7 +5,6 @@ const {
   cafecito,
   links,
   airlinesCodes,
-  searching,
   maxAirports,
 } = require("../config/constants");
 const regions = require("../data/regions");
@@ -24,33 +23,58 @@ const {
 
 const { checkDailyAlerts } = require("./alerts");
 
-const { searchRoundTrip } = require("./search");
-
 const {
   getPreferences,
   getRegions,
-  setPreferences,
   deletePreferences,
   setRegion,
-} = require("./preferences");
+} = require("../handlers/preferencesHandler");
 
-const { initializeDbFunctions } = require("../db/dbFunctions");
 const {
   searchSingleDestination,
   searchMultipleDestination,
-} = require("./telegramBotHandler");
+  searchRoundTrip,
+  savePreferences,
+  calculateMoney
+} = require("../handlers/telegramBotHandler");
+
+const messageQueue = require("../utils/messageQueue");
+
+const { removePreviousMessages } = require("../clients/telegramClient");
 
 const listen = async () => {
-  const bot = new TelegramBot(telegramApiToken, { polling: true });
-  await initializeDbFunctions();
-  await checkDailyAlerts(bot);
+  await removePreviousMessages();
+
+  const bot = new TelegramBot(telegramApiToken, {
+    polling: true,
+    onlyFirstMatch: true,
+  });
+
+  //await checkDailyAlerts();
+
+  const queueMessage = async (msg, handler) => {
+    const userId = msg.from.username || msg.from.id.toString();
+    const result = await messageQueue.addMessage(userId, msg, handler);
+  
+    await bot.sendMessage(
+      msg.chat.id,
+      result.message
+    );
+  
+    if (!result.error) {
+      messageQueue.processQueue();
+    }
+  };
 
   bot.onText(/\/start/, async (msg) =>
     bot.sendMessage(msg.chat.id, telegramStart, { parse_mode: "MarkdownV2" })
   );
 
   bot.onText(/\/regiones/, async (msg) => {
-    const entries = { ...regions, ...(await getRegions(msg)) };
+    const entries = {
+      ...regions,
+      ...(await getRegions(msg.from.username || msg.from.id.toString())),
+    };
     const airports = Object.entries(entries).reduce(
       (phrase, current) =>
         phrase.concat(
@@ -74,72 +98,82 @@ const listen = async () => {
   );
 
   bot.onText(regexSingleCities, async (msg, match) => {
-    await searchSingleDestination(match, msg, bot);
+    await queueMessage(msg, async (message) => {
+      await searchSingleDestination(match, message, bot);
+    });
   });
 
-  bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, false, false);
-  });
+  // bot.onText(regexMultipleDestinationMonthly, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, false, false);
+  // });
 
   bot.onText(regexMultipleDestinationFixedDay, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, true, false);
+    await queueMessage(msg, async (message) => {
+      await searchMultipleDestination(match, message, bot, true, false);
+    });
   });
 
-  bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, false, true);
-  });
+  // bot.onText(regexMultipleOriginMonthly, async (msg, match) => {
+  //   await searchMultipleDestination(match, msg, bot, false, true);
+  // });
 
   bot.onText(regexMultipleOriginFixedDay, async (msg, match) => {
     await searchMultipleDestination(match, msg, bot, true, true);
   });
 
-  bot.onText(regexRoundTrip, async (msg) => {
-    const chatId = msg.chat.id;
-    bot.sendMessage(chatId, searching);
-    const { response, error } = await searchRoundTrip(msg);
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
-  });
+  // bot.onText(regexRoundTrip, async (msg, match) => {
+  //   await searchRoundTrip(match, msg, bot);
+  // });
 
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");
     const entireCommand = [query.data];
-    if (match[0].length > 3) {
-      await searchMultipleDestination(
-        entireCommand.concat(match),
-        query.message,
-        bot,
-        false,
-        true
-      );
-    } else if (match[1].length > 3) {
-      await searchMultipleDestination(
-        entireCommand.concat(match),
-        query.message,
-        bot,
-        false,
-        false
-      );
-    } else {
-      await searchSingleDestination(
-        entireCommand.concat(match),
+    // Calculator
+    if (match[0] === "calculadora") {
+      calculateMoney(
+        {
+          miles: match[1],
+          taxPrice: match[2],
+          milePrice: match[3],
+          dolarPrice: match[4],
+          moneyPrice: match[5],
+        },
         query.message,
         bot
       );
+      return;
     }
+    return;
+    // If first match is a region
+    // if (match[0].length > 3) {
+    //   await searchMultipleDestination(
+    //     entireCommand.concat(match),
+    //     query.message,
+    //     bot,
+    //     false,
+    //     true
+    //   );
+    //   // If second match is a region
+    // } else if (match[1].length > 3) {
+    //   await searchMultipleDestination(
+    //     entireCommand.concat(match),
+    //     query.message,
+    //     bot,
+    //     false,
+    //     false
+    //   );
+    //   // Default - search a single destination query
+    // } else {
+    //   await searchSingleDestination(
+    //     entireCommand.concat(match),
+    //     query.message,
+    //     bot
+    //   );
+    // }
   });
 
   bot.onText(regexFilters, async (msg) => {
-    const chatId = msg.chat.id;
-    const { response, error } = await setPreferences(msg);
-    if (error) {
-      bot.sendMessage(chatId, error);
-    } else {
-      bot.sendMessage(chatId, response, { parse_mode: "Markdown" });
-    }
+    await savePreferences(msg, bot);
   });
 
   bot.onText(regexCustomRegion, async (msg, match) => {
@@ -163,7 +197,9 @@ const listen = async () => {
 
   bot.onText(/\/filtroseliminar/, async (msg) => {
     const chatId = msg.chat.id;
-    const { response, error } = await deletePreferences(msg);
+    const { response, error } = await deletePreferences(
+      msg.from.username || msg.from.id.toString()
+    );
     if (error) {
       bot.sendMessage(chatId, error);
     } else {
@@ -173,7 +209,9 @@ const listen = async () => {
 
   bot.onText(/\/filtros$/, async (msg) => {
     const chatId = msg.chat.id;
-    const { response, error } = await getPreferences(msg);
+    const { response, error } = await getPreferences(
+      msg.from.username || msg.from.id.toString()
+    );
     if (error) {
       bot.sendMessage(chatId, error);
     } else {

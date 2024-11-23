@@ -1,4 +1,4 @@
-const { getBestFlight } = require('../../utils/calculate');
+const { getBestFlight } = require('../../utils/bestFlight');
 
 const flightMocks = [
   {

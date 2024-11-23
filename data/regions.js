@@ -8,7 +8,7 @@ const BRASIL = ["RIO", "SAO", "FLN", "MCZ", "SSA", "REC", "NAT", "IGU"];
 
 const COLOMBIA = ["BOG", "ADZ", "CTG", "SMR"];
 
-const CARIBE = ["CUN", "PTY", "PUJ", "SJO", "AUA", "HAV", "CTG", "SJU"];
+const CARIBE = ["CUN", "PTY", "PUJ", "SJO", "AUA", "HAV", "SJU"];
 
 const NAMERICA = ["MEX", "CHI", "NYC", "LAX", "DFW", "SFO", "LAS"];
 
@@ -24,7 +24,7 @@ const HAWAII = ["HNL", "LIH", "KOA", "OGG"];
 
 const CANADA = ["YTO", "YMQ", "YVR", "YOW", "YQB"];
 
-const EUROPA = ["LIS", "MAD", "BCN", "PAR", "AMS", "ROM", "LON", "FRA", "IST"];
+const EUROPA = ["LIS", "MAD", "CDG", "AMS", "FCO", "LHR", "FRA"];
 
 const CEUROPA = ["BRU", "ATH", "BER", "ZRH", "VIE", "PRG"];
 

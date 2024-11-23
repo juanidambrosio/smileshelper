@@ -1,4 +1,4 @@
-service: twitter
+service: smiles-helper
 
 frameworkVersion: "3"
 
@@ -9,22 +9,41 @@ provider:
   runtime: nodejs14.x
 
 functions:
-  dailyTweet:
-    handler: twitter/dailyTweet.tweet
-    timeout: 45
-    events:
-      - schedule: 
-          rate: rate(1 day)
-          #enabled: false
-          enabled: true
-
-  responseTweet:
-    handler: twitter/responseTweet.tweet
+  promotions:
+    handler: aws/lambda/promotions.getPromotions
     timeout: 600
     events:
-      - http:
-          path: /response
-          method: POST
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:749264263523:smiles-helper-alerts
+          functionResponseType: ReportBatchItemFailures
+  removePreferences:
+    handler: aws/lambda/preferences.removePreferences
+    events:
+      - httpApi:
+          method: DELETE
+          path: /preferences/{username}
+  getMonthlyFlights:
+    handler: aws/lambda/search.getMonthlyFlights
+    timeout: 120
+    events:
+      - httpApi:
+          method: GET
+          path: /search_month
+  getRegionalFlights:
+    handler: aws/lambda/search.getRegionalFlights
+    timeout: 120
+    events:
+     - httpApi:
+        method: GET
+        path: /search_regional
+  getRoundTripFlights:
+    handler: aws/lambda/search.getRoundTripFlights
+    timeout: 120
+    events:
+      - httpApi:
+          method: GET
+          path: /search_round_trip
+
 plugins:
   - serverless-offline
   - serverless-dotenv-plugin

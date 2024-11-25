@@ -14,20 +14,23 @@ class UserRepository extends BaseRepository {
         const collection = await this.connect();
         return await collection.updateOne(
             { user_id: userId },
-            { $set: preferences },
+            { $set: Object.fromEntries(Object.entries(preferences).map(([key, value]) => [`preferences.${key}`, value])) },
             { upsert: true }
         );
     }
 
     async getPreferences(userId) {
         const collection = await this.connect();
-        const user =  await collection.findOne({ user_id: userId });
+        const user = await collection.findOne({ user_id: userId });
         return user.preferences;
     }
 
     async deletePreferences(userId) {
         const collection = await this.connect();
-        return await collection.deleteOne({ user_id: userId });
+        return await collection.updateOne(
+            { user_id: userId },
+            { $unset: { preferences: 1 } }
+        );
     }
 }
 

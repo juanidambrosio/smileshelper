@@ -12,7 +12,8 @@ class MessageQueue {
     if (!user || user.active !== true) {
       return {
         error: true,
-        message: 'Usuario no registrado o inactivo. Por favor regulariza tu cuenta primero para usar el bot.'
+        message: 'Usuario no registrado o inactivo. Por favor regulariza tu cuenta primero para usar el bot.',
+        inlineKeyboard: [[{ text: 'Suscribirme a Smiles Helper', callback_data: 'subscription ' + userId }]]
       };
     }
 
@@ -20,16 +21,14 @@ class MessageQueue {
     if (position !== -1) {
       return {
         error: true,
-        message: `Tenes una consulta en espera en posición ${position + 1}. Luego de que finalice podrás hacer otra consulta.`,
-        position
+        message: `Tenes una consulta en espera en posición ${position + 1}. Luego de que finalice podrás hacer otra consulta.`
       };
     }
 
     this.queue.push({ userId, message, callback });
     return {
       error: false,
-      message: `Consulta recibida. Estás en la posición ${this.queue.length} de la fila.`,
-      position: this.queue.length
+      message: `Consulta recibida. Estás en la posición ${this.queue.length} de la fila.`
     };
   }
 

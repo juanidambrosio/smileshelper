@@ -1,5 +1,5 @@
 const { initializeFunctions, stringify } = require("./utils.js");
-const { deletePreferences } = require("../../handlers/preferencesHandler.js");
+const { deletePreferences } = require("../../handlers/usersHandler.js");
 
 const removePreferences = async (event) => {
   await initializeFunctions();

@@ -10,6 +10,10 @@ const {
   regionSave,
 } = require("../config/constants");
 
+const createUser = async (userId, subscriptionId) => {
+  await userRepository.createUser(userId, subscriptionId);
+}
+
 const setPreferences = async (msg) => {
   try {
     const userId = msg.from.username || msg.from.id.toString();
@@ -100,6 +104,7 @@ const getRegions = async (id) => {
 };
 
 module.exports = {
+  createUser,
   setPreferences,
   setRegion,
   getPreferences,

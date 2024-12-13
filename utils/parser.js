@@ -336,7 +336,7 @@ const getInlineKeyboardSearch = (
     inlineKeyboard.push([
       {
         text: "Calcular $",
-        callback_data: `calculadora ${bestFlight?.price} ${bestFlight?.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice} ${bestFlight?.money}`,
+        callback_data: `calculator ${bestFlight?.price} ${bestFlight?.tax.moneyNumber} ${preferences?.milePrice} ${preferences?.dolarPrice} ${bestFlight?.money}`,
       },
     ]);
   }
@@ -347,7 +347,7 @@ const getInlineKeyboardSearchOnlyCalculator = (bestFlight, preferences) => [
   [
     {
       text: "Calcular $",
-      callback_data: `calculadora ${parseInt(bestFlight.departureFlight.price) +
+      callback_data: `calculator ${parseInt(bestFlight.departureFlight.price) +
         parseInt(bestFlight.returnFlight.price)
         } ${parseInt(bestFlight.departureFlight.tax.moneyNumber) +
         parseInt(bestFlight.returnFlight.tax.moneyNumber)

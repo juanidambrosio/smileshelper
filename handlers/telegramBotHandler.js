@@ -10,7 +10,7 @@ const {
   searchRoundTrip: getSearchRoundTrip,
 } = require("./searchHandler");
 const { convertToMoney } = require("../utils/milesConverter");
-const { setPreferences } = require("./preferencesHandler");
+const { setPreferences } = require("./usersHandler");
 const {
   getInlineKeyboardSearch,
   getInlineKeyboardSearchOnlyCalculator,

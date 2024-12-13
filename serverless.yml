@@ -1,50 +1,66 @@
+org: juanidambrosio
+app: smiles-helper
 service: smiles-helper
-
-frameworkVersion: "3"
-
-useDotenv: true
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs20.x
+  environment:
+    MONGO_URL: ${env:MONGO_URL}
 
 functions:
-  promotions:
-    handler: aws/lambda/promotions.getPromotions
-    timeout: 600
-    events:
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:749264263523:smiles-helper-alerts
-          functionResponseType: ReportBatchItemFailures
-  removePreferences:
-    handler: aws/lambda/preferences.removePreferences
+  webhookMP:
+    handler: aws/lambda/mpWebhook.handleMPWebhook
     events:
       - httpApi:
-          method: DELETE
-          path: /preferences/{username}
-  getMonthlyFlights:
-    handler: aws/lambda/search.getMonthlyFlights
-    timeout: 120
-    events:
-      - httpApi:
-          method: GET
-          path: /search_month
-  getRegionalFlights:
-    handler: aws/lambda/search.getRegionalFlights
-    timeout: 120
-    events:
-     - httpApi:
-        method: GET
-        path: /search_regional
-  getRoundTripFlights:
-    handler: aws/lambda/search.getRoundTripFlights
-    timeout: 120
-    events:
-      - httpApi:
-          method: GET
-          path: /search_round_trip
+          method: POST
+          path: /webhook/mercadopago
+    memorySize: 128
+    timeout: 10
+  
+  # promotions:
+  #   enabled: false
+  #   handler: aws/lambda/promotions.getPromotions
+  #   timeout: 30
+  #   events:
+  #     - sqs:
+  #         arn: arn:aws:sqs:us-east-1:749264263523:smiles-helper-alerts
+  #         functionResponseType: ReportBatchItemFailures
+  
+  # removePreferences:
+  #   enabled: false
+  #   handler: aws/lambda/preferences.removePreferences
+  #   events:
+  #     - httpApi:
+  #         method: DELETE
+  #         path: /preferences/{username}
+  
+  # getMonthlyFlights:
+  #   enabled: false
+  #   handler: aws/lambda/search.getMonthlyFlights
+  #   timeout: 30
+  #   events:
+  #     - httpApi:
+  #         method: GET
+  #         path: /search_month
+  
+  # getRegionalFlights:
+  #   enabled: false
+  #   handler: aws/lambda/search.getRegionalFlights
+  #   timeout: 30
+  #   events:
+  #    - httpApi:
+  #       method: GET
+  #       path: /search_regional
+  
+  # getRoundTripFlights:
+  #   enabled: false
+  #   handler: aws/lambda/search.getRoundTripFlights
+  #   timeout: 30
+  #   events:
+  #     - httpApi:
+  #         method: GET
+  #         path: /search_round_trip
 
 plugins:
   - serverless-offline
-  - serverless-dotenv-plugin
-

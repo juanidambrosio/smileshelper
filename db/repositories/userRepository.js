@@ -5,6 +5,15 @@ class UserRepository extends BaseRepository {
         super('users');
     }
 
+    async createUser(userId, subscriptionId) {
+        const collection = await this.connect();
+        await collection.updateOne(
+            { user_id: userId },
+            { $set: { user_id: userId, subscription_id: subscriptionId, active: false } },
+            { upsert: true }
+        );
+    }
+
     async getById(userId) {
         const collection = await this.connect();
         return await collection.findOne({ user_id: userId });

@@ -1,4 +1,5 @@
 const dotenv = require("dotenv");
+const { MercadoPagoConfig } = require('mercadopago');
 dotenv.config();
 
 const maxResults = process.env.MAX_RESULTS || 10;
@@ -20,10 +21,15 @@ const aws = {
   journeysCount: process.env.JOURNEYS_COUNT
 };
 
+const mercadopagoAccessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+const mercadoPagoConfig = new MercadoPagoConfig({ accessToken: mercadopagoAccessToken });
+
+
 module.exports = {
   maxResults,
   smiles,
   aws,
   telegramApiToken,
   telegramAlertsApiToken,
+  mercadoPagoConfig
 };

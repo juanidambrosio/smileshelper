@@ -12,31 +12,29 @@ const { applySimpleMarkdown } = require("../utils/parser");
 
 const {
   regexSingleCities,
-  regexMultipleDestinationMonthly,
   regexMultipleDestinationFixedDay,
-  regexMultipleOriginMonthly,
   regexMultipleOriginFixedDay,
-  regexRoundTrip,
   regexFilters,
   regexCustomRegion,
 } = require("../utils/regex");
-
-const { checkDailyAlerts } = require("./alerts");
 
 const {
   getPreferences,
   getRegions,
   deletePreferences,
   setRegion,
-} = require("../handlers/preferencesHandler");
+} = require("../handlers/usersHandler");
 
 const {
   searchSingleDestination,
   searchMultipleDestination,
-  searchRoundTrip,
   savePreferences,
-  calculateMoney
+  calculateMoney,
 } = require("../handlers/telegramBotHandler");
+
+const { createUser } = require("../handlers/usersHandler");
+
+const { createSubscription } = require("../handlers/mpHandler");
 
 const messageQueue = require("../utils/messageQueue");
 
@@ -55,12 +53,20 @@ const listen = async () => {
   const queueMessage = async (msg, handler) => {
     const userId = msg.from.username || msg.from.id.toString();
     const result = await messageQueue.addMessage(userId, msg, handler);
-  
+
+    const inlineKeyboard = result.inlineKeyboard || [];
+
     await bot.sendMessage(
       msg.chat.id,
-      result.message
+      result.message,
+      {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: inlineKeyboard
+        }
+      }
     );
-  
+
     if (!result.error) {
       messageQueue.processQueue();
     }
@@ -118,7 +124,9 @@ const listen = async () => {
   // });
 
   bot.onText(regexMultipleOriginFixedDay, async (msg, match) => {
-    await searchMultipleDestination(match, msg, bot, true, true);
+    await queueMessage(msg, async (message) => {
+      await searchMultipleDestination(match, message, bot, true, true);
+    })
   });
 
   // bot.onText(regexRoundTrip, async (msg, match) => {
@@ -127,9 +135,8 @@ const listen = async () => {
 
   bot.on("callback_query", async (query) => {
     const match = query.data.split(" ");
-    const entireCommand = [query.data];
     // Calculator
-    if (match[0] === "calculadora") {
+    if (match[0] === "calculator") {
       calculateMoney(
         {
           miles: match[1],
@@ -143,7 +150,13 @@ const listen = async () => {
       );
       return;
     }
-    return;
+    else if (match[0] === "subscription") {
+      const userId = match[1];
+      const { url, subscriptionId } = await createSubscription(userId);
+      await createUser(userId, subscriptionId)
+      bot.sendMessage(query.message.chat.id, url);
+      return;
+    }
     // If first match is a region
     // if (match[0].length > 3) {
     //   await searchMultipleDestination(
